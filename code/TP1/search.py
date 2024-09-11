@@ -100,6 +100,23 @@ def depthFirstSearch(problem:SearchProblem)->List[Direction]:
         INSÉREZ VOTRE SOLUTION À LA QUESTION 1 ICI
     '''
 
+    state = problem.getStartState()
+    stack = util.Stack()
+    stack.push((state, []))
+    visited = []
+    path = []
+
+    while not stack.isEmpty():
+        state, path = stack.pop()
+
+        if problem.isGoalState(state):
+            return path
+        elif state not in visited:
+            visited.append(state)
+            for successor in problem.getSuccessors(state):
+                if successor[0] not in visited:
+                    stack.push((successor[0], path + [successor[1]]))
+
     util.raiseNotDefined()
 
 
@@ -110,6 +127,21 @@ def breadthFirstSearch(problem:SearchProblem)->List[Direction]:
     '''
         INSÉREZ VOTRE SOLUTION À LA QUESTION 2 ICI
     '''
+    state = problem.getStartState()
+    queue = util.Queue()
+    queue.push((state,[]))
+    visited = []
+    path = []
+
+    while not queue.isEmpty():
+        state, path = queue.pop()
+
+        if problem.isGoalState(state):
+            return path
+        elif state not in visited:
+            visited.append(state)
+            for successor in problem.getSuccessors(state):
+                queue.push((successor[0], path + [successor[1]]))
 
     util.raiseNotDefined()
 
@@ -120,6 +152,23 @@ def uniformCostSearch(problem:SearchProblem)->List[Direction]:
     '''
         INSÉREZ VOTRE SOLUTION À LA QUESTION 3 ICI
     '''
+
+    state = problem.getStartState()
+    priorityQueue = util.PriorityQueue()
+    priorityQueue.push((state, []), 0)
+    visited = []
+    path = []
+
+    while not priorityQueue.isEmpty():
+        state, path = priorityQueue.pop()
+
+        if problem.isGoalState(state):
+            return path
+        elif state not in visited:
+            visited.append(state)
+            for successor in problem.getSuccessors(state):
+                if successor[0] not in visited:
+                    priorityQueue.push((successor[0], path + [successor[1]]), problem.getCostOfActions(path + [successor[1]]))
 
     util.raiseNotDefined()
 
