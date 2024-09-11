@@ -155,12 +155,12 @@ def uniformCostSearch(problem:SearchProblem)->List[Direction]:
 
     state = problem.getStartState()
     priorityQueue = util.PriorityQueue()
-    priorityQueue.push((state, []), 0)
+    priorityQueue.push((state, [], 0), 0)
     visited = []
     path = []
 
     while not priorityQueue.isEmpty():
-        state, path = priorityQueue.pop()
+        state, path, cost = priorityQueue.pop()
 
         if problem.isGoalState(state):
             return path
@@ -168,7 +168,7 @@ def uniformCostSearch(problem:SearchProblem)->List[Direction]:
             visited.append(state)
             for successor in problem.getSuccessors(state):
                 if successor[0] not in visited:
-                    priorityQueue.push((successor[0], path + [successor[1]]), problem.getCostOfActions(path + [successor[1]]))
+                    priorityQueue.push((successor[0], path + [successor[1]], cost + successor[2]), cost + successor[2])
 
     util.raiseNotDefined()
 
@@ -184,6 +184,23 @@ def aStarSearch(problem:SearchProblem, heuristic=nullHeuristic)->List[Direction]
     '''
         INSÉREZ VOTRE SOLUTION À LA QUESTION 4 ICI
     '''
+
+    state = problem.getStartState()
+    priorityQueue = util.PriorityQueue()
+    priorityQueue.push((state, [], 0), heuristic(state, problem))
+    visited = []
+    path = []
+
+    while not priorityQueue.isEmpty():
+        state, path, cost = priorityQueue.pop()
+
+        if problem.isGoalState(state):
+            return path
+        elif state not in visited:
+            visited.append(state)
+            for successor in problem.getSuccessors(state):
+                if successor[0] not in visited:
+                    priorityQueue.push((successor[0], path + [successor[1]], cost + successor[2]), cost + successor[2] + heuristic(successor[0], problem))
 
     util.raiseNotDefined()
 
