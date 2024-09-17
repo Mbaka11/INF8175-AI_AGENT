@@ -294,6 +294,12 @@ class CornersProblem(search.SearchProblem):
         '''
             INSÉREZ VOTRE SOLUTION À LA QUESTION 5 ICI
         '''
+        self.visited_corners = {
+            (1,1): False,
+            (1,top): False,
+            (right, 1): False,
+            (right, top): False
+        }
 
 
     def getStartState(self):
@@ -305,9 +311,8 @@ class CornersProblem(search.SearchProblem):
         '''
             INSÉREZ VOTRE SOLUTION À LA QUESTION 5 ICI
         '''
+        return (self.startingPosition, self.visited_corners)
         
-        util.raiseNotDefined()
-
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
@@ -316,8 +321,8 @@ class CornersProblem(search.SearchProblem):
         '''
             INSÉREZ VOTRE SOLUTION À LA QUESTION 5 ICI
         '''
-
-        util.raiseNotDefined()
+        current_position, visited_corners = state
+        return all(visited_corners.values())
 
     def getSuccessors(self, state):
         """
@@ -342,6 +347,18 @@ class CornersProblem(search.SearchProblem):
             '''
                 INSÉREZ VOTRE SOLUTION À LA QUESTION 5 ICI
             '''
+            
+            current_position, visited_corners = state
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(current_position[0] + dx), int(current_position[1] + dy)
+            nextState = (nextx, nexty)
+            hitsWall = self.walls[nextx][nexty]
+            
+            if not hitsWall:
+                newVisitedCorners = visited_corners.copy()
+                if nextState in self.corners and not newVisitedCorners[nextState]:
+                    newVisitedCorners[nextState] = True
+                successors.append(((nextState, newVisitedCorners), action, 1))
 
 
         self._expanded += 1 # DO NOT CHANGE
@@ -380,7 +397,17 @@ def cornersHeuristic(state, problem):
         INSÉREZ VOTRE SOLUTION À LA QUESTION 6 ICI
     '''
     
-    return 0
+    current_position, visited_corners = state
+    unvisited_corners = [corner for corner in corners if not visited_corners[corner]]
+    
+    if not unvisited_corners:
+        return 0
+    
+    distances = []
+    for corner in unvisited_corners:
+        distances.append(util.manhattanDistance(current_position, corner))
+    
+    return max(distances)
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
