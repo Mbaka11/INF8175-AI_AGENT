@@ -499,46 +499,25 @@ def foodHeuristic(state, problem: FoodSearchProblem):
     Subsequent calls to this heuristic can access
     problem.heuristicInfo['wallCount']
     """
+    position, foodGrid = state
 
     '''
         INSÉREZ VOTRE SOLUTION À LA QUESTION 7 ICI
     '''
-
-    current_position, foodGrid = state
-    food_positions = foodGrid.asList()
-    heuristic = 0
     
-    if len(food_positions) == 0:
+    foodsPositions = foodGrid.asList()
+    distances = []
+    
+    if not foodsPositions:
         return 0
     
-    food_position_distances_dict = {}
-    for food_position in food_positions:
-        food_position_distances_dict[food_position] = util.manhattanDistance(current_position, food_position)
-
-    # Find the closest food to the current position
-    closest_food = min(food_position_distances_dict, key=food_position_distances_dict.get)
-    closest_food_distance = food_position_distances_dict[closest_food]
+    for food in foodsPositions:
+        if (position, food) not in problem.heuristicInfo:
+            PSB = PositionSearchProblem(problem.startingGameState, start=position, goal=food, warn=False)
+            distance = len(search.bfs(PSB))
+            problem.heuristicInfo[(position, food)] = distance
+            distances.append(distance)
+        else:
+            distances.append(problem.heuristicInfo[(position, food)])
     
-    heuristic += closest_food_distance
-    # Remove the closest food from the dictionary
-    del food_position_distances_dict[closest_food]
-
-    current_position = closest_food
-    
-    # Now iterate through the remaining unvisited food
-    current_position = closest_food
-    while food_position_distances_dict:
-        # Find the next closest food from the current position
-        next_closest_food = min(food_position_distances_dict, key=lambda food: util.manhattanDistance(current_position, food))
-        next_min_distance = util.manhattanDistance(current_position, next_closest_food)
-        
-        # Add the distance to the heuristic
-        heuristic += next_min_distance
-        
-        # Update the current position to the newly visited food
-        current_position = next_closest_food
-        
-        # Remove the food from the dictionary
-        del food_position_distances_dict[next_closest_food]
-    
-    return heuristic
+    return max(distances)
