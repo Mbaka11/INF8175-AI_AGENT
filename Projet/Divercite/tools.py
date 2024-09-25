@@ -1,4 +1,6 @@
 
+from random import randint, seed
+from cachetools import cached, TTLCache
 from enum import Enum
 from functools import wraps
 from typing import Any, Literal, Callable
@@ -7,7 +9,15 @@ import pprint
 from inspect import signature
 from time import time, time_ns
 
-##############################################    Seeker              ###########################################3
+# Utils           ###########################################3
+
+
+def hash_args(args):
+    a, k = args
+    return str(a)+"<==>"+str(k)
+
+
+# Seeker              ###########################################3
 class SeekerResultMode(Enum):
     PRINT = 'print'
     JSON = 'json'
@@ -21,9 +31,9 @@ class Seeker:
 
     Cache = {}
 
-    def __init__(self, mode: SeekerResultMode=SeekerResultMode.JSON) -> None:
+    def __init__(self, mode: SeekerResultMode = SeekerResultMode.JSON) -> None:
         self.mode = mode
-        
+
     def init(self, func: Callable) -> None:
         self.seek_name = func.__name__
         self.func = func
@@ -34,7 +44,7 @@ class Seeker:
         Seeker.Cache[self.seek_name] = self
 
     def add(self, args, time, result=None):
-        args = self.hash_args(args)
+        args = hash_args(args)
         self.calling_counter += 1
         self.total_time += time
         if args not in self.data:
@@ -47,16 +57,12 @@ class Seeker:
         self.data[args][Seeker.COUNT_KEY] += 1
         self.data[args][Seeker.TIME_KEY] += time
 
-    def hash_args(self, args):
-        a, k = args
-        return str(a)+"<==>"+str(k)
-
     def __getitem__(self, args):
-        args = self.hash_args(args)
+        args = hash_args(args)
         return self.data[args]
 
     def __delitem__(self, args):
-        args = self.hash_args(args)
+        args = hash_args(args)
         self.data.pop(args)
 
     def __call__(self, *args: Any, **kwds: Any) -> Any:
@@ -66,21 +72,30 @@ class Seeker:
         return len(self.data)
 
     def __iter__(self):
-        return self.data
+        return iter(self.data)
+
+    def __contains__(self, args):
+        return hash_args(args) in self.data
 
     @property
     def reuse_ratio(self):
         return 100-(self.__len__()*100/self.calling_counter)
 
     def __repr__(self) -> str:
-        return f'Seeker(Function: {self.func}, Name: {self.seek_name},\n\t\tCalling_Counter: {self.calling_counter}, Total_Time: {self.total_time}, Reuse_Ratio: {self.reuse_ratio:0.4f}%, Distinct_Call: {self.__len__()} )'
+        try:
+            return f'Seeker(Function: {self.func}, Name: {self.seek_name},\n\t\tCalling_Counter: {self.calling_counter}, Total_Time: {self.total_time}, Reuse_Ratio: {self.reuse_ratio:0.4f}%, Distinct_Call: {self.__len__()} )'
+        except ZeroDivisionError:
+            return 'Target function has not been called yet'
 
     def __str__(self) -> str:
-        dump({"parameter":self.parameter,
-            "data":self.data}, open(self.seek_name+".json", 'w'))
+        try:
+            print(
+                f'Time Potentially Saved: {(self.reuse_ratio/100)*self.total_time}')
+        except ZeroDivisionError: 
+            return 'Target function has not been called yet'
+        dump({"parameter": str(self.parameter),
+            "data": self.data}, open(self.seek_name+".json", 'w'))
         print(f'{self.func} Data Saved')
-        print(
-            f'Time Potentially Saved: {(1-(self.reuse_ratio/100)*self.total_time)}')
         return self.__repr__()
 
     def __add__(self, other: object):
@@ -109,4 +124,37 @@ def Seek(seeker: Seeker):
             return result
         return wrapper
     return decorator
-##############################################                  ###########################################3
+##############################################                  ###########################################
+
+
+def Time(func: Callable):
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time()
+        result = func(*args, **kwargs)
+        end_time = time()
+        print(
+            f'Time {func.__name__} - {hash_args((args,kwargs))}: {end_time-start_time} sec')
+        return result
+
+    return wrapper
+
+##############################################  Memoirization     ###########################################
+
+
+def Memoirization(func: Callable):
+    cache = {}
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        key = hash_args((args, kwargs))
+        if key in cache:
+            return cache[key]
+        result = func(*args, **kwargs)
+        cache[key] = result
+        return result
+    return wrapper
+
+
+##############################################                 ###########################################
