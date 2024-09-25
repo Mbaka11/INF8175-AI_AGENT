@@ -1,21 +1,30 @@
 
+from enum import Enum
 from functools import wraps
-from typing import Any, overload, Callable, MappingView
+from typing import Any, Literal, Callable
 from json import dump, dumps
 import pprint
 from inspect import signature
 from time import time, time_ns
-from timeit import timeit
+
+##############################################                  ###########################################3
+class SeekerResultMode(Enum):
+    PRINT = 'print'
+    JSON = 'json'
 
 
 class Seeker:
+
     TIME_KEY = 'time'
     COUNT_KEY = 'count'
     RESULT_KEY = 'result'
 
-    Cache ={}
+    Cache = {}
 
-    def __init__(self, func: Callable) -> None:
+    def __init__(self, mode: SeekerResultMode=SeekerResultMode.JSON) -> None:
+        self.mode = mode
+        
+    def init(self, func: Callable) -> None:
         self.seek_name = func.__name__
         self.func = func
         self.data: dict[Any, dict[str, int | float]] = {}
@@ -26,6 +35,8 @@ class Seeker:
 
     def add(self, args, time, result=None):
         args = self.hash_args(args)
+        self.calling_counter += 1
+        self.total_time += time
         if args not in self.data:
             self.data[args] = {
                 Seeker.TIME_KEY: time,
@@ -35,10 +46,6 @@ class Seeker:
             return
         self.data[args][Seeker.COUNT_KEY] += 1
         self.data[args][Seeker.TIME_KEY] += time
-        self.calling_counter += 1
-        self.total_time += time
-
-        self._ordered = False
 
     def hash_args(self, args):
         a, k = args
@@ -66,41 +73,39 @@ class Seeker:
         return 100-(self.__len__()*100/self.calling_counter)
 
     def __repr__(self) -> str:
-        return f'Seeker(Function: {self.func}, Name: {self.seek_name},\nCalling_Counter: {self.calling_counter}, Total_Time: {self.total_time:0.5f}%, Reuse_Ratio: {self.reuse_ratio}, Distinct_Call: {self.__len__()} )'
+        return f'Seeker(Function: {self.func}, Name: {self.seek_name},\n\t\tCalling_Counter: {self.calling_counter}, Total_Time: {self.total_time}, Reuse_Ratio: {self.reuse_ratio:0.4f}%, Distinct_Call: {self.__len__()} )'
 
     def __str__(self) -> str:
-        dump(self.data, open(self.seek_name, 'w'))
+        dump(self.data, open(self.seek_name+".json", 'w'))
         print(f'{self.func} Data Saved')
+        print(
+            f'Time Potentially Saved: {(1-(self.reuse_ratio/100)*self.total_time)}')
         return self.__repr__()
 
     def __add__(self, other: object):
         ...
 
-    def order(self):
-        self.data =  dict(sorted(self.data,key=lambda item:item[Seeker.COUNT_KEY]))
-        self._ordered = True
+    def order(self, key: Literal['time', 'count']):
+        return sorted(self.data.items(), key=lambda item: item[1][key])
 
-    @property
-    def max(self):
-        if not self._ordered:
-            self.order()
-        return self.data[len(self)-1]        
+    def max(self, key: Literal['time', 'count'] = 'count'):
+        return f'Max({key}): {self.order(key) [-1]}'
 
-    @property
-    def min(self):
-        if not self._ordered:
-            self.order()
-        return self.data[0]   
-        
+    def min(self, key: Literal['time', 'count'] = 'count'):
+        return f'Min({key}): {self.order(key)[0]}'
 
-def Seek(func: Callable):
-    seeker = Seeker(func)
 
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        start_time = time()
-        result = func(*args, **kwargs)
-        end_time = time()
-        seeker.add((args, kwargs), end_time-start_time)
-        return result
-    return wrapper
+def Seek(seeker: Seeker):
+    def decorator(func: Callable):
+        seeker.init(func)
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            start_time = time()
+            result = func(*args, **kwargs)
+            end_time = time()
+            seeker.add((args, kwargs), end_time-start_time)
+            return result
+        return wrapper
+    return decorator
+##############################################                  ###########################################3
