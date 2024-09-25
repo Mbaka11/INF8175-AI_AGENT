@@ -1,13 +1,10 @@
 
-from random import randint, seed
-from cachetools import cached, TTLCache
 from enum import Enum
 from functools import wraps
 from typing import Any, Literal, Callable
-from json import dump, dumps
-import pprint
+from json import dump
 from inspect import signature
-from time import time, time_ns
+from time import perf_counter
 
 # Utils           ###########################################3
 
@@ -91,12 +88,15 @@ class Seeker:
         try:
             print(
                 f'Time Potentially Saved: {(self.reuse_ratio/100)*self.total_time}')
+        
+            dump({"parameter": str(self.parameter),
+                "data": self.data}, open(self.seek_name+".json", 'w'))
+            print(f'{self.func} Data Saved')
+            return self.__repr__()
         except ZeroDivisionError: 
             return 'Target function has not been called yet'
-        dump({"parameter": str(self.parameter),
-            "data": self.data}, open(self.seek_name+".json", 'w'))
-        print(f'{self.func} Data Saved')
-        return self.__repr__()
+        except AttributeError:
+            return 'Object has not been initialized... Make sure to put in the Seek decorator'
 
     def __add__(self, other: object):
         ...
@@ -117,9 +117,9 @@ def Seek(seeker: Seeker):
 
         @wraps(func)
         def wrapper(*args, **kwargs):
-            start_time = time()
+            start_time = perf_counter()
             result = func(*args, **kwargs)
-            end_time = time()
+            end_time = perf_counter()
             seeker.add((args, kwargs), end_time-start_time)
             return result
         return wrapper
@@ -131,9 +131,9 @@ def Time(func: Callable):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        start_time = time()
+        start_time = perf_counter()
         result = func(*args, **kwargs)
-        end_time = time()
+        end_time = perf_counter()
         print(
             f'Time {func.__name__} - {hash_args((args,kwargs))}: {end_time-start_time} sec')
         return result
@@ -149,12 +149,13 @@ def Memoirization(func: Callable):
     @wraps(func)
     def wrapper(*args, **kwargs):
         key = hash_args((args, kwargs))
-        if key in cache:
-            return cache[key]
-        result = func(*args, **kwargs)
-        cache[key] = result
-        return result
+        if key not in cache:
+            cache[key]= func(*args, **kwargs)
+        return cache[key]
     return wrapper
 
 
 ##############################################                 ###########################################
+
+
+
