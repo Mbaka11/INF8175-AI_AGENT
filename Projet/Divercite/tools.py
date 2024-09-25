@@ -7,7 +7,7 @@ import pprint
 from inspect import signature
 from time import time, time_ns
 
-##############################################                  ###########################################3
+##############################################    Seeker              ###########################################3
 class SeekerResultMode(Enum):
     PRINT = 'print'
     JSON = 'json'
@@ -76,7 +76,8 @@ class Seeker:
         return f'Seeker(Function: {self.func}, Name: {self.seek_name},\n\t\tCalling_Counter: {self.calling_counter}, Total_Time: {self.total_time}, Reuse_Ratio: {self.reuse_ratio:0.4f}%, Distinct_Call: {self.__len__()} )'
 
     def __str__(self) -> str:
-        dump(self.data, open(self.seek_name+".json", 'w'))
+        dump({"parameter":self.parameter,
+            "data":self.data}, open(self.seek_name+".json", 'w'))
         print(f'{self.func} Data Saved')
         print(
             f'Time Potentially Saved: {(1-(self.reuse_ratio/100)*self.total_time)}')
