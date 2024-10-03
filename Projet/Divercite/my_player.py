@@ -23,7 +23,7 @@ class MyPlayer(PlayerDivercite):
         """
         super().__init__(piece_type, name)
 
-    def compute_action(self, current_state: GameState, remaining_time: int = 1e9, **kwargs) -> Action:
+    def compute_action(self, current_state: GameStateDivercite, remaining_time: int = 1e9, **kwargs) -> Action:
         """
         Use the minimax algorithm to choose the best action based on the heuristic evaluation of game states.
 

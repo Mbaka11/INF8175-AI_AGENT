@@ -1,3 +1,5 @@
 Divercite/*
 !Divercite/my_player.py
+!Divercite/tools.py
 *.pdf
+.venv

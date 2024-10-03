@@ -1,11 +1,11 @@
 install	:
-	pip install -r requirements_dev.txt
+	pip install -r requirements.txt
 
 cleandep:
-	pipreqs --clean requirements_dev.txt
+	pipreqs --clean requirements.txt
 
 getdep: 
-	pipreqs --savepath requirements_dev.txt --force .
+	pipreqs --savepath requirements.txt --force .
 
 clean:
 	find . -name "__pycache__" -type d -exec rm -rf {} +

@@ -1,10 +1,13 @@
 
 from enum import Enum
-from functools import wraps
+from functools import wraps,lru_cache
 from typing import Any, Literal, Callable
 from json import dump
 from inspect import signature
-from time import perf_counter
+from time import perf_counter,time
+import psutil,os
+
+
 
 ############################################      Utils        ###########################################
 
@@ -332,7 +335,27 @@ def Memoization(func: Callable):
     return wrapper
 
 
-##############################################                 ###########################################
+##############################################   Monitor      ###########################################
 
 
+def Monitor(func:Callable):
 
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        process = psutil.Process(os.getpid())
+        start_mem = process.memory_info().rss
+        start_cpu = process.cpu_percent(interval=None)
+        
+        start_time = time()
+        result = func(*args, **kwargs)
+        end_time = time()
+        
+        end_mem = process.memory_info().rss
+        end_cpu = process.cpu_percent(interval=None)
+        
+        print(f"Memory usage: {end_mem - start_mem} bytes")
+        print(f"CPU usage: {end_cpu - start_cpu}%")
+        print(f"Execution time: {end_time - start_time} seconds")
+        
+        return result
+    return wrapper
