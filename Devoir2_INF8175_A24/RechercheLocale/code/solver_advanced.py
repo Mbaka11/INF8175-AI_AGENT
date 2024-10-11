@@ -10,6 +10,16 @@ def solve(schedule : Schedule) -> dict:
     :return: a list of tuples of the form (c,t) where c is a course and t a time slot. 
     """
     # Add here your agent
+    def naive_solution(schedule):
+        solution = dict()
+        time_slot_idx = 1
+        for c in schedule.course_list:
+            assignation = time_slot_idx
+            solution[c] = assignation
+            time_slot_idx += 1
+        return solution
+    
+    
     def get_total_number_of_conflicts(solution) -> int:
         return sum(solution[a[0]] == solution[a[1]] for a in schedule.conflict_list)
     
@@ -32,14 +42,8 @@ def solve(schedule : Schedule) -> dict:
         return min(valid_neighbors, key=lambda sol: schedule.get_n_creneaux(sol))
     
     def evaluate_solution(solution) -> int:
-        conflicts = get_total_number_of_conflicts(solution)
         time_slots = schedule.get_n_creneaux(solution)
-        return conflicts + time_slots
-
-    def acceptance_probability(delta : float, temperature : float) -> float:
-        return math.exp(-delta / temperature) if delta > 0 else 1
-        # return math.exp(-delta / temperature)
-
+        return time_slots
         
     def hill_climbing(current_solution) -> dict:
         # current_solution = {course: random.randint(0, len(schedule.course_list) - 1) for course in schedule.course_list}
@@ -72,53 +76,49 @@ def solve(schedule : Schedule) -> dict:
         
         return best_solution
 
+    def get_random_neighbor(solution) -> dict:
+        neighbor = solution.copy()
+        course = random.choice(list(neighbor.keys()))
+        conflicts_slots = {solution[conflict] for conflict in schedule.get_node_conflicts(course)}
+        available_slots = [slot for slot in range(len(schedule.course_list)) if slot not in conflicts_slots]
+        
+        if available_slots:
+            neighbor[course] = random.choice(available_slots)
+        
+        return neighbor
+
+    def acceptance_probability(delta : float, temperature : float) -> float:
+        return math.exp(-delta / temperature) if delta > 0 else 1
+
     def simulated_annealing(t0 : float, alpha : float, time_limit : int) -> dict:
-        current_solution = {course: random.randint(0, len(schedule.course_list) - 1) for course in schedule.course_list}
-        best_solution = current_solution
-        best_cost = evaluate_solution(best_solution)
+        current_solution = naive_solution(schedule)
+        current_cost = evaluate_solution(current_solution)
+        best_solution = current_solution.copy()
+        best_cost = current_cost
         temperature = t0
         start_time = time.time()
-        stagnation_counter = 0
-
+        
         while time.time() - start_time < time_limit:
-            neighbors = get_neighborhood(current_solution)
-            neighbor = random.choice(neighbors)
-            # neighbor = min(neighbors, key=lambda n: evaluate_solution(n))
-            
-            current_cost = evaluate_solution(current_solution)
-            neighbor_cost = evaluate_solution(neighbor)
+            neighbor_solution = get_random_neighbor(current_solution)
+            neighbor_cost = evaluate_solution(neighbor_solution)
             delta = neighbor_cost - current_cost
             
             if delta <= 0:
-                current_solution = neighbor
-                stagnation_counter = 0 
-                # print(f"Accepted new solution with cost {neighbor} (delta = {delta})")
+                current_solution = neighbor_solution
+                current_cost = neighbor_cost
             elif delta > 0 and random.random() < acceptance_probability(delta, temperature):
-                current_solution = neighbor
-                stagnation_counter = 0 
-                # print(f"Accepted new solution with cost {neighbor} (delta = {delta})")
+                current_solution = neighbor_solution
+                current_cost = neighbor_cost
 
-            if evaluate_solution(current_solution) < best_cost:
-                best_solution = current_solution
-                best_cost = evaluate_solution(best_solution)
+            if current_cost < best_cost:
+                best_solution = current_solution.copy()
+                best_cost = current_cost
                 print(f"New best solution found with cost {best_cost}")
                 
             temperature *= alpha
-            
-            if stagnation_counter > 25:  # If no improvement after 50 iterations
-                temperature *= 1.05  # Slightly increase temperature
-                
-            stagnation_counter += 1  # Increment stagnation counter
-            
-            # Restart if stuck
-            if stagnation_counter > 50:  # Arbitrary limit for stagnation
-                # current_solution = {course: random.randint(0, len(schedule.course_list) - 1) for course in schedule.course_list}
-                print("Restarting due to stagnation")
-                current_solution = hill_climbing(current_solution)
-                stagnation_counter = 0  # Reset the counter 
             
         return best_solution
     
     # return hill_climbing()
     # return local_search_with_restart(120)
-    return simulated_annealing(5000, 0.85, 300)
+    return simulated_annealing(100, 0.99, 300)
