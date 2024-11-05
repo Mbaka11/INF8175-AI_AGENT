@@ -71,7 +71,7 @@ class MyPlayer(PlayerDivercite):
         """
 
         #TODO
-        # We test with a depth of 3
+        # We test with a depth of 2
         max_depth = 2
         _, best_action = self.max_value(current_state, 0, max_depth)
         return best_action
