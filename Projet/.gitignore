@@ -4,3 +4,4 @@ Divercite/*
 !Divercite/lib
 *.pdf
 .venv
+*.json

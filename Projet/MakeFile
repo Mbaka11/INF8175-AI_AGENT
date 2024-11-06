@@ -10,3 +10,15 @@ getdep:
 clean:
 	find . -name "__pycache__" -type d -exec rm -rf {} +
 	find . -name "*.pyc" -type f -delete
+
+hvp:
+	python Divercite/main_divercite.py -t human_vs_computer Divercite/my_player.py
+
+hvr:
+	python Divercite/main_divercite.py -t human_vs_computer Divercite/random_player_divercite.py
+
+hvg:
+	python Divercite/main_divercite.py -t human_vs_computer Divercite/greedy_player_divercite.py
+
+gvp:
+	python Divercite/main_divercite.py -t local Divercite/greedy_player_divercite.py Divercite/my_player.py -r -g
