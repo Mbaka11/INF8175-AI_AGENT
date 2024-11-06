@@ -8,18 +8,18 @@ class AlgoController:
         self.strategy_count = 0
 
     def __call__(self, *args, **kwds):
-        return self._play_best_move(*args)
+        return self.play_best(*args)
 
-    def _play_best_move(self, moves_index:int):
+    def play_best(self, moves_index:int):
         algorithm = self[moves_index]
-        return algorithm.compute_best_moves()
+        return algorithm.search()
         
     def add_strategy(self, moves_index:int,algorithm:Algorithm):
         if moves_index < len(self.strategy):
             raise IndexError
             
-        if moves_index > MAX_STEP:
-            moves_index = MAX_STEP - moves_index
+        if moves_index > MAX_MOVES:
+            moves_index = MAX_MOVES - moves_index
 
         self.strategy.extend([algorithm for _  in range(moves_index)])
         return self
