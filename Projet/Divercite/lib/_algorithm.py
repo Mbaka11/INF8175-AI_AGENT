@@ -1,3 +1,4 @@
+from typing import Generator
 from .heuristic import Heuristic
 from game_state_divercite import GameStateDivercite
 from cachetools import FIFOCache,LFUCache,TTLCache,LRUCache,cachedmethod, Cache
@@ -12,7 +13,7 @@ class Algorithm:
     opponent_id: int = None
     remaining_time: float = None
     my_step:int = 0
-    max_step: int = 0 
+
     
     @staticmethod
     def set_current_state(current_state:GameStateDivercite,remaining_time: float):
@@ -65,9 +66,6 @@ class Algorithm:
         if my_scores == opponent_scores:
             return 0
 
-    def _isTerminal(self,state:GameStateDivercite,current_depth:int):
-        return state.step + current_depth == state.max_step
-
     def _turn(self):
         ...
 
@@ -83,5 +81,9 @@ class Algorithm:
     def _transition(self,state,action):
         return state.apply_action(action)
     
-    def _compute_redondant_state(self,states:list):
+    def _compute_redondant_state(self,states:list | Generator    ) -> Generator:
+        # TODO 
         return states
+    
+    def _normalize(self,):
+        ...
