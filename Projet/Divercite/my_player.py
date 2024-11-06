@@ -36,7 +36,7 @@ class MyPlayer(PlayerDivercite):
         Returns:
             Action: The best action as determined by minimax.
         """
-        Algorithm.set_current_state(current_state)
+        Algorithm.set_current_state(current_state,remaining_time)
         
         # return _algoController(current_state.step)
         #TODO

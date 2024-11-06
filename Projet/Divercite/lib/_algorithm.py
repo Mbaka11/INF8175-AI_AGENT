@@ -4,6 +4,7 @@ from game_state_divercite import GameStateDivercite
 
 class Algorithm:
     
+    # Meta Data 
     is_first_move: bool = None
     current_state: GameStateDivercite = None
     my_id: int = None
@@ -23,7 +24,8 @@ class Algorithm:
     def init_game_state():
         Algorithm.opponent_id = Algorithm.current_state.compute_next_player().id
         temp = [ player.id for player in Algorithm.current_state.players]
-        Algorithm.my_id = temp.remove(Algorithm.opponent_id)[0]    
+        temp.remove(Algorithm.opponent_id)
+        Algorithm.my_id = temp[0]
         Algorithm.is_first_move = Algorithm.my_step == Algorithm.current_state.step
     
     def __init__(self,heuristic:Heuristic):
@@ -33,3 +35,12 @@ class Algorithm:
     def compute_best_moves(self):
         pass
     
+    @property
+    def _get_my_pieces(self):
+        return self.current_state.players_pieces_left[self.my_id]
+    
+    def _utility(self):
+        ...
+
+    def _isTerminal(self):
+        ...

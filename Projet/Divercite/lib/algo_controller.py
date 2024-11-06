@@ -26,9 +26,13 @@ class AlgoController:
         
     def __getitem__(self,move_index) -> Algorithm:
         return self.strategy[move_index]
-
     
+    def strategy_from_dict(self, strategy:dict[int,Algorithm],clear=False):
+        if clear:
+            self.strategy.clear()
 
+        for move_step,algo in strategy.items():
+            self.add_strategy(move_step,algo)
 
 _algoController = AlgoController()
 

@@ -1,13 +1,9 @@
 from game_state_divercite import GameStateDivercite
-from ._algorithm import Algorithm
 
-class Heurstic:
-    
-    def __init__(self):
-        pass
+class Heuristic:
     
     def __call__(self, *args, **kwds):
         pass
 
-    def evalutate(self):
+    def evalutate(self,current_state:GameStateDivercite):
         pass
