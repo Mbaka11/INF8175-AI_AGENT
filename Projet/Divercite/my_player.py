@@ -4,6 +4,9 @@ from seahorse.game.game_state import GameState
 from game_state_divercite import GameStateDivercite
 from seahorse.utils.custom_exceptions import MethodNotImplementedError
 
+from lib._algorithm import Algorithm
+from lib.algo_controller import _algoController
+
 class MyPlayer(PlayerDivercite):
     """
     Player class for Divercite game that makes random moves.
@@ -33,6 +36,8 @@ class MyPlayer(PlayerDivercite):
         Returns:
             Action: The best action as determined by minimax.
         """
+        best_moves = _algoController(current_state.step)
+        print(current_state.)
 
         #TODO
-        raise MethodNotImplementedError()
+        return list(current_state.generate_possible_light_actions())[0]
