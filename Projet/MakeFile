@@ -8,8 +8,12 @@ getdep:
 	pipreqs --savepath requirements.txt --force .
 
 clean:
-	find . -name "__pycache__" -type d -exec rm -rf {} +
-	find . -name "*.pyc" -type f -delete
+	rm  *.json
+	rm  data/*.json 
+	rm  *.pyc
+
+move_game:
+	mv ./*.json data/
 
 hvp:
 	python Divercite/main_divercite.py -t human_vs_computer Divercite/my_player.py
