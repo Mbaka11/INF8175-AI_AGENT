@@ -1,4 +1,5 @@
 Divercite/*
+Divercite/lib/__pycache__/
 !Divercite/my_player.py
 !Divercite/tools.py
 !Divercite/lib
