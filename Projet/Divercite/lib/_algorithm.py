@@ -32,12 +32,13 @@ class Algorithm:
         Algorithm.is_first_move = Algorithm.my_step == Algorithm.current_state.step
         
     
-    def __init__(self,heuristic:Heuristic,cache:Cache):
+    def __init__(self,heuristic:Heuristic,cache:Cache,allowed_time:float):
         self.heuristic: Heuristic = heuristic
         self.cache = cache
+        self.allowed_time = allowed_time
         pass
 
-    def compute_best_moves(self):
+    def search(self):
         pass
     
     @property
