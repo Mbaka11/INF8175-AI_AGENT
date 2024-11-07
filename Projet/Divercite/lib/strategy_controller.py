@@ -1,6 +1,8 @@
 from ._strategy import *
 from .heuristic import *
-from .opening_moves import OpeningMoveStrategy
+from .mcts_algorithm import *
+from .minimax_algorithm import *
+from .opening_moves import *
 from .constant import *
 
 
@@ -41,5 +43,7 @@ class StrategyController:
         for move_step,algo in strategy.items():
             self.add_strategy(move_step,algo)
 
-strategyController = StrategyController().add_strategy(OpeningMoveStrategy(False),1).add_strategy(TestRandomStrategy(RandomTestHeuristic()))
+############################################### PREDEFINED STRATEGY ##############################################
+
+STRATEGY_CONTROLLER = StrategyController().add_strategy(OpeningMoveStrategy(False),1).add_strategy(SimpleMoveStrategy(RandomTestHeuristic()))
 #print(strategyController.strategies)

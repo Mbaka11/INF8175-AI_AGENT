@@ -7,7 +7,7 @@ from seahorse.game.game_layout.board import Piece
 POSITION_KEY = 'position'
 PIECE_KEY = 'piece'
 
-
+############################## Simple Strategy ##########################################
 class SimpleMoveStrategy(Strategy):
     def __init__(self, heuristic):
         super().__init__(heuristic)
@@ -16,6 +16,7 @@ class SimpleMoveStrategy(Strategy):
         return self.main_heuristic(self.current_state)
 
 
+############################## Opening Moves Strategy ##################################
 class OpeningMoveStrategy(Strategy):
     def __init__(self,force_same_color:bool = True):
         self.force_same_color = force_same_color

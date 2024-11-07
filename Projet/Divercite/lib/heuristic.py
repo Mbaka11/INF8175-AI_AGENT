@@ -16,6 +16,8 @@ method = {
 
 L=4.2
 
+############################################ Base Heuristic class  #############################################
+
 class Heuristic:
     def evaluate(self,current_state:GameStateDivercite,)-> Any:
         ...
@@ -55,4 +57,4 @@ class AlgorithmHeuristic(Heuristic):
 class RandomTestHeuristic(Heuristic):
 
     def evaluate(self, current_state):
-        return choice(list(self.current_state.get_possible_heavy_actions()))
+        return choice(list(current_state.get_possible_heavy_actions()))

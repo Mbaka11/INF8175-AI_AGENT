@@ -2,8 +2,8 @@ from typing import Generator
 from .heuristic import AlgorithmHeuristic, Heuristic
 from game_state_divercite import GameStateDivercite
 from cachetools import FIFOCache,LFUCache,TTLCache,LRUCache,cachedmethod, Cache
-import random
 
+####################################### Base Strategy Classes #######################################3
 class Strategy:
     
     # Meta Data 
@@ -59,7 +59,7 @@ class Strategy:
 
 class Algorithm(Strategy):
 
-    def __init__(self,heuristic:AlgorithmHeuristic,cache:Cache,allowed_time:float):
+    def __init__(self,heuristic:AlgorithmHeuristic,cache:Cache,allowed_time:float = None):
         super().__init__(heuristic)
         self.cache = cache
         self.allowed_time = allowed_time
@@ -94,8 +94,6 @@ class Algorithm(Strategy):
         # TODO 
         return states
     
-# NOTE compute as a Simple moves
-class TestRandomStrategy(Strategy):
-
-    def search(self):
-        return self.main_heuristic(self.current_state)
+    def _hash_state(self, state: GameStateDivercite) -> str:
+        # TODO 
+        ...

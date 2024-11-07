@@ -5,7 +5,7 @@ from game_state_divercite import GameStateDivercite
 from seahorse.utils.custom_exceptions import MethodNotImplementedError
 
 from lib._strategy import Algorithm,Strategy
-from lib.strategy_controller import strategyController
+from lib.strategy_controller import STRATEGY_CONTROLLER
 
 class MyPlayer(PlayerDivercite):
     """
@@ -39,4 +39,4 @@ class MyPlayer(PlayerDivercite):
         #TODO
         print('Current step:',current_state.step)
         Strategy.set_current_state(current_state,remaining_time)
-        return  strategyController.play_best(Algorithm.my_step)
+        return  STRATEGY_CONTROLLER.play_best(Algorithm.my_step)
