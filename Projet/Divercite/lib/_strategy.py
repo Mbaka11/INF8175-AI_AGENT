@@ -1,5 +1,5 @@
 from typing import Generator
-from .heuristic import Heuristic
+from .heuristic import AlgorithmHeuristic
 from game_state_divercite import GameStateDivercite
 from cachetools import FIFOCache,LFUCache,TTLCache,LRUCache,cachedmethod, Cache
 import random
@@ -56,8 +56,8 @@ class Strategy:
 
 class Algorithm(Strategy):
 
-    def __init__(self,heuristic:Heuristic,cache:Cache,allowed_time:float):
-        self.main_heuristic: Heuristic = heuristic
+    def __init__(self,heuristic:AlgorithmHeuristic,cache:Cache,allowed_time:float):
+        self.main_heuristic: AlgorithmHeuristic = heuristic
         self.cache = cache
         self.allowed_time = allowed_time
 

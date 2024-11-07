@@ -13,12 +13,15 @@ method = {
     'sum':np.sum,
 }
 
-class Heuristic:
+L=4.2
+
+class AlgorithmHeuristic:
     
-    def __init__(self,k,method:Method='sum'):
-        self.h_list:list[Heuristic] = [self]
+    def __init__(self,min_value:float,max_value:float,method:Method='sum'):
+        self.h_list:list[AlgorithmHeuristic] = [self]
         self.method = method
-        self.k = k
+        self.min_value = min_value
+        self.max_value = max_value
 
     def __call__(self, *args, **kwds):
         if len(self.h_list) ==1:
@@ -28,15 +31,12 @@ class Heuristic:
         return method[self.method](vals)
         
     @abstractmethod
-    def evaluate(self,current_state:GameStateDivercite):
+    def evaluate(self,current_state:GameStateDivercite)-> float:
         ...
 
-    @abstractmethod
-    def _normalize(self,current_state:GameStateDivercite):
-        ...
-
-    def _sigmoid(self,x):
-        return -1 +(2/(1+np.exp2(-x*self.k)))
+    def _sigmoid(self,x:float):
+        x_scaled = (x - (self.min_value + self.max_value) / 2) / ((self.max_value - self.min_value) / 2) * L
+        return 2 / (1 + np.exp(-x_scaled)) - 1
 
     def __add__(self,other):
         if other not in self.h_list: 
