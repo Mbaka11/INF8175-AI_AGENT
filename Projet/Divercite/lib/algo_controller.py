@@ -1,10 +1,10 @@
-from Divercite.lib._strategy import Algorithm
+from Divercite.lib._strategy import Strategy
 from .constant import *
 
 class AlgoController:
     
     def __init__(self):
-        self.strategy:list[Algorithm] = []
+        self.strategy:list[Strategy] = []
         self.strategy_count = 0
 
     def __call__(self, *args, **kwds):
@@ -14,7 +14,7 @@ class AlgoController:
         algorithm = self[moves_index]
         return algorithm.search()
         
-    def add_strategy(self, moves_index:int,algorithm:Algorithm):
+    def add_strategy(self, moves_index:int,algorithm:Strategy):
         if moves_index < len(self.strategy):
             raise IndexError
             
@@ -24,10 +24,10 @@ class AlgoController:
         self.strategy.extend([algorithm for _  in range(moves_index)])
         return self
         
-    def __getitem__(self,move_index) -> Algorithm:
+    def __getitem__(self,move_index) -> Strategy:
         return self.strategy[move_index]
     
-    def strategy_from_dict(self, strategy:dict[int,Algorithm],clear=False):
+    def strategy_from_dict(self, strategy:dict[int,Strategy],clear=False):
         if clear:
             self.strategy.clear()
 

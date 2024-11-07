@@ -1,5 +1,5 @@
 import os
-from ._strategy import Algorithm
+from ._strategy import Strategy
 from .heuristic import Heuristic
 from seahorse.game.light_action import LightAction,Action
 from random import choice
@@ -13,10 +13,8 @@ PIECE_KEY = 'piece'
 class OpeningMovesHeuristic:
     ...
 
-
-class OpeningMovesAlgorithm(Algorithm):
+class OpeningMovesAlgorithm(Strategy):
     def __init__(self,is_same_color:bool = True):
-        super().__init__(None, None, None)
         self.is_same_color = is_same_color
 
     def search(self) -> Action:
