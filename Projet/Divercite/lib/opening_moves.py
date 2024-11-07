@@ -10,7 +10,8 @@ PIECE_KEY = 'piece'
 # class OpeningMovesHeuristic:
 #     ...
 
-class OpeningMovesStrategy(Strategy):
+
+class OpeningMoveStrategy(Strategy):
     def __init__(self,force_same_color:bool = True):
         self.force_same_color = force_same_color
 
@@ -43,3 +44,6 @@ class OpeningMovesStrategy(Strategy):
                 return new_pos
         
         return choice(center_city_position)
+
+
+class SimpleMoveStrategy(Strategy):...

@@ -1,5 +1,5 @@
 from ._strategy import Strategy, TestRandomAlgorithm
-from .opening_moves import OpeningMovesStrategy
+from .opening_moves import OpeningMoveStrategy
 from .constant import *
 
 
@@ -36,5 +36,5 @@ class StrategyController:
         for move_step,algo in strategy.items():
             self.add_strategy(move_step,algo)
 
-strategyController = StrategyController().add_strategy(1,OpeningMovesStrategy(False)).add_strategy(19,TestRandomAlgorithm())
+strategyController = StrategyController().add_strategy(1,OpeningMoveStrategy(False)).add_strategy(19,TestRandomAlgorithm())
 #print(strategyController.strategies)

@@ -57,7 +57,7 @@ class Strategy:
 class Algorithm(Strategy):
 
     def __init__(self,heuristic:Heuristic,cache:Cache,allowed_time:float):
-        self.heuristic: Heuristic = heuristic
+        self.main_heuristic: Heuristic = heuristic
         self.cache = cache
         self.allowed_time = allowed_time
 

@@ -38,7 +38,7 @@ class MinimaxTypeASearch(Algorithm):
             return self._utility(state), None
         
         if state.step >= max_depth:
-            pred_utility= self.heuristic(state)
+            pred_utility= self.main_heuristic(state)
             if self._isQuiescent(state,pred_utility):
                 collect()
                 return pred_utility,_
@@ -92,7 +92,7 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
         self.n_expanded = n_expanded
         self.typeB_heuristic = typeB_heuristic
         if typeA_heuristic is None:
-            self.heuristic = typeB_heuristic
+            self.main_heuristic = typeB_heuristic
     
     def _order_actions(self, actions: Generator | list,current_state: GameStateDivercite) -> list:
         # TODO modifier le nombre d'enfants a etendre dynamiquement
