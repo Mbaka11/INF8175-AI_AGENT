@@ -16,14 +16,18 @@ class StrategyController:
         strategy = self[moves_index]
         return strategy.search()
         
-    def add_strategy(self, moves_index:int,algorithm:Strategy):
-        if moves_index < len(self.strategies):
-            raise IndexError
-            
-        if moves_index > MAX_MOVES:
-            moves_index = MAX_MOVES - moves_index
+    def add_strategy(self,strategy:Strategy | type[Strategy],number_of_moves:int | None = None):
+        
+        try:
+            if isinstance(strategy,type):
+                strategy = strategy()
+        except:
+            raise KeyError('This Strategy needs args, define it before passing to the class')
 
-        self.strategies.extend([algorithm for _  in range(moves_index)])
+        if number_of_moves == None or number_of_moves > MAX_MOVES- len(self.strategies):
+            number_of_moves = MAX_MOVES - len(self.strategies)
+
+        self.strategies.extend([strategy for _  in range(number_of_moves)])
         return self
         
     def __getitem__(self,move_index) -> Strategy:
@@ -36,5 +40,5 @@ class StrategyController:
         for move_step,algo in strategy.items():
             self.add_strategy(move_step,algo)
 
-strategyController = StrategyController().add_strategy(1,OpeningMoveStrategy(False)).add_strategy(19,TestRandomAlgorithm())
+strategyController = StrategyController().add_strategy(OpeningMoveStrategy(False),1).add_strategy(TestRandomAlgorithm())
 #print(strategyController.strategies)
