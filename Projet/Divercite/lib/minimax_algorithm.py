@@ -68,6 +68,7 @@ class MinimaxTypeASearch(Algorithm):
         return v_star,m_star    
 
     def _isQuiescent(self,state:GameStateDivercite, pred_utility:float)->bool:
+        # TODO 
         True
     
     def _compute_next_max_depth(self,current_max_depth:int, current_step:int,v_star:float,alpha:float,beta:float) -> int:

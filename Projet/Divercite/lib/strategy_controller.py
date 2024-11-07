@@ -13,8 +13,7 @@ class StrategyController:
         return self.play_best(*args)
 
     def play_best(self, moves_index:int):
-        strategy = self[moves_index-1]
-        print(type(strategy))
+        strategy = self[moves_index]
         return strategy.search()
         
     def add_strategy(self, moves_index:int,algorithm:Strategy):
@@ -37,5 +36,5 @@ class StrategyController:
         for move_step,algo in strategy.items():
             self.add_strategy(move_step,algo)
 
-strategyController = StrategyController().add_strategy(1,OpeningMovesStrategy()).add_strategy(19,TestRandomAlgorithm())
-print(strategyController.strategies)
+strategyController = StrategyController().add_strategy(1,OpeningMovesStrategy(False)).add_strategy(19,TestRandomAlgorithm())
+#print(strategyController.strategies)

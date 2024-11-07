@@ -12,7 +12,7 @@ class Strategy:
     my_id: int = None
     opponent_id: int = None
     remaining_time: float = None
-    my_step:int = 0
+    my_step:int = -1 # [0,19]
 
     
     @staticmethod
@@ -20,8 +20,7 @@ class Strategy:
         Strategy.current_state = current_state
         Strategy.remaining_time = remaining_time
         Strategy.my_step+=1
-        print(Strategy.my_step)
-        if Strategy.my_step == 1:
+        if Strategy.my_step == 0:
             Strategy.init_game_state()
         
     @staticmethod
@@ -30,7 +29,7 @@ class Strategy:
         temp = [ player.id for player in Strategy.current_state.players]
         temp.remove(Strategy.opponent_id)
         Strategy.my_id = temp[0]
-        Strategy.is_first_move = Strategy.my_step == Strategy.current_state.step
+        Strategy.is_first_move = Strategy.current_state.step == 0
         
     def search(self):
         pass

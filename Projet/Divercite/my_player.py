@@ -37,5 +37,6 @@ class MyPlayer(PlayerDivercite):
             Action: The best action as determined by minimax.
         """
         #TODO
+        print('Current step:',current_state.step)
         Strategy.set_current_state(current_state,remaining_time)
         return  strategyController.play_best(Algorithm.my_step)
