@@ -15,11 +15,10 @@ method = {
 
 class Heuristic:
     
-    def __init__(self,method:Method,k):
+    def __init__(self,k,method:Method='sum'):
         self.h_list:list[Heuristic] = [self]
         self.method = method
         self.k = k
-        
 
     def __call__(self, *args, **kwds):
         if len(self.h_list) ==1:

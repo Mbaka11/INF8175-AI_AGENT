@@ -47,8 +47,10 @@ class MinimaxTypeASearch(Algorithm):
         m_star = None
 
         for action in self._compute_actions(state):
+            
             new_state = self._transition(state,action)
             next_max_depth = self._compute_next_max_depth(max_depth,state.step,v_star,alpha, beta)
+        
             v,_ =  self._minimax(new_state, not isMaximize,alpha, beta,next_max_depth)
             if v >= v_star:
                 v_star = v
