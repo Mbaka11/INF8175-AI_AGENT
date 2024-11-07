@@ -30,7 +30,7 @@ corner_city_position = [
 no_corner_city_position = list(
     set(city_position).difference(corner_city_position))
 
-center_city_position = [(4, 4), (4, 6), (5, 5), (3, 5)
+center_city_position = [(4, 3), (4, 5), (3, 4), (5, 4)
                         ]
 
 horizontal_vertical_compute = [(1, 1), (-1, -1), (1, -1), (-1, 1)]
