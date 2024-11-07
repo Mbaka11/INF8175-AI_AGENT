@@ -1,7 +1,7 @@
 from typing import Generator
 
 from cachetools import Cache
-from .heuristic import Heuristic
+from .heuristic import AlgorithmHeuristic
 from game_state_divercite import GameStateDivercite
 from ._strategy import Algorithm
 import numpy as np
@@ -10,7 +10,7 @@ from gc import collect
 
 class MinimaxTypeASearch(Algorithm):
 
-    def __init__(self, typeA_heuristic:Heuristic,cache:Cache,allowed_time:float,max_depth:int|None):
+    def __init__(self, typeA_heuristic:AlgorithmHeuristic,cache:Cache,allowed_time:float,max_depth:int|None):
         super().__init__(typeA_heuristic,cache,allowed_time)
         if max_depth == None:
             self.max_depth = MAX_STEP
@@ -22,12 +22,11 @@ class MinimaxTypeASearch(Algorithm):
                 self.max_depth = MAX_STEP
 
 
-    def _alphaBeta_search(self):
+    def search(self):
         collect()
         return self._minimax(self.current_state,True,float('-inf'),float('inf'))
  
-    def _predict_by_time(self):
-        ... 
+    
         
     def _minimax(self,state:GameStateDivercite,isMaximize:bool,alpha:float,beta:float,max_depth:int = None):
         if max_depth == None:
@@ -87,7 +86,7 @@ class MinimaxTypeASearch(Algorithm):
 
 class MinimaxHybridSearch(MinimaxTypeASearch):
 
-    def __init__(self,max_depth,cache:Cache,allowed_time:float, n_expanded:int,typeB_heuristic:Heuristic,typeA_heuristic:Heuristic= None):
+    def __init__(self,max_depth,cache:Cache,allowed_time:float, n_expanded:int,typeB_heuristic:AlgorithmHeuristic,typeA_heuristic:AlgorithmHeuristic= None):
         super().__init__(typeA_heuristic, cache,allowed_time,max_depth)  
         self.n_expanded = n_expanded
         self.typeB_heuristic = typeB_heuristic

@@ -1,4 +1,5 @@
-from ._strategy import Strategy, TestRandomAlgorithm
+from ._strategy import *
+from .heuristic import *
 from .opening_moves import OpeningMoveStrategy
 from .constant import *
 
@@ -17,7 +18,7 @@ class StrategyController:
         return strategy.search()
         
     def add_strategy(self,strategy:Strategy | type[Strategy],number_of_moves:int | None = None):
-        
+        # NOTE add **kwards if we want to another way to create a strategy
         try:
             if isinstance(strategy,type):
                 strategy = strategy()
@@ -40,5 +41,5 @@ class StrategyController:
         for move_step,algo in strategy.items():
             self.add_strategy(move_step,algo)
 
-strategyController = StrategyController().add_strategy(OpeningMoveStrategy(False),1).add_strategy(TestRandomAlgorithm())
+strategyController = StrategyController().add_strategy(OpeningMoveStrategy(False),1).add_strategy(TestRandomStrategy(RandomTestHeuristic()))
 #print(strategyController.strategies)

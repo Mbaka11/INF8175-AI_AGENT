@@ -7,8 +7,13 @@ from seahorse.game.game_layout.board import Piece
 POSITION_KEY = 'position'
 PIECE_KEY = 'piece'
 
-# class OpeningMovesHeuristic:
-#     ...
+
+class SimpleMoveStrategy(Strategy):
+    def __init__(self, heuristic):
+        super().__init__(heuristic)
+
+    def search(self):
+        return self.main_heuristic(self.current_state)
 
 
 class OpeningMoveStrategy(Strategy):
@@ -45,5 +50,3 @@ class OpeningMoveStrategy(Strategy):
         
         return choice(center_city_position)
 
-
-class SimpleMoveStrategy(Strategy):...

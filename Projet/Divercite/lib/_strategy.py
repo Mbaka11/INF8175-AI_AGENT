@@ -1,5 +1,5 @@
 from typing import Generator
-from .heuristic import AlgorithmHeuristic
+from .heuristic import AlgorithmHeuristic, Heuristic
 from game_state_divercite import GameStateDivercite
 from cachetools import FIFOCache,LFUCache,TTLCache,LRUCache,cachedmethod, Cache
 import random
@@ -31,6 +31,9 @@ class Strategy:
         Strategy.my_id = temp[0]
         Strategy.is_first_move = Strategy.current_state.step == 0
         
+    def __init__(self,heuristic: Heuristic=None):
+        self.main_heuristic= heuristic
+
     def search(self):
         pass
     
@@ -57,7 +60,7 @@ class Strategy:
 class Algorithm(Strategy):
 
     def __init__(self,heuristic:AlgorithmHeuristic,cache:Cache,allowed_time:float):
-        self.main_heuristic: AlgorithmHeuristic = heuristic
+        super().__init__(heuristic)
         self.cache = cache
         self.allowed_time = allowed_time
 
@@ -91,8 +94,8 @@ class Algorithm(Strategy):
         # TODO 
         return states
     
-
-class TestRandomAlgorithm(Strategy):
+# NOTE compute as a Simple moves
+class TestRandomStrategy(Strategy):
 
     def search(self):
-        return random.choice(list(self.current_state.get_possible_heavy_actions()))
+        return self.main_heuristic(self.current_state)
