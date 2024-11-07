@@ -20,6 +20,7 @@ class Strategy:
         Strategy.current_state = current_state
         Strategy.remaining_time = remaining_time
         Strategy.my_step+=1
+        print(Strategy.my_step)
         if Strategy.my_step == 1:
             Strategy.init_game_state()
         

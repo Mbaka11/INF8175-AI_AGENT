@@ -13,7 +13,7 @@ PIECE_KEY = 'piece'
 class OpeningMovesHeuristic:
     ...
 
-class OpeningMovesAlgorithm(Strategy):
+class OpeningMovesStrategy(Strategy):
     def __init__(self,is_same_color:bool = True):
         self.is_same_color = is_same_color
 
