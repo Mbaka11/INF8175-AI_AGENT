@@ -1,7 +1,7 @@
 from Divercite.lib._strategy import Strategy
 from .constant import *
 
-class AlgoController:
+class StrategyController:
     
     def __init__(self):
         self.strategy:list[Strategy] = []
@@ -34,5 +34,5 @@ class AlgoController:
         for move_step,algo in strategy.items():
             self.add_strategy(move_step,algo)
 
-_algoController = AlgoController()
+_algoController = StrategyController()
 
