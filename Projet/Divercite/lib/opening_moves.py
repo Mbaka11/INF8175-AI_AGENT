@@ -18,6 +18,7 @@ class SimpleMoveStrategy(Strategy):
 
 ############################## Opening Moves Strategy ##################################
 class OpeningMoveStrategy(Strategy):
+    # NOTE if theres multiple opening strategy, move the code to a heuristic
     def __init__(self,force_same_color:bool = True):
         self.force_same_color = force_same_color
 
@@ -36,8 +37,8 @@ class OpeningMoveStrategy(Strategy):
         
         return LightAction({POSITION_KEY: self._check_city_in_center(last_move,around_type_compute), PIECE_KEY: piece})
 
-    def _check_city_in_center(self,pos,index_compute,):
-        
+    def _check_city_in_center(self,pos,index_compute,preferred_pos = no_corner_city_position):
+             
         new_pos = None
         n_index = len(index_compute)
         shuffle(index_compute)
@@ -46,8 +47,8 @@ class OpeningMoveStrategy(Strategy):
             i,j = index_compute[index]
             x,y = pos  
             new_pos = x+i,y+j
-            if new_pos in center_city_position:
+            if new_pos in preferred_pos:
                 return new_pos
         
-        return choice(center_city_position)
+        return choice(preferred_pos)
 

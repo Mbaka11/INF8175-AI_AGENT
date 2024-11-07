@@ -45,5 +45,5 @@ class StrategyController:
 
 ############################################### PREDEFINED STRATEGY ##############################################
 
-STRATEGY_CONTROLLER = StrategyController().add_strategy(OpeningMoveStrategy(False),1).add_strategy(SimpleMoveStrategy(RandomTestHeuristic()))
+STRATEGY_CONTROLLER = StrategyController().add_strategy(OpeningMoveStrategy(True),1).add_strategy(SimpleMoveStrategy(RandomTestHeuristic()))
 #print(strategyController.strategies)
