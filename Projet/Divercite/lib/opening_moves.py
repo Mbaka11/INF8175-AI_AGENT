@@ -1,5 +1,5 @@
 import os
-from ._algorithm import Algorithm
+from ._strategy import Algorithm
 from .heuristic import Heuristic
 from seahorse.game.light_action import LightAction,Action
 from random import choice

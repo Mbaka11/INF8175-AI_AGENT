@@ -3,7 +3,7 @@ from typing import Generator
 from cachetools import Cache
 from .heuristic import Heuristic
 from game_state_divercite import GameStateDivercite
-from ._algorithm import Algorithm
+from ._strategy import Algorithm
 import numpy as np
 from .constant import *
 from gc import collect

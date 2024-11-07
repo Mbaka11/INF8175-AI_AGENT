@@ -1,4 +1,4 @@
-from lib._algorithm import Algorithm
+from Divercite.lib._strategy import Algorithm
 from .constant import *
 
 class AlgoController:

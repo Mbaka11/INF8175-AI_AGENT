@@ -4,7 +4,7 @@ from seahorse.game.game_state import GameState
 from game_state_divercite import GameStateDivercite
 from seahorse.utils.custom_exceptions import MethodNotImplementedError
 
-from lib._algorithm import Algorithm
+from Divercite.lib._strategy import Algorithm
 from lib.algo_controller import _algoController
 
 class MyPlayer(PlayerDivercite):
