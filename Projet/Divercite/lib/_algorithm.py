@@ -2,7 +2,7 @@ from typing import Generator
 from .heuristic import Heuristic
 from game_state_divercite import GameStateDivercite
 from cachetools import FIFOCache,LFUCache,TTLCache,LRUCache,cachedmethod, Cache
-
+import random
 
 class Algorithm:
     
@@ -42,9 +42,13 @@ class Algorithm:
         pass
     
     @property
-    def _get_my_pieces(self):
+    def my_pieces(self):
         return self.current_state.players_pieces_left[self.my_id]
     
+    @property
+    def opponent_pieces(self):
+        return self.current_state.players_pieces_left[self.opponent_id]
+
     @property
     def my_score(self):
         return self.current_state.scores[self.my_id]
@@ -52,6 +56,10 @@ class Algorithm:
     @property
     def opponent_score(self):
         return self.current_state.scores[self.opponent_id]
+    
+    @property
+    def last_move(self):
+        return list(self.current_state.rep.env)[-1]
 
     def _utility(self,state:GameStateDivercite):
         scores = state.get_scores()
@@ -79,12 +87,17 @@ class Algorithm:
         
         return False
              
-    def _transition(self,state,action):
+    def _transition(self,state:GameStateDivercite,action):
         return state.apply_action(action)
     
     def _compute_redondant_state(self,states:list | Generator    ) -> Generator:
         # TODO 
         return states
     
-    def _normalize(self,):
-        ...
+
+class TestRandomAlgorithm(Algorithm):
+    def __init__(self):
+        super().__init__(None,None,None)
+
+    def search(self):
+        return random.choice(list(self.current_state.get_possible_heavy_actions()))
