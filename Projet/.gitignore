@@ -6,3 +6,4 @@ Divercite/lib/__pycache__/
 *.pdf
 .venv
 *.json
+*.ipynb
