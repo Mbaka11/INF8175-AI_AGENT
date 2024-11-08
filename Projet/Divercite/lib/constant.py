@@ -1,8 +1,10 @@
 from enum import Enum
 from board_divercite import BoardDivercite
+import numpy as np
 
 
 BOARD_MASK = BoardDivercite.BOARD_MASK
+
 MAX_MOVES = 20
 MAX_STEP = 40
 
