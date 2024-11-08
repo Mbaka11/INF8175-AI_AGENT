@@ -7,7 +7,7 @@ from cachetools import FIFOCache,LFUCache,TTLCache,LRUCache,cachedmethod, Cache
 class Strategy:
     
     # Meta Data 
-    is_first_move: bool = None
+    is_first_to_play: bool = None
     current_state: GameStateDivercite = None
     my_id: int = None
     opponent_id: int = None
@@ -29,7 +29,7 @@ class Strategy:
         temp = [ player.id for player in Strategy.current_state.players]
         temp.remove(Strategy.opponent_id)
         Strategy.my_id = temp[0]
-        Strategy.is_first_move = Strategy.current_state.step == 0
+        Strategy.is_first_to_play = Strategy.current_state.step == 0
         
     def __init__(self,heuristic: Heuristic=None):
         self.main_heuristic= heuristic
@@ -56,6 +56,10 @@ class Strategy:
     @property
     def last_move(self):
         return list(self.current_state.rep.env)[-1]
+    
+    @property
+    def moves(self):
+        return list(self.current_state.rep.env)
 
 class Algorithm(Strategy):
 
@@ -79,10 +83,10 @@ class Algorithm(Strategy):
             return 0
 
     def _is_our_turn(self):
-        if self.is_first_move and self.current_state.step % 2 == 0:
+        if self.is_first_to_play and self.current_state.step % 2 == 0:
             return True
         
-        if not self.is_first_move and self.current_state.step % 2 == 1:
+        if not self.is_first_to_play and self.current_state.step % 2 == 1:
             return True
         
         return False

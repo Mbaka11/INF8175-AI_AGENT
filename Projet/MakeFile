@@ -10,8 +10,7 @@ getdep:
 clean:
 	rm  *.json
 	rm  data/*.json 
-	rm  *.pyc
-
+	
 move_game:
 	mv ./*.json data/
 
@@ -26,3 +25,6 @@ hvg:
 
 gvp:
 	python Divercite/main_divercite.py -t local Divercite/greedy_player_divercite.py Divercite/my_player.py -r -g
+
+pvg:
+	python Divercite/main_divercite.py -t local Divercite/my_player.py Divercite/greedy_player_divercite.py  -r -g

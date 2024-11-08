@@ -1,6 +1,7 @@
 from game_state_divercite import GameStateDivercite
 from ._strategy import Algorithm
 
+
 class MCTSSearch(Algorithm):
     def __init__(self, heuristic, cache, allowed_time, max_depth:int,):
         super().__init__(heuristic, cache, allowed_time)
