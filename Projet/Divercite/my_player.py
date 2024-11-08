@@ -4,7 +4,7 @@ from seahorse.game.game_state import GameState
 from game_state_divercite import GameStateDivercite
 from seahorse.utils.custom_exceptions import MethodNotImplementedError
 
-from lib._strategy import Algorithm,Strategy
+from lib.definition import Algorithm,Strategy
 from lib.strategy_controller import STRATEGY_CONTROLLER
 
 class MyPlayer(PlayerDivercite):
@@ -37,6 +37,7 @@ class MyPlayer(PlayerDivercite):
             Action: The best action as determined by minimax.
         """
         #TODO
-        print('Current step:',current_state.step)
         Strategy.set_current_state(current_state,remaining_time)
+        #last_move = list(current_state.rep.env)[-1]
+        # print(current_state.get_neighbours(last_move[0],last_move[1]))
         return  STRATEGY_CONTROLLER.play_best(Algorithm.my_step)
