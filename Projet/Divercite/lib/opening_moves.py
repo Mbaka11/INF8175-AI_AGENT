@@ -1,4 +1,4 @@
-from ._strategy import Strategy
+from .definition import Strategy
 from seahorse.game.light_action import LightAction,Action
 from random import choice,shuffle
 from .constant import *

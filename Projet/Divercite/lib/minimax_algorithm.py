@@ -1,9 +1,7 @@
 from typing import Generator
-
 from cachetools import Cache
-from .heuristic import AlgorithmHeuristic
+from .definition import AlgorithmHeuristic,Algorithm
 from game_state_divercite import GameStateDivercite
-from ._strategy import Algorithm
 import numpy as np
 from .constant import *
 from gc import collect

@@ -1,5 +1,5 @@
 from game_state_divercite import GameStateDivercite
-from ._strategy import Algorithm
+from .definition import Algorithm
 
 
 class MCTSSearch(Algorithm):

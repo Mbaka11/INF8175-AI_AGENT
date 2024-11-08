@@ -1,5 +1,4 @@
-from ._strategy import *
-from .heuristic import *
+from .definition import *
 from .mcts_algorithm import *
 from .minimax_algorithm import *
 from .opening_moves import *
