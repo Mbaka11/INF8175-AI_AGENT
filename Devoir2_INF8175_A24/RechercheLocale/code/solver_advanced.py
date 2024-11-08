@@ -1,3 +1,6 @@
+# Marsel Bakashov - 2147174
+# Prince David Madzou - 2117902
+
 from schedule import Schedule
 import random
 import time
