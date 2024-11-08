@@ -1,5 +1,5 @@
-% NOM_ETUDIANT_1 (MATRICULE_1)
-% NOM_ETUDIANT_2 (MATRICULE_2)
+% BAKASHOV (2147174)
+% MADZOU (2117902)
 
 include "globals.mzn";
 
@@ -24,9 +24,19 @@ array [1..n] of var 1..n: assignation_role;
 %-----------------------------------------------------------------------------%
 % Partie étudiant
 %-----------------------------------------------------------------------------%
+% 1 : Chaque acteur doit avoir un rôle unique
+constraint all_different(assignation_role);
 
+% 2 : Non-adjacence des rôles pour les acteurs voisins
+constraint forall(i in 1..n-1) (
+    abs(assignation_role[i] - assignation_role[i+1]) > 1
+);
 
-
+% 3 : Chaque costume n'est utilisé que par un seul acteur / une seule fois
+constraint
+  forall(i in 1..n, j in 1..n where i != j) (
+    choix_costume[assignation_role[i], i] != choix_costume[assignation_role[j], j]
+  );
 %-----------------------------------------------------------------------------%
 
 output	

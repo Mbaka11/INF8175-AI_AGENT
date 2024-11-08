@@ -1,0 +1,40 @@
+Améliorations Progressives pour l’Agent Divercité
+
+1. Implémenter une Heuristique Avancée
+   - Description : Actuellement, l’agent utilise uniquement les scores pour évaluer les actions. Cela est simpliste et ne tient pas compte des spécificités du jeu Divercité.
+   - Suggestions pour l’heuristique :
+     - Prendre en compte les Divercités : prioriser les placements menant à une divercité ou bloquant celle de l'adversaire.
+     - Contrôle de la zone : évaluer la proximité des ressources autour des cités de chaque joueur.
+     - Avantage à long terme : observer si les placements ouvrent des opportunités stratégiques ou limitent les actions adverses.
+
+2. Élagage des Actions avec des Heuristiques
+   - Description : Utiliser une élagage supplémentaire pour filtrer les actions « moins prometteuses » afin de réduire les branches explorées par l’Alpha-Beta Pruning.
+   - Exemple : Limiter les actions aux zones « chaudes » du plateau (près des cités ou des cases clés) pour concentrer les calculs sur les mouvements pertinents.
+
+3. Ajustement Dynamique de la Profondeur (Iterative Deepening)
+   - Description : Utiliser une approche d’Iterative Deepening pour explorer progressivement en augmentant la profondeur jusqu’à la limite de temps.
+   - Implémentation : Commencer avec une faible profondeur (ex: 2) et augmenter progressivement jusqu'à atteindre la profondeur maximale ou la limite de temps.
+
+4. Incorporer une Table de Transposition
+   - Description : Stocker les évaluations des états déjà explorés pour éviter les recalculs dans des états similaires.
+   - Implémentation : Utiliser un dictionnaire pour sauvegarder les évaluations des états visités, avec une clé unique (ex: hachage du plateau).
+
+5. Utiliser des Fonctions d’Évaluation Inspirées du Monte Carlo Tree Search (MCTS)
+   - Description : Ajouter des simulations aléatoires pour évaluer des actions potentielles dans des situations complexes.
+   - Exemple : Après avoir choisi une action avec Minimax, lancer quelques playouts pour estimer son potentiel en fonction de plusieurs résultats possibles.
+
+6. Optimiser le Code pour une Exécution Plus Rapide
+   - Description : Examiner les possibilités d’optimisation dans la gestion des états et des actions pour gagner du temps de calcul.
+   - Astuces :
+     - Minimiser la création de nouveaux objets pour chaque état.
+     - Utiliser des structures de données optimisées et des fonctions Python natives pour les calculs fréquents.
+
+7. Tester contre des Agents de Divers Niveaux
+   - Description : Évaluer les performances de l'agent en le confrontant à des agents variés (ex: agent Minimax sans élagage, agent random, agent Alpha-Beta de base).
+   - Utilité : Permet d’identifier les forces et faiblesses de l’agent et d’ajuster les paramètres et l'heuristique.
+
+8. Intégrer une Analyse Post-Mortem pour Amélioration Continue
+   - Description : Après chaque partie, analyser les choix de l’agent pour identifier les améliorations possibles.
+   - Implémentation : Enregistrer les états et les scores pour les coups importants (victoires ou erreurs) pour ajuster les stratégies à long terme.
+
+En suivant ces étapes, votre agent pour Divercité sera progressivement optimisé, améliorant sa performance et sa capacité à s'adapter aux stratégies adverses.
