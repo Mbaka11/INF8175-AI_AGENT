@@ -47,8 +47,14 @@ class MinimaxTypeASearch(Algorithm):
             
             new_state = self._transition(state,action)
             next_max_depth = self._compute_next_max_depth(max_depth,state.step,v_star,alpha, beta)
-        
-            v,_ =  self._minimax(new_state, not isMaximize,alpha, beta,next_max_depth)
+
+            hash_state = self._hash_state(new_state,next_max_depth)
+
+            if hash_state not in self.cache:
+                self.cache[hash_state] = self._minimax(new_state, not isMaximize,alpha, beta,next_max_depth)
+
+            v,_ = self.cache[hash_state]
+
             if v >= v_star:
                 v_star = v
                 m_star = action
@@ -109,9 +115,11 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
         ...
 
     def _compute_next_max_depth(self, current_max_depth:int, current_depth:int,v_star:int,alpha:float,beta:float):
+        # TODO
         ...
     
     def _compute_max_n_expanded(self, cur_step):
+        # TODO
         ...
 
 class IterativeDeepeningSearch(Algorithm):
