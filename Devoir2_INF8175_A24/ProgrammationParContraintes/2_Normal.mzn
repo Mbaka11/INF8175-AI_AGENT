@@ -1,5 +1,5 @@
-% NOM_ETUDIANT_1 (MATRICULE_1)
-% NOM_ETUDIANT_2 (MATRICULE_2)
+% BAKASHOV (2147174)
+% MADZOU (2117902)
 
 include "globals.mzn"; 
 
@@ -36,8 +36,23 @@ var int: fin_projet;
 %-----------------------------------------------------------------------------%
 % Partie étudiant
 %-----------------------------------------------------------------------------%
+% 1. Chaque tâche doit se terminer après sa durée
+constraint forall(i in 1..n) (
+    fin_tache[i] = debut_tache[i] + duree_tache[i]
+);
 
+% 2. Définition de la fin du projet comme la fin de la dernière tâche terminée
+constraint fin_projet = max(i in 1..n)(fin_tache[i]);
 
+% 3. Limite de ressources simultanées : contrainte cumulative
+constraint cumulative(debut_tache, duree_tache, ressource_tache, limite);
+
+% 4. Limiter le nombre de démarrages simultanés à chaque instant t
+constraint forall(t in 1..m) (
+    sum([bool2int(debut_tache[i] = t) | i in 1..n]) <= 2
+);
+
+solve minimize fin_projet;
 %-----------------------------------------------------------------------------%
 
 output [
