@@ -16,11 +16,13 @@ answer_dict= {
 
 class Solution:
 
-    def __init__(self,schedule: Schedule, t0:int,teta:int,time_limit:int):
+    def __init__(self,schedule: Schedule,teta:int,time_limit:int, t0:int = 100, alpha:float = 0.89):
         self.schedule = schedule
         self.enc = {}
 
         self.t0 = t0
+        self.alpha = alpha
+
         self.miss = 0
         self.hit = 0
 
@@ -123,7 +125,11 @@ class Solution:
             return  current_solution,current_cost
 
         return best_sol,cost
-        
+    
+    def acceptance_probability(self,delta : float, temperature : float) -> float:
+        return math.exp(-delta / temperature) if delta > 0 else 1
+
+
     def _evaluation(self,solution):
         return self.schedule.get_n_creneaux(solution)
 
@@ -137,6 +143,7 @@ class Solution:
         best_solution =current_solution.copy()
         best_cost = current_cost
 
+        temperature = self.t0
         for _ in range(self.teta):
             group = self._regroup_courses(current_solution)
             if self._compute_redondant_visitor(group):
@@ -145,11 +152,26 @@ class Solution:
                 continue
             highest_conflict_course = self._highest_node_conflict(group,current_solution)
             G = self._gen_valid(highest_conflict_course,current_solution)
-            current_solution,cost = self._select(G,current_solution,current_cost)
-            if  cost < best_cost:
-                best_cost = cost
-                best_solution =current_solution.copy()
-                print('\tNew Local Search cost: ',best_cost)
+            n_sol,n_cost = self._select(G,current_solution,current_cost)
+
+            delta = n_cost - current_cost
+            if delta <= 0:
+                current_cost = n_cost
+                current_solution = n_sol
+            
+            elif delta > 0 and  self.acceptance_probability(delta, temperature)> 0.8:
+                current_cost = n_cost
+                current_solution = n_sol
+
+            if  n_cost < best_cost:
+                best_cost = n_cost
+                best_solution =n_sol.copy()
+                
+                current_cost = n_cost
+                current_solution = n_sol.copy()
+
+                #print('\tNew Local Search cost: ',best_cost)
+            temperature = self.alpha*temperature
         return best_cost,best_solution 
 
     def _compute_list_conflict(self):
@@ -207,4 +229,4 @@ def solve(schedule : Schedule) -> dict:
     
     # return hill_climbing()
     # return local_search_with_restart(120)
-    return Solution(schedule,300,300)()
+    return Solution(schedule,800,300)()
