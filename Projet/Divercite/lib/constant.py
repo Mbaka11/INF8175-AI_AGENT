@@ -3,11 +3,14 @@ from board_divercite import BoardDivercite
 import numpy as np
 
 
+########################################     Board & Game Related   #####################################
+
 BOARD_MASK = BoardDivercite.BOARD_MASK
 
 MAX_MOVES = 20
 MAX_STEP = 40
 
+########################################     City Position    #####################################
 city_position = set([(1, 4),
                  (2, 3),
                  (2, 5),
@@ -35,6 +38,7 @@ center_city_position = set([(4, 3), (4, 5), (3, 4), (5, 4)])
 
 no_corner_no_center_city_position = no_corner_city_position.difference(center_city_position)
 
+########################################  Ressource Position    #####################################
 
 ressources_position = set([(0, 4),
                        (1, 3),
@@ -73,16 +77,19 @@ corner_ressource_position =set([
 
 center_ressources_position = ressources_position.difference(outside_ressources_position)
 
-
+########################################   Index Position Compute    #####################################
 
 horizontal_vertical_compute = [(1, 1), (-1, -1), (1, -1), (-1, 1)]
 diagonal_compute = [(2,0),(0,2),(-2,0),(0,-2)]
 other_type_around_compute = [(1, 0), (-1, 0), (0, 1), (0, -1)]
 
+########################################    Key     #####################################
+
 CITY_KEY = 'C'
 RESSOURCE_KEY = 'R'
 COLORS = set(['R', 'G', 'B', 'Y'])
 
+########################################   Pieces     #####################################
 
 class RessourcesNames(Enum):
     RR = 'RR'
@@ -97,12 +104,3 @@ class CityNames(Enum):
     YC = 'YC'
     BC = 'BC'
 
-
-def is_city(piece_type: str): ...
-
-
-def is_ressource(piece_type: str): ...
-
-def is_in_board(pos:tuple[int,int]):
-    x,y = pos
-    return x >= 0 and y >= 0 and x<=9 and y<=9

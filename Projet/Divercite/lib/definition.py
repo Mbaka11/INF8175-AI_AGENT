@@ -6,6 +6,7 @@ import numpy as np
 from seahorse.game.light_action import LightAction, Action
 from random import choice, shuffle
 from .constant import *
+from .helper import *
 from typing import Generator
 from game_state_divercite import GameStateDivercite
 from cachetools import FIFOCache, LFUCache, TTLCache, LRUCache, cachedmethod, Cache
@@ -21,11 +22,13 @@ method = {
 
 L = 4.2
 
+ARGS_KEYS: Literal['opponent_score','my_score','last_move']
+
 ############################################ Base Heuristic class  #############################################
 
 
 class Heuristic:
-    def evaluate(self, current_state: GameStateDivercite,) -> Any:
+    def evaluate(self, current_state: GameStateDivercite,**kwargs) -> Any:
         ...
 
     def __call__(self, *args, **kwds) -> LightAction | float:
@@ -40,14 +43,14 @@ class AlgorithmHeuristic(Heuristic):
         self.min_value = min_value
         self.max_value = max_value
 
-    def __call__(self, *args, **kwds) -> float:
+    def __call__(self, *args, **kwds) -> float: # TODO add weight
         if len(self.h_list) == 1:
-            return self.evaluate(*args)
+            return self.evaluate(*args,**kwds)
 
-        vals = [h.evaluate(*args) for h in self.h_list]
+        vals = [h.evaluate(*args,**kwds) for h in self.h_list]
         return method[self.method](vals)
 
-    def evaluate(self, current_state: GameStateDivercite) -> float:
+    def evaluate(self, current_state: GameStateDivercite,**kwargs) -> float:
         ...
 
     def _sigmoid(self, x: float):
@@ -59,9 +62,9 @@ class AlgorithmHeuristic(Heuristic):
         if other not in self.h_list:
             self.h_list.append(other)
 
-
 class SimpleMoveHeuristic(Heuristic):
 
+    # NOTE might put in a helper
     def check_certain_position(self, pos, index_compute, preferred_pos=no_corner_city_position, fallback_pos=None):
 
         if fallback_pos == None:
