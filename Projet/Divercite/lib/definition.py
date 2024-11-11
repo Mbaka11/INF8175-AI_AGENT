@@ -22,7 +22,7 @@ method = {
 
 L = 4.2
 
-ARGS_KEYS: Literal['opponent_score','my_score','last_move']
+ARGS_KEYS= Literal['opponent_score','my_score','last_move','my_piece','opponent_pieces']
 
 ############################################ Base Heuristic class  #############################################
 
@@ -86,11 +86,13 @@ class SimpleMoveHeuristic(Heuristic):
     def _minimize_maximize_distance(self, x, preferred_position: set, is_min=True):
         # NOTE might put in a helper
         available_position = list(preferred_position)
-        positions = (np.array(available_position) - np.array([x]))**2
+        distances = (np.array(available_position) - np.array([x]))**2
         dist_position: np.ndarray = np.apply_along_axis(
-            np.sum, axis=1, arr=positions)
+            np.sum, axis=1, arr=distances)
+        
         dist_position = dist_position.argmin(
-        )[0] if is_min else dist_position.argmax()[0]
+        ) if is_min else dist_position.argmax()
+        print(dist_position)
         return available_position[int(dist_position)]
 
 
