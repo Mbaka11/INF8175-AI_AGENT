@@ -15,13 +15,13 @@ class OpeningHeuristic(SimpleMoveHeuristic):
     
     def evaluate(self, current_state:GameStateDivercite,first_to_play:bool,last_move:tuple[int,int]):
         # NOTE forcing the same color or a different might not necessary be a better move
-        if first_to_play:
-            return LightAction({POSITION_KEY: choice(center_city_position), PIECE_KEY: choice(CityNames._member_names_)})
+        if first_to_play and current_state.step ==0 :
+            return LightAction({POSITION_KEY: choice(list(center_city_position)), PIECE_KEY: choice(CityNames._member_names_)})
      
         pieces:Piece = current_state.rep.env[last_move]
         c,t,_ = pieces.piece_type
         piece = c+CITY_KEY if self.force_same_color else choice(COLORS)+CITY_KEY
-
+        # TODO this is the same move for the first two actions
         if t == CITY_KEY:
                 
                 if last_move in center_city_position:
@@ -39,7 +39,7 @@ class OpeningHeuristic(SimpleMoveHeuristic):
         if last_move in center_ressources_position:
             neighbors = current_state.get_neighbours(last_move[0],last_move[1])
             neighbors = [ v[1] for _,v in neighbors.items()]
-            neighbors = choice(center_city_position.intersection(neighbors))
+            neighbors = choice(list(center_city_position.intersection(neighbors)))
 
             return LightAction({POSITION_KEY: neighbors, PIECE_KEY: c+CITY_KEY})
 
