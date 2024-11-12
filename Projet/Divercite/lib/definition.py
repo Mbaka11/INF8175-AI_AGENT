@@ -37,24 +37,34 @@ class Heuristic:
 
 
 class AlgorithmHeuristic(Heuristic):
-
-    def __init__(self, min_value: float, max_value: float):
+    # BUG Need tweak for the weights adds
+    def __init__(self, min_value: float, max_value: float,weight=1):
         self.h_list: list[AlgorithmHeuristic] = [self]
         self.min_value = min_value
         self.max_value = max_value
+        self.weight = weight
+        self.total_weight=weight
 
     def __call__(self, *args, **kwds) -> float: 
         if len(self.h_list) == 1:
             return self.evaluate(*args,**kwds)
 
-        vals = [h.evaluate(*args,**kwds) for h in self.h_list]
-        return sum(vals) # TODO add weighted sum 
+        vals = [h.weight*h.evaluate(*args,**kwds) for h in self.h_list]
+        return sum(vals)/self.total_weight # TODO add weighted sum 
 
     def evaluate(self, current_state: GameStateDivercite,**kwargs) -> float:
         return self._sigmoid(self._evaluation(current_state,**kwargs))
 
     def _evaluation(self,current_state:GameStateDivercite,**kwargs)-> float:
         ...
+
+    def __mul__(self,weight):
+        self.weight = weight
+        return self
+
+    def __truediv__(self,weight):
+        self.weight = weight
+        return self
 
     def _sigmoid(self, x: float):
         x_scaled = (x - (self.min_value + self.max_value) / 2) / \
@@ -63,7 +73,9 @@ class AlgorithmHeuristic(Heuristic):
 
     def __add__(self, other):
         if other not in self.h_list:
+            self.total_weight += other.weight
             self.h_list.append(other)
+        return self
 
 ############################################# Base Strategy Classes ##############################################
 
@@ -164,6 +176,7 @@ class Algorithm(Strategy):
         return states.generate_possible_light_actions()
 
     def _hash_state(self, state: GameStateDivercite,next_max_depth:int) -> int:
+        # BUG need to add the next_max_depth for depth controlling as the value will be different
         temp_env ={pos:piece.piece_type for pos, piece in state.rep.env.items()}
         return frozenset(temp_env.items())
         

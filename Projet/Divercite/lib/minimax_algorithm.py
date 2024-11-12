@@ -38,11 +38,12 @@ class MinimaxTypeASearch(Algorithm):
             next_max_depth = self._compute_next_max_depth(
                 max_depth, state.step, v_star, alpha, beta)
 
-            if self.cache:
+            if self.cache != None:
+                
                 hash_state = self._hash_state(new_state, next_max_depth) 
                 if hash_state in self.cache:
                     self.hit+=1
-                    print('hit:',self.hit)
+                    print('Hit:',self.hit)
 
                 if hash_state not in self.cache:
                     self.cache[hash_state]  = self._minimax(new_state, (not isMaximize), alpha, beta,depth+1, next_max_depth)
