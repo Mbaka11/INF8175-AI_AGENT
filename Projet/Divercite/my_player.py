@@ -6,6 +6,7 @@ from seahorse.utils.custom_exceptions import MethodNotImplementedError
 
 from lib.definition import Algorithm,Strategy
 from lib.strategy_controller import STRATEGY_CONTROLLER
+from lib.tools import Monitor
 
 class MyPlayer(PlayerDivercite):
     """
@@ -26,6 +27,8 @@ class MyPlayer(PlayerDivercite):
         """
         super().__init__(piece_type, name)
 
+
+    @Monitor
     def compute_action(self, current_state: GameStateDivercite, remaining_time: int = 1e9, **kwargs) -> Action:
         """
         Use the minimax algorithm to choose the best action based on the heuristic evaluation of game states.
@@ -38,6 +41,4 @@ class MyPlayer(PlayerDivercite):
         """
         #TODO
         Strategy.set_current_state(current_state,remaining_time)
-        #last_move = list(current_state.rep.env)[-1]
-        # print(current_state.get_neighbours(last_move[0],last_move[1]))
-        return  STRATEGY_CONTROLLER.play_best(Algorithm.my_step)
+        return  STRATEGY_CONTROLLER.play_best(Strategy.my_step)
