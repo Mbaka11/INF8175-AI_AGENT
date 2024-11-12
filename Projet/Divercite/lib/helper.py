@@ -1,9 +1,8 @@
 from random import shuffle,choice
-from .constant import no_corner_city_position
+from .constant import no_corner_city_position,AROUND_CITY,center_city_position,CENTER_CITY,CORNER_CITY,city_index_control
 import numpy as np
 
 def is_city(piece_type: str): ...
-
 
 def is_ressource(piece_type: str): ...
 
@@ -40,3 +39,12 @@ def minimize_maximize_distance(x, preferred_position: set, is_min=True):
         ) if is_min else dist_position.argmax()
         print(dist_position)
         return available_position[int(dist_position)]
+################################################################
+
+def control_index(city_pos:tuple):
+    if city_pos in no_corner_city_position:
+        return city_index_control[AROUND_CITY]
+    if city_pos in center_city_position:
+        return city_index_control[CENTER_CITY]
+    
+    return city_index_control[CORNER_CITY]
