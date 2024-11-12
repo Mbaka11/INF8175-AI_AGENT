@@ -13,33 +13,36 @@ class MinimaxTypeASearch(Algorithm):
         self.max_depth = max_depth
 
     def search(self):
-        # if self.max_depth == None:
-        #     self.max_depth = MAX_STEP
+        if self.max_depth == None:
+            self.max_depth = MAX_STEP
 
-        # else:
-        #     self.max_depth = self.current_state.step + self.max_depth
-        #     if self.max_depth > MAX_STEP:
-        #         self.max_depth = MAX_STEP
+        else:
+            self.max_depth = self.current_state.step + self.max_depth
+            if self.max_depth > MAX_STEP:
+                print('Warning:', '')
+                self.max_depth = MAX_STEP
 
-        _,best_action= self._minimax(self.current_state, 0,True, float('-inf'), float('inf'),self.max_depth)
-        return best_action
-
-    def _minimax(self, state: GameStateDivercite,depth:int, isMaximize: bool, alpha: float, beta: float, max_depth: int = None):
         
+        _, action_star =self._minimax(self.current_state, True, float('-inf'), float('inf'))
+        return action_star
+
+    def _minimax(self, state: GameStateDivercite, isMaximize: bool, alpha: float, beta: float, max_depth: int = None):
+        if max_depth == None:
+            max_depth = self.max_depth
+
         if state.is_done():
             return self._utility(state), None
 
-        if depth >= max_depth:
-            print(state.step)
+        if state.step >= max_depth:
             pred_utility = self.main_heuristic(
                 state, my_id=self.my_id, opponent_id=self.opponent_id, my_pieces=self.my_pieces, opponent_pieces=self.opponent_pieces)
             if self._isQuiescent(state, pred_utility):
-                return pred_utility, _
+                return pred_utility, None
 
         v_star = float('-inf') if isMaximize else float('inf')
         m_star = None
 
-        for action in state.generate_possible_light_actions(): #NOTE this will change
+        for action in self._compute_actions(state):
 
             new_state = self._transition(state, action)
             next_max_depth = self._compute_next_max_depth(
@@ -49,18 +52,18 @@ class MinimaxTypeASearch(Algorithm):
 
             if hash_state not in self.cache:
                 self.cache[hash_state] = self._minimax(
-                    new_state, depth+1,(not isMaximize), alpha, beta, next_max_depth)
+                    new_state, (not isMaximize), alpha, beta, next_max_depth)
 
             v, _ = self.cache[hash_state]
-            flag = (v > v_star) if isMaximize else (v<v_star)
-
+            flag = (v>v_star) if isMaximize else (v<v_star)
             if flag:
                 v_star = v
                 m_star = action
-                if isMaximize:
-                    alpha = max(alpha, v_star)
-                else:
-                    beta = min(beta, v_star)
+
+            if isMaximize:
+                alpha = max(alpha, v_star)
+            else:
+                beta = min(beta, v_star)
 
             if v_star >= beta and isMaximize:
                 return v_star, m_star
@@ -71,17 +74,14 @@ class MinimaxTypeASearch(Algorithm):
 
     def _isQuiescent(self, state: GameStateDivercite, pred_utility: float) -> bool:
         # TODO
-        True
+        return True
 
     def _compute_next_max_depth(self, current_max_depth: int, current_step: int, v_star: float, alpha: float, beta: float) -> int:
         return current_max_depth
 
-    def _order_actions(self, actions: list | Generator, current_state: GameStateDivercite) -> Generator | list:
-        return actions
-
     def _compute_actions(self, state: GameStateDivercite):
-        actions = self._compute_redondant_state(state)
-        return self._order_actions(actions, state)
+       return  self._compute_redondant_state(state)
+       
 
     def _compute_max_n_expanded(self, cur_step):
         return float('inf')
@@ -111,6 +111,10 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
         max_child_expanded = self.n_expanded if self.n_expanded < n_child else n_child
         vals = vals.argmax(axis=0)[:max_child_expanded]
         return returned_actions[vals]
+
+    def _compute_actions(self, state: GameStateDivercite):
+        actions = self._compute_redondant_state(state)
+        return self._order_actions(actions, state)
 
     def _isQuiescent(self, state, pred_utility):
         # TODO If the step is less than the last step, we should check if the moves is safe

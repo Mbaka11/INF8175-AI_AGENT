@@ -81,6 +81,7 @@ class Strategy:
         Strategy.current_state = current_state
         Strategy.remaining_time = remaining_time
         Strategy.my_step += 1
+        
         if Strategy.my_step == 0:
             Strategy.init_game_state()
 
@@ -95,7 +96,7 @@ class Strategy:
     def __init__(self, heuristic: Heuristic = None):
         self.main_heuristic = heuristic
 
-    def search(self):
+    def search(self)-> LightAction:
         pass
 
     @property
