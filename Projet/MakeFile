@@ -13,8 +13,9 @@ clean:
 	rm  *.json
 	rm  data/*.json 
 	
-move_game:
-	mv ./*.json data/
+move:
+	mv *.json data/
+
 
 hvp:
 	python Divercite/main_divercite.py -t human_vs_computer Divercite/${player_name}
