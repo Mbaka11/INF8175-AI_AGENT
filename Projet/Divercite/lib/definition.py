@@ -77,6 +77,7 @@ class AlgorithmHeuristic(Heuristic):
 
 ############################################# Base Strategy Classes ##############################################
 
+
 class Strategy:
 
     # Meta Data
@@ -109,7 +110,6 @@ class Strategy:
 
     def search(self)-> LightAction:
         collect()
-        pass
 
     @property
     def my_pieces(self):
@@ -156,6 +156,32 @@ class Algorithm(Strategy):
 
         if my_scores == opponent_scores:
             return 0
+    
+    def _search(self):
+        ...
+
+    def search(self):
+        super().search()
+        try:
+            return self._search()
+        except Exception as e:
+            print('Warning... !:',e.__class__.__name__,f': {e.args}')
+            Algorithm.greedy_fallback_move()
+    
+    @staticmethod
+    def greedy_fallback_move():
+        possible_actions = Strategy.current_state.generate_possible_heavy_actions()
+        best_action = next(possible_actions)
+        best_score = best_action.get_next_game_state().scores[Strategy.my_id]
+
+        for action in possible_actions:
+            state = action.get_next_game_state()
+            score = state.scores[Strategy.my_id]
+            if score > best_score:
+                best_action = action
+        
+        return best_action
+
 
     def _is_our_turn(self):
         if self.is_first_to_play and self.current_state.step % 2 == 0:

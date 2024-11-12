@@ -13,8 +13,7 @@ class MinimaxTypeASearch(Algorithm):
         self.max_depth = max_depth
         self.hit = 0
 
-    def search(self):
-        super().search()
+    def _search(self):
         _, action_star =self._minimax(self.current_state, True, float('-inf'), float('inf'),0,self.max_depth)
         return action_star
 
