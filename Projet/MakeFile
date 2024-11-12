@@ -1,3 +1,5 @@
+player_name = my_player.py
+
 install	:
 	pip install -r requirements.txt
 
@@ -15,7 +17,7 @@ move_game:
 	mv ./*.json data/
 
 hvp:
-	python Divercite/main_divercite.py -t human_vs_computer Divercite/my_player.py
+	python Divercite/main_divercite.py -t human_vs_computer Divercite/${player_name}
 
 hvr:
 	python Divercite/main_divercite.py -t human_vs_computer Divercite/random_player_divercite.py
@@ -24,7 +26,10 @@ hvg:
 	python Divercite/main_divercite.py -t human_vs_computer Divercite/greedy_player_divercite.py
 
 gvp:
-	python Divercite/main_divercite.py -t local Divercite/greedy_player_divercite.py Divercite/my_player.py -r -g
+	python Divercite/main_divercite.py -t local Divercite/greedy_player_divercite.py Divercite/${player_name} -r -g
 
 pvg:
-	python Divercite/main_divercite.py -t local Divercite/my_player.py Divercite/greedy_player_divercite.py  -r -g
+	python Divercite/main_divercite.py -t local Divercite/${player_name} Divercite/greedy_player_divercite.py  -r -g
+
+pvh:
+	cd Divercite && python main_divercite.py -t human_vs_computer ${player_name}
