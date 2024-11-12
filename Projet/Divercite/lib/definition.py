@@ -59,12 +59,10 @@ class AlgorithmHeuristic(Heuristic):
         ...
 
     def __mul__(self,weight):
-        self.weight = weight
-        return self
+        return AlgorithmHeuristic(self.min_value,self.max_value,weight)
 
     def __truediv__(self,weight):
-        self.weight = weight
-        return self
+        return AlgorithmHeuristic(self.min_value,self.max_value,weight)
 
     def _sigmoid(self, x: float):
         x_scaled = (x - (self.min_value + self.max_value) / 2) / \
@@ -75,7 +73,7 @@ class AlgorithmHeuristic(Heuristic):
         if other not in self.h_list:
             self.total_weight += other.weight
             self.h_list.append(other)
-        return self
+        return AlgorithmHeuristic(self.min_value,self.max_value,self.weight)
 
 ############################################# Base Strategy Classes ##############################################
 
