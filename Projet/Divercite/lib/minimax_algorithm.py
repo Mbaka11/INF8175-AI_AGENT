@@ -41,16 +41,13 @@ class MinimaxTypeASearch(Algorithm):
             if self.cache != None:
                 
                 hash_state = self._hash_state(new_state, next_max_depth) 
-                if hash_state in self.cache:
-                    self.hit+=1
-                    print('Hit:',self.hit)
-
                 if hash_state not in self.cache:
                     self.cache[hash_state]  = self._minimax(new_state, (not isMaximize), alpha, beta,depth+1, next_max_depth)
 
                 v, _ = self.cache[hash_state]
             else:   
                 v,_=self._minimax(new_state, (not isMaximize), alpha, beta,depth+1, next_max_depth)
+
             flag = (v>v_star) if isMaximize else (v<v_star)
             if flag:
                 v_star = v
@@ -77,10 +74,6 @@ class MinimaxTypeASearch(Algorithm):
 
     def _compute_actions(self, state: GameStateDivercite):
        return  self._compute_redondant_state(state)
-       
-
-    def _compute_max_n_expanded(self, cur_step):
-        return float('inf')
 
 
 class MinimaxHybridSearch(MinimaxTypeASearch):

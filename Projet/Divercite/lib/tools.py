@@ -362,9 +362,9 @@ def Monitor(func:Callable):
         computed_time = end_time - start_time
 
         print(f"Memory usage: {used_mem} bytes")
-        print(f"CPU usage: {end_cpu - start_cpu}%")
-        print(f"Execution time: {computed_time} seconds")
-        print(f'Environnement: {used_mem/MAX_RAM} RAM USED % -',f'{computed_time} TIME USED %' )
+        print(f"CPU usage: {(end_cpu - start_cpu)}%")
+        print(f"Execution time: {computed_time:.4f} seconds")
+        print(f'Environnement: {used_mem/MAX_RAM:.4f} RAM USED % -',f'{computed_time/MAX_TIME:.4f} TIME USED %' )
         
         return result
     return wrapper
