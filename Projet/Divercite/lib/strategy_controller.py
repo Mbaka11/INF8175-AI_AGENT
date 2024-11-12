@@ -3,6 +3,7 @@ from .mcts_algorithm import *
 from .minimax_algorithm import *
 from .opening_moves import *
 from .constant import *
+from .heuristic import *
 
 
 class StrategyController:
@@ -44,5 +45,7 @@ class StrategyController:
 
 ############################################### PREDEFINED STRATEGY ##############################################
 
-STRATEGY_CONTROLLER = StrategyController().add_strategy(OpeningMoveStrategy(False),2).add_strategy(SimpleMoveStrategy(RandomMoveHeuristic()))
+pointDiffHeuristic =  PointDifferenceHeuristic()
+
+STRATEGY_CONTROLLER = StrategyController().add_strategy(OpeningMoveStrategy(False),2).add_strategy(MinimaxTypeASearch(pointDiffHeuristic,LFUCache(100),None,2))
 #print(strategyController.strategies)

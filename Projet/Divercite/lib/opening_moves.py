@@ -1,7 +1,6 @@
-from game_state_divercite import GameStateDivercite
-from .definition import Strategy,Heuristic,SimpleMoveHeuristic
+from .definition import Strategy,Heuristic
 from seahorse.game.light_action import LightAction,Action
-from random import choice,shuffle
+from random import choice
 from .constant import *
 from .helper import *
 from seahorse.game.game_layout.board import Piece
@@ -9,7 +8,7 @@ from seahorse.game.game_layout.board import Piece
 POSITION_KEY = 'position'
 PIECE_KEY = 'piece'
 
-class RandomMoveHeuristic(SimpleMoveHeuristic):
+class RandomMoveHeuristic(Heuristic):
     def evaluate(self, current_state):
         return choice(list(current_state.get_possible_light_actions())) 
 
@@ -79,6 +78,7 @@ class OpeningMoveStrategy(Strategy):
 
             neighbors = self.current_state.get_neighbours(self.last_move[0],self.last_move[1])
             neighbors = [ v[1] for _,v in neighbors.items()]
+            print(neighbors)
             neighbors = choice(list(self.center_city_position.intersection(neighbors)))
             self.last_color_played = c
             return LightAction({POSITION_KEY: neighbors, PIECE_KEY: c+CITY_KEY})

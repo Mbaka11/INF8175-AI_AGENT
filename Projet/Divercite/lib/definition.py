@@ -37,20 +37,22 @@ class Heuristic:
 
 class AlgorithmHeuristic(Heuristic):
 
-    def __init__(self, min_value: float, max_value: float, method: Method = 'sum'):
+    def __init__(self, min_value: float, max_value: float):
         self.h_list: list[AlgorithmHeuristic] = [self]
-        self.method = method
         self.min_value = min_value
         self.max_value = max_value
 
-    def __call__(self, *args, **kwds) -> float: # TODO add weight
+    def __call__(self, *args, **kwds) -> float: 
         if len(self.h_list) == 1:
             return self.evaluate(*args,**kwds)
 
         vals = [h.evaluate(*args,**kwds) for h in self.h_list]
-        return method[self.method](vals)
+        return sum(vals) # TODO add weighted sum 
 
     def evaluate(self, current_state: GameStateDivercite,**kwargs) -> float:
+        return self._sigmoid(self._evaluation(current_state,**kwargs))
+
+    def _evaluation(self,current_state:GameStateDivercite,**kwargs)-> float:
         ...
 
     def _sigmoid(self, x: float):
@@ -154,9 +156,9 @@ class Algorithm(Strategy):
     def _transition(self, state: GameStateDivercite, action):
         return state.apply_action(action)
 
-    def _compute_redondant_state(self, states: list | Generator) -> Generator:
+    def _compute_redondant_state(self, states: GameStateDivercite) -> Generator:
         # TODO
-        return states
+        return states.generate_possible_light_actions()
 
     def _hash_state(self, state: GameStateDivercite,next_max_depth:int) -> int:
         return hash(str([str(k)+val.piece_type for k, val in state.rep.env.items()])) + next_max_depth
