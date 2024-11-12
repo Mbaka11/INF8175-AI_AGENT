@@ -164,5 +164,7 @@ class Algorithm(Strategy):
         return states.generate_possible_light_actions()
 
     def _hash_state(self, state: GameStateDivercite,next_max_depth:int) -> int:
-        # BUG Might not be the best hash_ function
-        return hash(str([str(k)+val.piece_type for k, val in state.rep.env.items()]))+next_max_depth
+        temp_env ={pos:piece.piece_type for pos, piece in state.rep.env.items()}
+        return frozenset(temp_env.items())
+        
+

@@ -26,7 +26,7 @@ def check_certain_position(pos, index_compute, preferred_pos=no_corner_city_posi
             if new_pos in preferred_pos and is_in_board(new_pos):
                 return new_pos
 
-        return choice(fallback_pos)
+        return choice(list(fallback_pos))
 
 def minimize_maximize_distance(x, preferred_position: set, is_min=True):
         # NOTE might put in a helper
