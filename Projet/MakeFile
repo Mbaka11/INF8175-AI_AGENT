@@ -1,4 +1,5 @@
 player_name = my_player.py
+src_file = src_2147174_2117902
 
 install	:
 	pip install -r requirements.txt
@@ -16,6 +17,12 @@ clean:
 move:
 	mv *.json data/
 
+abyss:
+	cp Divercite/${player_name} ./
+	mkdir ${src_file}
+	cp Divercite/${src_file}/*.py ./${src_file}
+	zip abyss_2147174_2117902.zip requirements.txt ${player_name} ${src_file}/*.py
+	rm ${player_name} ${src_file} -f -R
 
 hvp:
 	python Divercite/main_divercite.py -t human_vs_computer Divercite/${player_name}
