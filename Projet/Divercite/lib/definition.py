@@ -170,6 +170,9 @@ class Algorithm(Strategy):
     
     @staticmethod
     def greedy_fallback_move():
+        '''
+        Code taken from the template
+        '''
         possible_actions = Strategy.current_state.generate_possible_heavy_actions()
         best_action = next(possible_actions)
         best_score = best_action.get_next_game_state().scores[Strategy.my_id]
