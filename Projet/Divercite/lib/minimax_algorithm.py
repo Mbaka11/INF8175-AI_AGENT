@@ -8,32 +8,22 @@ from gc import collect
 
 class MinimaxTypeASearch(Algorithm):
 
-    def __init__(self, typeA_heuristic: AlgorithmHeuristic, cache: Cache, allowed_time: float, max_depth: int | None):
+    def __init__(self, typeA_heuristic: AlgorithmHeuristic, allowed_time: float, max_depth: int | None,cache: Cache):
         super().__init__(typeA_heuristic, cache, allowed_time)
         self.max_depth = max_depth
+        self.hit = 0
 
     def search(self):
-        if self.max_depth == None:
-            self.max_depth = MAX_STEP
-
-        else:
-            self.max_depth = self.current_state.step + self.max_depth
-            if self.max_depth > MAX_STEP:
-                print('Warning:', '')
-                self.max_depth = MAX_STEP
-
-        
-        _, action_star =self._minimax(self.current_state, True, float('-inf'), float('inf'))
+        super().search()
+        _, action_star =self._minimax(self.current_state, True, float('-inf'), float('inf'),0,self.max_depth)
         return action_star
 
-    def _minimax(self, state: GameStateDivercite, isMaximize: bool, alpha: float, beta: float, max_depth: int = None):
-        if max_depth == None:
-            max_depth = self.max_depth
+    def _minimax(self, state: GameStateDivercite, isMaximize: bool, alpha: float, beta: float,depth:int, max_depth: int = None):
 
         if state.is_done():
             return self._utility(state), None
 
-        if state.step >= max_depth:
+        if depth >= max_depth:
             pred_utility = self.main_heuristic(
                 state, my_id=self.my_id, opponent_id=self.opponent_id, my_pieces=self.my_pieces, opponent_pieces=self.opponent_pieces)
             if self._isQuiescent(state, pred_utility):
@@ -44,17 +34,22 @@ class MinimaxTypeASearch(Algorithm):
 
         for action in self._compute_actions(state):
 
-            new_state = self._transition(state, action)
+            new_state = self._transition(state,action)
             next_max_depth = self._compute_next_max_depth(
                 max_depth, state.step, v_star, alpha, beta)
 
-            hash_state = self._hash_state(new_state, next_max_depth) # BUG Might not be the best hash_ function
+            if self.cache:
+                hash_state = self._hash_state(new_state, next_max_depth) 
+                if hash_state in self.cache:
+                    self.hit+=1
+                    print('hit:',self.hit)
 
-            if hash_state not in self.cache:
-                self.cache[hash_state] = self._minimax(
-                    new_state, (not isMaximize), alpha, beta, next_max_depth)
+                if hash_state not in self.cache:
+                    self.cache[hash_state]  = self._minimax(new_state, (not isMaximize), alpha, beta,depth+1, next_max_depth)
 
-            v, _ = self.cache[hash_state]
+                v, _ = self.cache[hash_state]
+            else:   
+                v,_=self._minimax(new_state, (not isMaximize), alpha, beta,depth+1, next_max_depth)
             flag = (v>v_star) if isMaximize else (v<v_star)
             if flag:
                 v_star = v
@@ -97,7 +92,7 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
             self.main_heuristic = typeB_heuristic
 
     def _order_actions(self, actions: Generator | list, current_state: GameStateDivercite) -> list:
-        # TODO modifier le nombre d'enfants a etendre dynamiquement
+        # TODO modifier le nombre d'enfants a étendre dynamiquement
         vals = []
         returned_actions = []
         for a in actions:
@@ -118,7 +113,7 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
 
     def _isQuiescent(self, state, pred_utility):
         # TODO If the step is less than the last step, we should check if the moves is safe
-        ...
+        return True
 
     def _compute_next_max_depth(self, current_max_depth: int, current_depth: int, v_star: int, alpha: float, beta: float):
         # TODO if we should go further or nah

@@ -47,5 +47,5 @@ class StrategyController:
 
 pointDiffHeuristic =  PointDifferenceHeuristic()
 
-STRATEGY_CONTROLLER = StrategyController().add_strategy(MinimaxTypeASearch(pointDiffHeuristic,LFUCache(100),None,2))
+STRATEGY_CONTROLLER = StrategyController().add_strategy(OpeningMoveStrategy(False),2).add_strategy(MinimaxTypeASearch(pointDiffHeuristic,LFUCache(100),None,4))
 #print(strategyController.strategies)

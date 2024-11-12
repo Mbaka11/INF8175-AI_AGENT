@@ -10,6 +10,7 @@ from .helper import *
 from typing import Generator
 from game_state_divercite import GameStateDivercite
 from cachetools import FIFOCache, LFUCache, TTLCache, LRUCache, cachedmethod, Cache
+from gc import collect
 
 Method = Literal['min', 'max', 'mean', 'sum']
 
@@ -97,6 +98,7 @@ class Strategy:
         self.main_heuristic = heuristic
 
     def search(self)-> LightAction:
+        collect()
         pass
 
     @property
@@ -162,4 +164,5 @@ class Algorithm(Strategy):
         return states.generate_possible_light_actions()
 
     def _hash_state(self, state: GameStateDivercite,next_max_depth:int) -> int:
-        return hash(str([str(k)+val.piece_type for k, val in state.rep.env.items()])) + next_max_depth
+        # BUG Might not be the best hash_ function
+        return hash(str([str(k)+val.piece_type for k, val in state.rep.env.items()]))+next_max_depth
