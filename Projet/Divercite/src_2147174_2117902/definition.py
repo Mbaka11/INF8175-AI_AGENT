@@ -194,13 +194,30 @@ class Algorithm(Strategy):
 
     def _transition(self, state: GameStateDivercite, action):
         return state.apply_action(action)
+    
+    def rotate_moves_90(self,moves:dict[tuple[int,int],Any]):
+        temp_moves = {}
+        for pos, pieces in moves.items():
+            x,y = pos
+            pos = rotate_position_90_clockwise(x,y)
+            temp_moves[pos] = pieces
+        return temp_moves
 
-    def _compute_redondant_state(self, states: GameStateDivercite) -> Generator:
-        # TODO
-        return states.generate_possible_light_actions()
-
-    def _hash_state(self, state: GameStateDivercite,next_max_depth:int) -> int:
-        # BUG need to add the next_max_depth for depth controlling as the value will be different
-        temp_env ={pos:piece.piece_type for pos, piece in state.rep.env.items()}
+    def _hash_state(self, state_env: dict) -> int:
+        temp_env ={pos:piece.piece_type for pos, piece in state_env.items()}
         return frozenset(temp_env.items())
+    
+    def check_symmetric_moves_in_cache(self, state_env:dict) -> tuple[bool, None | frozenset]:   
+        temp_env = state_env.copy()
+        for _ in range(3):
+            temp_env= self.rotate_moves_90(temp_env) 
+            temp_env_hash = self._hash_state(temp_env_hash)
+            if temp_env_hash in self.cache:
+                return True, temp_env_hash
+        return False, None
         
+    def search(self):
+        # NOTE See comments in line 170
+        if self.cache != None or not self.keep_cache:
+            self.cache.clear()
+        return super().search()

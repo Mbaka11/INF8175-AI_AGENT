@@ -38,10 +38,14 @@ class MinimaxTypeASearch(Algorithm):
                 max_depth, state.step, v_star, alpha, beta)
 
             if self.cache != None:
-                
-                hash_state = self._hash_state(new_state, next_max_depth) 
+                     
+                hash_state = self._hash_state(new_state.rep.env) 
                 if hash_state not in self.cache:
-                    self.cache[hash_state]  = self._minimax(new_state, (not isMaximize), alpha, beta,depth+1, next_max_depth)
+                    flag,_hash = self.check_symmetric_moves_in_cache(new_state.rep.env)
+                    if flag:
+                        hash_state = _hash
+                    else:
+                        self.cache[hash_state]  = self._minimax(new_state, (not isMaximize), alpha, beta,depth+1, next_max_depth)
 
                 v, _ = self.cache[hash_state]
             else:   
@@ -71,9 +75,11 @@ class MinimaxTypeASearch(Algorithm):
     def _compute_next_max_depth(self, current_max_depth: int, current_step: int, v_star: float, alpha: float, beta: float) -> int:
         return current_max_depth
 
-    def _compute_actions(self, state: GameStateDivercite):
-       return  self._compute_redondant_state(state)
+    def _filter_action(self, states: GameStateDivercite) -> Generator:
+        return states.generate_possible_light_actions()
 
+    def _compute_actions(self, state: GameStateDivercite):
+       return  self._filter_action(state)
 
 class MinimaxHybridSearch(MinimaxTypeASearch):
 
@@ -101,8 +107,12 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
         return returned_actions[vals]
 
     def _compute_actions(self, state: GameStateDivercite):
-        actions = self._compute_redondant_state(state)
+        actions = self._filter_action(state)
         return self._order_actions(actions, state)
+
+    def _filter_action(self, states):
+        # TODO 
+        return super()._filter_action(states)
 
     def _isQuiescent(self, state, pred_utility):
         # TODO If the step is less than the last step, we should check if the moves is safe

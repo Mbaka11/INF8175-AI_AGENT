@@ -10,6 +10,9 @@ BOARD_MASK = BoardDivercite.BOARD_MASK
 MAX_MOVES = 20
 MAX_STEP = 40
 
+N_DIMS= 9
+BOARD_DIMS = N_DIMS,N_DIMS
+
 ########################################     City Position    #####################################
 CENTER_CITY = 'center_city_key'
 CORNER_CITY = 'corner_city_key'

@@ -1,5 +1,5 @@
 from random import shuffle,choice
-from .constant import no_corner_city_position,AROUND_CITY,center_city_position,CENTER_CITY,CORNER_CITY,city_index_control
+from .constant import no_corner_city_position,AROUND_CITY,center_city_position,CENTER_CITY,CORNER_CITY,city_index_control,N_DIMS
 import numpy as np
 
 def is_city(piece_type: str): ...
@@ -9,6 +9,9 @@ def is_ressource(piece_type: str): ...
 def is_in_board(pos:tuple[int,int]):
     x,y = pos
     return x >= 0 and y >= 0 and x<=9 and y<=9
+
+def rotate_position_90_clockwise(i:int, j:int): return (j, N_DIMS - 1 - i)
+     
 ################################################################
 def check_certain_position(pos, index_compute, preferred_pos=no_corner_city_position, fallback_pos=None):
 
