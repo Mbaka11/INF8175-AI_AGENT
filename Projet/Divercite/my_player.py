@@ -4,9 +4,10 @@ from seahorse.game.game_state import GameState
 from game_state_divercite import GameStateDivercite
 from seahorse.utils.custom_exceptions import MethodNotImplementedError
 
-from src_2147174_2117902.definition import Algorithm,Strategy
-from src_2147174_2117902.strategy_controller import STRATEGY_CONTROLLER
+from src_2147174_2117902.definition import Algorithm, Strategy
+from src_2147174_2117902.strategy_controller import *
 from src_2147174_2117902.tools import Monitor
+
 
 class MyPlayer(PlayerDivercite):
     """
@@ -26,7 +27,10 @@ class MyPlayer(PlayerDivercite):
             time_limit (float, optional): the time limit in (s)
         """
         super().__init__(piece_type, name)
+        pointDiffHeuristic = PointDifferenceHeuristic()
 
+        self.controller: StrategyController = StrategyController().add_strategy(OpeningMoveStrategy(False), 2).add_strategy(MinimaxTypeASearch(
+            pointDiffHeuristic, None, 4, LFUCache(200)), 7).add_strategy(MinimaxTypeASearch(pointDiffHeuristic, None, 5, LFUCache(200)))
 
     @Monitor
     def compute_action(self, current_state: GameStateDivercite, remaining_time: int = 1e9, **kwargs) -> Action:
@@ -39,6 +43,6 @@ class MyPlayer(PlayerDivercite):
         Returns:
             Action: The best action as determined by minimax.
         """
-        #TODO
-        Strategy.set_current_state(current_state,remaining_time)
-        return  STRATEGY_CONTROLLER.play_best(Strategy.my_step)
+        # TODO
+        Strategy.set_current_state(current_state, remaining_time)
+        return self.controller.play_best()

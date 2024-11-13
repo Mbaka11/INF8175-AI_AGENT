@@ -108,8 +108,33 @@ class Strategy:
     def __init__(self, heuristic: Heuristic = None):
         self.main_heuristic = heuristic
 
-    def search(self)-> LightAction:
+    @staticmethod
+    def greedy_fallback_move():
+        '''
+        Code taken from the template
+        '''
+        possible_actions = Strategy.current_state.generate_possible_heavy_actions()
+        best_action = next(possible_actions)
+        best_score = best_action.get_next_game_state().scores[Strategy.my_id]
+
+        for action in possible_actions:
+            state = action.get_next_game_state()
+            score = state.scores[Strategy.my_id]
+            if score > best_score:
+                best_action = action
+        
+        return best_action
+
+    def _search(self) -> LightAction:
+        ...
+
+    def search(self):
         collect()
+        try:
+            return self._search()
+        except Exception as e:
+            print('Warning... !:',e.__class__.__name__,f': {e.args}')
+            return Algorithm.greedy_fallback_move()
 
     @property
     def my_pieces(self):
@@ -138,10 +163,11 @@ class Strategy:
 
 class Algorithm(Strategy):
 
-    def __init__(self, heuristic: AlgorithmHeuristic, cache: Cache, allowed_time: float = None):
+    def __init__(self, heuristic: AlgorithmHeuristic, cache: Cache=None, allowed_time: float = None,keep_cache: bool = False):
         super().__init__(heuristic)
         self.cache = cache
         self.allowed_time = allowed_time
+        self.keep_cache = keep_cache # ERROR can be source of heuristic evaluation error, only uses if a deeper search was done prior a less deeper search
 
     def _utility(self, state: GameStateDivercite):
         scores = state.get_scores()
@@ -156,35 +182,6 @@ class Algorithm(Strategy):
 
         if my_scores == opponent_scores:
             return 0
-    
-    def _search(self):
-        ...
-
-    def search(self):
-        super().search()
-        try:
-            return self._search()
-        except Exception as e:
-            print('Warning... !:',e.__class__.__name__,f': {e.args}')
-            Algorithm.greedy_fallback_move()
-    
-    @staticmethod
-    def greedy_fallback_move():
-        '''
-        Code taken from the template
-        '''
-        possible_actions = Strategy.current_state.generate_possible_heavy_actions()
-        best_action = next(possible_actions)
-        best_score = best_action.get_next_game_state().scores[Strategy.my_id]
-
-        for action in possible_actions:
-            state = action.get_next_game_state()
-            score = state.scores[Strategy.my_id]
-            if score > best_score:
-                best_action = action
-        
-        return best_action
-
 
     def _is_our_turn(self):
         if self.is_first_to_play and self.current_state.step % 2 == 0:
@@ -207,4 +204,3 @@ class Algorithm(Strategy):
         temp_env ={pos:piece.piece_type for pos, piece in state.rep.env.items()}
         return frozenset(temp_env.items())
         
-

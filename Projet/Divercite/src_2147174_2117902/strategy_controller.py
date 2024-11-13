@@ -15,7 +15,8 @@ class StrategyController:
     def __call__(self, *args, **kwds):
         return self.play_best(*args)
 
-    def play_best(self, moves_index:int):
+    def play_best(self):
+        moves_index = Strategy.my_step
         strategy = self[moves_index]
         return strategy.search()
         
@@ -42,7 +43,9 @@ class StrategyController:
 
         for move_step,algo in strategy.items():
             self.add_strategy(move_step,algo)
-
+    
+    def to_json(self):
+        return {}
 ############################################### PREDEFINED STRATEGY ##############################################
 
 pointDiffHeuristic =  PointDifferenceHeuristic()
