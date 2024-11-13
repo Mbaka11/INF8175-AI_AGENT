@@ -5,6 +5,7 @@ from game_state_divercite import GameStateDivercite
 import numpy as np
 from .constant import *
 from gc import collect
+from random import random
 
 
 class MinimaxTypeASearch(Algorithm):
@@ -25,7 +26,7 @@ class MinimaxTypeASearch(Algorithm):
             return self._utility(state), None
 
         if depth >= max_depth:
-            pred_utility = self.main_heuristic(
+            pred_utility: float = self.main_heuristic(
                 state, my_id=self.my_id, opponent_id=self.opponent_id, my_pieces=self.my_pieces, opponent_pieces=self.opponent_pieces)
             if self._isQuiescent(state, pred_utility):
                 return pred_utility, None
@@ -37,7 +38,7 @@ class MinimaxTypeASearch(Algorithm):
 
             new_state = self._transition(state, action)
             next_max_depth = self._compute_next_max_depth(
-                max_depth, state.step, depth,  v_star, alpha, beta)
+                max_depth, state.step, depth)
 
             #  NOTE put it in a separate method
             if self.cache != None:
@@ -59,7 +60,8 @@ class MinimaxTypeASearch(Algorithm):
             flag = (v > v_star) if isMaximize else (v < v_star)
             if flag:
                 v_star = v
-                m_star = action[0] if isinstance(action,(list,tuple)) else action
+                m_star = action[0] if isinstance(
+                    action, (list, tuple)) else action
 
             if isMaximize:
                 alpha = max(alpha, v_star)
@@ -89,20 +91,24 @@ class MinimaxTypeASearch(Algorithm):
 
 class MinimaxHybridSearch(MinimaxTypeASearch):
 
-    def __init__(self, cache: Cache, allowed_time: float, typeB_heuristic: AlgorithmHeuristic, typeA_heuristic: AlgorithmHeuristic = None, n_expanded: int | None = None, max_depth: int = MAX_STEP+1):
+    MAX_THRESHOLD = 0
+
+    def __init__(self, cache: Cache, allowed_time: float, typeB_heuristic: AlgorithmHeuristic, typeA_heuristic: AlgorithmHeuristic = None, threshold: float = 0.5, n_expanded: int | None = None, max_depth: int = MAX_STEP+1):
         super().__init__(typeA_heuristic, cache, allowed_time, max_depth)
         self.n_max_expanded = n_expanded
         self.typeB_heuristic = typeB_heuristic
+        if threshold < self.MAX_THRESHOLD:
+            threshold = self.MAX_THRESHOLD
+        self.threshold = threshold
         if typeA_heuristic is None:
             self.main_heuristic = typeB_heuristic
-
 
     def _order_actions(self, actions: Generator | list, current_state: GameStateDivercite) -> list[tuple]:
         def _apply(a):
             return self.typeB_heuristic(current_state.apply_action(a))
-        
+
         returned_actions = np.fromiter(actions)
-        vals = np.apply_along_axis(_apply,axis=0,arr=returned_actions)
+        vals = np.apply_along_axis(_apply, axis=0, arr=returned_actions)
         n_child = len(returned_actions)
         max_child_expanded = self._compute_n_expanded(
             current_state.step, n_child)
@@ -125,11 +131,20 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
     def _transition(self, state, action):
         return super()._transition(state, action[0])
 
-    def _compute_next_max_depth(self, current_max_depth: int, current_step: int, current_depth, action:tuple,v_star: float, alpha: float, beta: float):
+    def _compute_next_max_depth(self, current_max_depth: int, current_step: int, current_depth, action: tuple,):
         # TODO if we should go further or nah
-        _eval:float = action[1]
-        
-        ...
+        _eval: float = action[1]
+        if _eval >= self.threshold:
+            return self.max_depth
+
+        if _eval < self.MAX_THRESHOLD:
+            return current_depth  # BUG subject to change
+
+        if random() < self._proba_by_temperature(_eval, current_step):
+            return current_max_depth - current_depth
+
+    def _proba_by_temperature(self, _eval, current_step):
+        return _eval*2 * ((MAX_STEP-current_step+C_TEMP_NUM)/C_TEMP_DEN)
 
     def _compute_n_expanded(self, cur_step: int, n_child: int):
         # TODO dynamically update the number of nodes expanded
