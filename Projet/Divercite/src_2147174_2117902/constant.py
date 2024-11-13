@@ -61,7 +61,7 @@ corner_ressource_position = set([
 
 center_ressources_position = ressources_position.difference(
     outside_ressources_position)
-print(center_ressources_position)
+
 
 ########################################   Index Position Compute    #####################################
 

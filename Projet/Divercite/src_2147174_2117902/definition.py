@@ -12,16 +12,7 @@ from game_state_divercite import GameStateDivercite
 from cachetools import FIFOCache, LFUCache, TTLCache, LRUCache, cachedmethod, Cache
 from gc import collect
 
-Method = Literal['min', 'max', 'mean', 'sum']
-
-method = {
-    'min': np.min,
-    'max': np.max,
-    'mean': np.mean,
-    'sum': np.sum,
-}
-
-L = 4.2
+L = 4.1
 
 ARGS_KEYS= Literal['opponent_score','my_score','last_move','my_piece','opponent_pieces']
 
@@ -218,6 +209,6 @@ class Algorithm(Strategy):
         
     def search(self):
         # NOTE See comments in line 170
-        if self.cache != None or not self.keep_cache:
+        if self.cache != None and not self.keep_cache:
             self.cache.clear()
         return super().search()
