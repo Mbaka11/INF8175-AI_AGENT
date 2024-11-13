@@ -211,7 +211,7 @@ class Algorithm(Strategy):
         temp_env = state_env.copy()
         for _ in range(3):
             temp_env= self.rotate_moves_90(temp_env) 
-            temp_env_hash = self._hash_state(temp_env_hash)
+            temp_env_hash = self._hash_state(temp_env)
             if temp_env_hash in self.cache:
                 return True, temp_env_hash
         return False, None
