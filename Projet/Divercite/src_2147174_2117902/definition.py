@@ -166,14 +166,17 @@ class Algorithm(Strategy):
         my_scores = scores[self.my_id]
         opponent_scores = scores[self.opponent_id]
 
-        if my_scores > opponent_scores:
-            return 1
+        # if my_scores > opponent_scores:
+        #     return 1
 
-        if my_scores < opponent_scores:
-            return -1
+        # if my_scores < opponent_scores:
+        #     return -1
 
-        if my_scores == opponent_scores:
-            return 0
+        # if my_scores == opponent_scores:
+        #     return 0
+
+        return my_scores-opponent_scores
+        
 
     def _is_our_turn(self):
         if self.is_first_to_play and self.current_state.step % 2 == 0:
