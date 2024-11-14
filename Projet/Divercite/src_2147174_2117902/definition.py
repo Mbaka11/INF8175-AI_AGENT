@@ -11,6 +11,7 @@ from typing import Generator
 from game_state_divercite import GameStateDivercite
 from cachetools import FIFOCache, LFUCache, TTLCache, LRUCache, cachedmethod, Cache
 from gc import collect
+from seahorse.utils.custom_exceptions import ActionNotPermittedError
 
 L = 4.1
 
@@ -108,6 +109,7 @@ class Strategy:
         '''
         Code taken from the template
         '''
+
         possible_actions = Strategy.current_state.generate_possible_light_actions()
         best_action = next(possible_actions)
         best_score = Strategy.current_state.apply_action(best_action).scores[Strategy.my_id]
@@ -118,6 +120,7 @@ class Strategy:
             if score > best_score:
                 best_action = action
         
+        print('Error')
         return best_action
 
     def _search(self) -> LightAction:
@@ -127,8 +130,13 @@ class Strategy:
         collect()
         try:
             return self._search()
+        except ActionNotPermittedError as e:
+            print(e.__class__.__name__,f': {e.args}')
         except Exception as e:
             print('Warning... !:',e.__class__.__name__,f': {e.args}')
+        except:
+            print('Unresolvable error...')
+        finally:
             return Strategy.greedy_fallback_move()
 
     @property
@@ -223,7 +231,7 @@ class Algorithm(Strategy):
             if self.cache != None and not self.keep_cache:
                 self.cache.clear()
         except AttributeError:
-            print('Warining: Trying to clear cache when None is provided')
+            print('Warning: Trying to clear cache when None is provided')
         except:
             ...
         

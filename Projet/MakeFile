@@ -41,3 +41,6 @@ pvg:
 
 pvh:
 	cd Divercite && python main_divercite.py -t human_vs_computer ${player_name}
+
+pvr:
+	python Divercite/main_divercite.py -t local Divercite/${player_name} Divercite/random_player_divercite.py  -r -g

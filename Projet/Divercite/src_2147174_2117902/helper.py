@@ -40,7 +40,6 @@ def minimize_maximize_distance(x, preferred_position: set, is_min=True):
         
         dist_position = dist_position.argmin(
         ) if is_min else dist_position.argmax()
-        print(dist_position)
         return available_position[int(dist_position)]
 ################################################################
 

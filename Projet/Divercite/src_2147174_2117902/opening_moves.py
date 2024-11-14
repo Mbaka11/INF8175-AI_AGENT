@@ -34,7 +34,7 @@ class OpeningMoveStrategy(Strategy):
         self.center_city_position = center_city_position.copy()
     
 
-    def _search(self) -> Action:
+    def _search(self) -> LightAction:
        # NOTE forcing the same color or a different might not necessary be a better move
         if self.is_first_to_play and  self.current_state.step ==0 :
             city = choice(CityNames._member_names_)
