@@ -104,12 +104,12 @@ class Strategy:
         '''
         Code taken from the template
         '''
-        possible_actions = Strategy.current_state.generate_possible_heavy_actions()
+        possible_actions = Strategy.current_state.generate_possible_light_actions()
         best_action = next(possible_actions)
-        best_score = best_action.get_next_game_state().scores[Strategy.my_id]
+        best_score = Strategy.current_state.apply_action(best_action).scores[Strategy.my_id]
 
         for action in possible_actions:
-            state = action.get_next_game_state()
+            state = Strategy.current_state.apply_action(action)
             score = state.scores[Strategy.my_id]
             if score > best_score:
                 best_action = action
@@ -125,7 +125,7 @@ class Strategy:
             return self._search()
         except Exception as e:
             print('Warning... !:',e.__class__.__name__,f': {e.args}')
-            return Algorithm.greedy_fallback_move()
+            return Strategy.greedy_fallback_move()
 
     @property
     def my_pieces(self):
