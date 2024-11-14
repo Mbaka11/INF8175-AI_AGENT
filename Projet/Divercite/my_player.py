@@ -29,8 +29,10 @@ class MyPlayer(PlayerDivercite):
         super().__init__(piece_type, name)
         pointDiffHeuristic = PointDifferenceHeuristic()
 
-        self.controller: StrategyController = StrategyController().add_strategy(OpeningMoveStrategy(False), 2).add_strategy(MinimaxTypeASearch(
-            pointDiffHeuristic, None, 4, LFUCache(200)), 7).add_strategy(MinimaxTypeASearch(pointDiffHeuristic, None, 5, LFUCache(200)))
+        self._controller: StrategyController = StrategyController().add_strategy(
+            OpeningMoveStrategy(True), 2).add_strategy(
+                MinimaxTypeASearch(pointDiffHeuristic,4,LRUCache(1000)), 9).add_strategy(
+                MinimaxTypeASearch(pointDiffHeuristic, 6, LRUCache(1500)))
 
     @Monitor
     def compute_action(self, current_state: GameStateDivercite, remaining_time: int = 1e9, **kwargs) -> Action:
@@ -45,4 +47,4 @@ class MyPlayer(PlayerDivercite):
         """
         # TODO
         Strategy.set_current_state(current_state, remaining_time)
-        return self.controller.play_best()
+        return self._controller.play_best()
