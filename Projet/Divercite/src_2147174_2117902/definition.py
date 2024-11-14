@@ -134,10 +134,8 @@ class Strategy:
             print(e.__class__.__name__,f': {e.args}')
         except Exception as e:
             print('Warning... !:',e.__class__.__name__,f': {e.args}')
-        except:
-            print('Unresolvable error...')
-        finally:
-            return Strategy.greedy_fallback_move()
+        
+        return Strategy.greedy_fallback_move()
 
     @property
     def my_pieces(self):
