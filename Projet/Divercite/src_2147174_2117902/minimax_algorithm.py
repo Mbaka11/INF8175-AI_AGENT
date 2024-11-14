@@ -30,7 +30,7 @@ class MinimaxTypeASearch(Algorithm):
 
         if depth >= max_depth:
             pred_utility: float = self.main_heuristic(
-                state, my_id=self.my_id, opponent_id=self.opponent_id, my_pieces=self.my_pieces, opponent_pieces=self.opponent_pieces)
+                state, my_id=self.my_id, opponent_id=self.opponent_id, my_pieces=self.my_pieces, opponent_pieces=self.opponent_pieces,last_move=self.last_move,is_first_to_play=self.is_first_to_play,moves=self.moves)
             if self._isQuiescent(state, pred_utility):
                 return pred_utility, None
 
@@ -90,6 +90,10 @@ class MinimaxTypeASearch(Algorithm):
     def _compute_actions(self, state: GameStateDivercite):
         return self._filter_action(state)
 
+    def _clear_cache(self):
+        if (MAX_STEP - self.current_state.step) <= self.max_depth:
+            print('Not clearing the cache cause we already compute it')
+            super()._clear_cache()
 
 class MinimaxHybridSearch(MinimaxTypeASearch):
 
@@ -107,7 +111,7 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
 
     def _order_actions(self, actions: Generator | list, current_state: GameStateDivercite) -> list[tuple]:
         def _apply(a):
-            return self.typeB_heuristic(current_state.apply_action(a[0]), my_id=self.my_id, opponent_id=self.opponent_id, last_move=self.last_move, my_piece=self.my_pieces, opponent_pieces=self.opponent_pieces)
+            return self.typeB_heuristic(current_state.apply_action(a[0]), my_id=self.my_id, opponent_id=self.opponent_id, my_pieces=self.my_pieces, opponent_pieces=self.opponent_pieces,last_move=self.last_move,is_first_to_play=self.is_first_to_play,moves=self.moves)
 
         returned_actions = np.fromiter(actions, dtype=np.object_)
         vals = np.apply_along_axis(

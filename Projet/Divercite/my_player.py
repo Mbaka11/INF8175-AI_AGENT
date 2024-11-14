@@ -31,7 +31,7 @@ class MyPlayer(PlayerDivercite):
 
         self._controller: StrategyController = StrategyController().add_strategy(
             OpeningMoveStrategy(True), 2).add_strategy(
-                MinimaxTypeASearch(pointDiffHeuristic,4,LRUCache(1000)), 9).add_strategy(
+                MinimaxTypeASearch(pointDiffHeuristic,4,LRUCache(1500)), 10).add_strategy(
                 MinimaxTypeASearch(pointDiffHeuristic, 6, LRUCache(1500)))
 
     @Monitor

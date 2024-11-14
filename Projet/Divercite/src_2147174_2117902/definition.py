@@ -14,7 +14,7 @@ from gc import collect
 
 L = 4.1
 
-ARGS_KEYS= Literal['opponent_score','my_score','last_move','my_piece','opponent_pieces']
+ARGS_KEYS= Literal['opponent_score','my_score','last_move','my_piece','opponent_pieces','moves','is_first_to_play','my_id','opponent_id']
 
 ############################################ Base Heuristic class  #############################################
 
@@ -206,9 +206,17 @@ class Algorithm(Strategy):
             if temp_env_hash in self.cache:
                 return True, temp_env_hash
         return False, None
+    
+    def _clear_cache(self):
+        try:
+            if self.cache != None and not self.keep_cache:
+                self.cache.clear()
+        except AttributeError:
+            print('Warining: Trying to clear cache when None is provided')
+        except:
+            ...
         
     def search(self):
         # NOTE See comments in line 170
-        if self.cache != None and not self.keep_cache:
-            self.cache.clear()
+        self._clear_cache()
         return super().search()
