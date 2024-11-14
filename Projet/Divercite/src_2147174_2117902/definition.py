@@ -14,7 +14,7 @@ from gc import collect
 
 L = 4.1
 
-ARGS_KEYS= Literal['opponent_score','my_score','last_move','my_piece','opponent_pieces','moves','is_first_to_play','my_id','opponent_id']
+ARGS_KEYS= Literal['opponent_score','my_score','last_move','my_piece','opponent_pieces','moves','is_first_to_play','my_id','opponent_id','current_env']
 
 ############################################ Base Heuristic class  #############################################
 
@@ -50,6 +50,9 @@ class AlgorithmHeuristic(Heuristic):
     def _evaluation(self,current_state:GameStateDivercite,**kwargs)-> float:
         ...
 
+    def _clone(self):
+        ...
+
     def __mul__(self,weight):
         return AlgorithmHeuristic(self.min_value,self.max_value,weight)
 
@@ -72,7 +75,7 @@ class AlgorithmHeuristic(Heuristic):
 
 class Strategy:
 
-    # Meta Data
+    # Meta Data de l'État actuel
     is_first_to_play: bool = None
     current_state: GameStateDivercite = None
     my_id: int = None
@@ -151,6 +154,10 @@ class Strategy:
     @property
     def moves(self):
         return list(self.current_state.rep.env)
+    
+    @property
+    def current_env(self):
+        return self.current_state.rep.env
 
 
 class Algorithm(Strategy):

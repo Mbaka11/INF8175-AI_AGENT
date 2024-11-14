@@ -9,7 +9,7 @@ POSITION_KEY = 'position'
 PIECE_KEY = 'piece'
 
 class RandomMoveHeuristic(Heuristic):
-    def evaluate(self, current_state):
+    def evaluate(self, current_state,**kwargs):
         return choice(list(current_state.get_possible_light_actions())) 
 
 ############################## Simple Strategy ##########################################
@@ -18,7 +18,10 @@ class SimpleMoveStrategy(Strategy):
         super().__init__(heuristic)
 
     def search(self):
-        return self.main_heuristic(self.current_state)
+        return self.main_heuristic(self.current_state,my_id=self.my_id, opponent_id=self.opponent_id,
+                                        my_pieces=self.my_pieces, opponent_pieces=self.opponent_pieces,
+                                        last_move=self.last_move, is_first_to_play=self.is_first_to_play, moves=self.moves,
+                                        my_score=self.my_score, opponent_score=self.opponent_score,current_env=self.current_env)
 
 
 ############################## Opening Moves Strategy ##################################

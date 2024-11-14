@@ -31,7 +31,7 @@ class MinimaxTypeASearch(Algorithm):
         if depth >= max_depth:
             pred_utility: float = self.main_heuristic(
                 state, my_id=self.my_id, opponent_id=self.opponent_id, my_pieces=self.my_pieces, opponent_pieces=self.opponent_pieces,
-                last_move=self.last_move, is_first_to_play=self.is_first_to_play, moves=self.moves,
+                last_move=self.last_move, is_first_to_play=self.is_first_to_play, moves=self.moves,current_env=self.current_env,
                 my_score=self.my_score, opponent_score=self.opponent_score)
             if self._isQuiescent(state, pred_utility):
                 return pred_utility, None
@@ -117,7 +117,7 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
             return self.typeB_heuristic(current_state.apply_action(a[0]), my_id=self.my_id, opponent_id=self.opponent_id,
                                         my_pieces=self.my_pieces, opponent_pieces=self.opponent_pieces,
                                         last_move=self.last_move, is_first_to_play=self.is_first_to_play, moves=self.moves,
-                                        my_score=self.my_score, opponent_score=self.opponent_score)
+                                        my_score=self.my_score, opponent_score=self.opponent_score,current_env=self.current_env)
 
         returned_actions = np.fromiter(actions, dtype=np.object_)
         vals = np.apply_along_axis(

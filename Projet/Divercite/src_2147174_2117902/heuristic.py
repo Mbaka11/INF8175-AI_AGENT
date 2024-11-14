@@ -19,7 +19,7 @@ class PointDifferenceHeuristic(AlgorithmHeuristic):
         cross_diff = (my_state_score - opponent_current_score) - (opponent_state_score-my_current_score)
 
         return my_delta_score+delta_state+cross_diff
-        #return my_current_score-my_state_score
+
 
 
 class ControlIndexHeuristic(AlgorithmHeuristic):
