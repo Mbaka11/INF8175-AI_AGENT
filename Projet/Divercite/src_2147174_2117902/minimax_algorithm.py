@@ -30,7 +30,9 @@ class MinimaxTypeASearch(Algorithm):
 
         if depth >= max_depth:
             pred_utility: float = self.main_heuristic(
-                state, my_id=self.my_id, opponent_id=self.opponent_id, my_pieces=self.my_pieces, opponent_pieces=self.opponent_pieces,last_move=self.last_move,is_first_to_play=self.is_first_to_play,moves=self.moves)
+                state, my_id=self.my_id, opponent_id=self.opponent_id, my_pieces=self.my_pieces, opponent_pieces=self.opponent_pieces,
+                last_move=self.last_move, is_first_to_play=self.is_first_to_play, moves=self.moves,
+                my_score=self.my_score, opponent_score=self.opponent_score)
             if self._isQuiescent(state, pred_utility):
                 return pred_utility, None
 
@@ -40,7 +42,7 @@ class MinimaxTypeASearch(Algorithm):
         for action in self._compute_actions(state):
             new_state = self._transition(state, action)
             next_max_depth = self._compute_next_max_depth(
-                max_depth, state.step, depth,action)
+                max_depth, state.step, depth, action)
 
             #  NOTE put it in a separate method
             if self.cache != None:
@@ -95,6 +97,7 @@ class MinimaxTypeASearch(Algorithm):
             print('Not clearing the cache cause we already compute it')
             super()._clear_cache()
 
+
 class MinimaxHybridSearch(MinimaxTypeASearch):
 
     MAX_THRESHOLD = 0
@@ -111,7 +114,10 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
 
     def _order_actions(self, actions: Generator | list, current_state: GameStateDivercite) -> list[tuple]:
         def _apply(a):
-            return self.typeB_heuristic(current_state.apply_action(a[0]), my_id=self.my_id, opponent_id=self.opponent_id, my_pieces=self.my_pieces, opponent_pieces=self.opponent_pieces,last_move=self.last_move,is_first_to_play=self.is_first_to_play,moves=self.moves)
+            return self.typeB_heuristic(current_state.apply_action(a[0]), my_id=self.my_id, opponent_id=self.opponent_id,
+                                        my_pieces=self.my_pieces, opponent_pieces=self.opponent_pieces,
+                                        last_move=self.last_move, is_first_to_play=self.is_first_to_play, moves=self.moves,
+                                        my_score=self.my_score, opponent_score=self.opponent_score)
 
         returned_actions = np.fromiter(actions, dtype=np.object_)
         vals = np.apply_along_axis(
@@ -120,7 +126,7 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
         max_child_expanded = self._compute_n_expanded(
             current_state.step, n_child)
         vals_indice = vals.argsort(axis=0)[::-1][:max_child_expanded]
-        
+
         return zip(returned_actions[vals_indice], vals[vals_indice])
 
     def _compute_actions(self, state: GameStateDivercite):
@@ -147,10 +153,10 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
         if _eval < self.MAX_THRESHOLD:
             print(_eval)
             return current_depth
-        
+
         if random() < self._proba_by_temperature(_eval, current_step):
             return current_max_depth - current_depth
-        
+
         return current_depth
 
     def _proba_by_temperature(self, _eval, current_step):

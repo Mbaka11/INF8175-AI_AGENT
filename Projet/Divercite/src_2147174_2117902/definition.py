@@ -29,12 +29,13 @@ class Heuristic:
 
 class AlgorithmHeuristic(Heuristic):
     # BUG Need tweak for the weights adds
-    def __init__(self, min_value: float, max_value: float,weight=1):
+    def __init__(self, min_value: float, max_value: float,weight=1,L=L):
         self.h_list: list[AlgorithmHeuristic] = [self]
         self.min_value = min_value
         self.max_value = max_value
         self.weight = weight
         self.total_weight=weight
+        self.L = L
 
     def __call__(self, *args, **kwds) -> float: 
         if len(self.h_list) == 1:
@@ -57,7 +58,7 @@ class AlgorithmHeuristic(Heuristic):
 
     def _sigmoid(self, x: float):
         x_scaled = (x - (self.min_value + self.max_value) / 2) / \
-            ((self.max_value - self.min_value) / 2) * L
+            ((self.max_value - self.min_value) / 2) * self.L
         return 2 / (1 + np.exp(-x_scaled)) - 1
 
     def __add__(self, other):
