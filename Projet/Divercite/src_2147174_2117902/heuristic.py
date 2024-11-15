@@ -30,8 +30,8 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
 
 class PiecesVarianceHeuristic(AlgorithmHeuristic):
     
-    def __init__(self,city_weight=.7,ress_weight=.3):
-        super().__init__(-20, 0,L=5.5)
+    def __init__(self,city_weight=.6,ress_weight=.4):
+        super().__init__(-55, 9,L=6.5)
         self.city_weight = city_weight
         self.ress_weight =ress_weight
 
