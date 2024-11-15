@@ -17,8 +17,9 @@ class MinimaxTypeASearch(Algorithm):
         self.node_expanded = 0
 
     def _search(self):
-        _, action_star = self._minimax(self.current_state, True, float(
+        cost, action_star = self._minimax(self.current_state, True, float(
             '-inf'), float('inf'), 0, self.max_depth)
+        print(cost)
         return action_star
 
     def __del__(self):

@@ -30,8 +30,8 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
 
 class PiecesVarianceHeuristic(AlgorithmHeuristic):
     
-    def __init__(self,city_weight=.6,ress_weight=.4):
-        super().__init__(-55, 9,L=6.5)
+    def __init__(self,city_weight=.7,ress_weight=.3):
+        super().__init__(-300, -4,L=4.3)
         self.city_weight = city_weight
         self.ress_weight =ress_weight
 
@@ -53,13 +53,18 @@ class PiecesVarianceHeuristic(AlgorithmHeuristic):
         opp_diff = opp_state_var-opponent_original_var
         state_diff = opp_state_var-my_state_var
         my_diff = my_state_var-my_original_var
-
+        #print(my_state_var)
         return -my_state_var
         
     def _pieces_var(self,pieces:dict[str,int]):
         city_val = np.array([pieces[cn] for cn in CityNames._member_names_])
         ress_val = np.array([pieces[rn] for rn in RessourcesNames._member_names_])
-        
+        score_city = np.var(city_val)*100
+        score_ress = np.var(ress_val)*100
+
+        score_city = 25 if score_city ==0 else score_city
+        score_ress = 40 if score_ress ==0 else score_ress
+        return (score_city*self.city_weight + score_ress*self.ress_weight)/self._h_tot_weight
         
         ##################################
         # city_val = np.var(city_val)
@@ -70,9 +75,9 @@ class PiecesVarianceHeuristic(AlgorithmHeuristic):
         #return float(city_val*self.city_weight+ ress_val*self.ress_weight)/self._h_tot_weight
         #return float(city_val+ress_val)
         ##########################
-        pieces_vectors = (city_val*self.city_weight + ress_val*self.ress_weight)/self._h_tot_weight
-        return float(np.var(pieces_vectors)*100)
-
+        # pieces_vectors = (city_val*self.city_weight + ress_val*self.ress_weight)/self._h_tot_weight
+        # return float(np.var(pieces_vectors)*100)
+        ############################################33
 
     
     @property

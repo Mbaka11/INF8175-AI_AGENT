@@ -15,7 +15,7 @@ from seahorse.utils.custom_exceptions import ActionNotPermittedError
 
 L = 4.1
 
-ARGS_KEYS= Literal['opponent_score','my_score','last_move','my_piece','opponent_pieces','moves','is_first_to_play','my_id','opponent_id','current_env']
+ARGS_KEYS= Literal['opponent_score','my_score','last_move','my_pieces','opponent_pieces','moves','is_first_to_play','my_id','opponent_id','current_env']
 
 ############################################ Base Heuristic class  #############################################
 
@@ -30,8 +30,9 @@ class Heuristic:
 
 class AlgorithmHeuristic(Heuristic):
     # BUG Need tweak for the weights adds
-    def __init__(self, min_value: float, max_value: float,weight=1,L=L):
-        self.h_list: list[AlgorithmHeuristic] = [self]
+
+    def __init__(self, min_value: float, max_value: float,L=L,weight=1,h_list=None):
+        self.h_list: list[AlgorithmHeuristic] = [self] if h_list ==None else h_list
         self.min_value = min_value
         self.max_value = max_value
         self.weight = weight
@@ -51,25 +52,34 @@ class AlgorithmHeuristic(Heuristic):
     def _evaluation(self,current_state:GameStateDivercite,**kwargs)-> float:
         ...
 
-    def _clone(self):
-        ...
-
-    def __mul__(self,weight):
-        return AlgorithmHeuristic(self.min_value,self.max_value,weight)
-
-    def __truediv__(self,weight):
-        return AlgorithmHeuristic(self.min_value,self.max_value,weight)
-
     def _sigmoid(self, x: float):
         x_scaled = (x - (self.min_value + self.max_value) / 2) / \
             ((self.max_value - self.min_value) / 2) * self.L
         return 2 / (1 + np.exp(-x_scaled)) - 1
 
+    def __mul__(self,weight):
+        # BUG if there is other parameter then change the __mul__ in the kid class
+        clone = self.__class__()
+        clone.weight = weight
+        return clone
+
+    def __truediv__(self,weight):
+        clone = self.__class__()
+        clone.weight = weight
+        return clone
+
     def __add__(self, other):
-        if other not in self.h_list:
-            self.total_weight += other.weight
-            self.h_list.append(other)
-        return AlgorithmHeuristic(self.min_value,self.max_value,self.weight)
+        other:AlgorithmHeuristic = other
+        total_weight =self.weight + other.weight
+        temp = self.h_list + other.h_list
+    
+        clone = AlgorithmHeuristic(1,1,1,h_list=temp)
+        clone.total_weight = total_weight
+        return clone
+    
+    def __repr__(self):
+        return f'{self.__class__.__name__}:{self.weight}'
+    
 
 ############################################# Base Strategy Classes ##############################################
 
