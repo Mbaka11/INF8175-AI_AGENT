@@ -1,10 +1,12 @@
 from random import shuffle,choice
-from .constant import no_corner_city_position,AROUND_CITY,center_city_position,CENTER_CITY,CORNER_CITY,city_index_control,N_DIMS
+from .constant import *
 import numpy as np
 
-def is_city(piece_type: str): ...
+def is_city(piece_type: str): 
+    return piece_type in CityNames._member_names_
 
-def is_ressource(piece_type: str): ...
+def is_ressource(piece_type: str):
+    return piece_type in RessourcesNames._member_names_
 
 def is_in_board(pos:tuple[int,int]):
     x,y = pos

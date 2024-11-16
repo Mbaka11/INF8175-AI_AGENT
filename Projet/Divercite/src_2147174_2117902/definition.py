@@ -64,9 +64,21 @@ class AlgorithmHeuristic(Heuristic):
         return clone
 
     def __truediv__(self,weight):
-        clone = self.__class__()
+        temp_args = self._compute_added_args()
+        clone = self.__class__(**temp_args)
         clone.weight = weight
+
         return clone
+    
+    def _compute_added_args(self):
+        temp_args = self.__dict__.copy()
+        del temp_args['weight']
+        del temp_args['min_value']
+        del temp_args['max_value']
+        del temp_args['L']
+        del temp_args['h_list']
+        return temp_args
+    
 
     def __add__(self, other):
         other:AlgorithmHeuristic = other
@@ -79,6 +91,15 @@ class AlgorithmHeuristic(Heuristic):
     
     def __repr__(self):
         return f'{self.__class__.__name__}:{self.weight}'
+    
+    def _maximize_score_diff(self,my_original,opp_original,my_state,opp_state):
+        my_delta_score = my_state - my_original
+        delta_state = my_state - opp_state
+        cross_diff = (my_state - opp_original) - \
+            (opp_state-my_original)
+
+        return my_delta_score+delta_state+cross_diff
+
     
 
 ############################################# Base Strategy Classes ##############################################
