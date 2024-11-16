@@ -148,7 +148,8 @@ class MyPlayer(PlayerDivercite):
             # Case 7: 2 unique colors + 4 resources (Locked city)
             elif len(unique_colors) == 2 and len(adjacent_colors) == 4:
                 score -= 10  # Penalize lightly for inefficiency
-            return score
+                
+        return score
     
     def heuristic_evaluation(self, state: GameState) -> float:
         score_divercite = self.calculate_divercite_score(state)
