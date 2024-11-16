@@ -18,7 +18,6 @@ C_TEMP_DEN =20 +MAX_STEP
 
 N_DIMS= 9
 BOARD_DIMS = N_DIMS,N_DIMS
-
 ########################################     City Position    #####################################
 CENTER_CITY = 'center_city_key'
 CORNER_CITY = 'corner_city_key'
@@ -74,6 +73,9 @@ other_type_around_compute = [(1, 0), (-1, 0), (0, 1), (0, -1)]
 CITY_KEY = 'C'
 RESSOURCE_KEY = 'R'
 COLORS = set(['R', 'G', 'B', 'Y'])
+W_PIECE ='W'
+B_PIECE='B'
+PIECE_TYPE =set([W_PIECE,B_PIECE])
 
 ########################################   Pieces     #####################################
 

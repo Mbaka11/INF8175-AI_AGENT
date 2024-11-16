@@ -93,7 +93,9 @@ class Strategy:
     opponent_id: int = None
     remaining_time: float = None
     my_step: int = -1  # [0,19]
-
+    my_piece_type:str=None
+    opponent_piece_type:str=None
+                
     @staticmethod
     def set_current_state(current_state: GameStateDivercite, remaining_time: float):
         Strategy.current_state = current_state
@@ -110,6 +112,8 @@ class Strategy:
         temp.remove(Strategy.opponent_id)
         Strategy.my_id = temp[0]
         Strategy.is_first_to_play = Strategy.current_state.step == 0
+        Strategy.my_piece_type = W_PIECE if Strategy.is_first_to_play else B_PIECE
+        Strategy.opponent_piece_type = list(PIECE_TYPE.difference([Strategy.my_piece_type]))[0]
 
     def __init__(self, heuristic: Heuristic|AlgorithmHeuristic = None):
         self.main_heuristic = heuristic
