@@ -111,7 +111,7 @@ class Strategy:
         Strategy.my_id = temp[0]
         Strategy.is_first_to_play = Strategy.current_state.step == 0
 
-    def __init__(self, heuristic: Heuristic = None):
+    def __init__(self, heuristic: Heuristic|AlgorithmHeuristic = None):
         self.main_heuristic = heuristic
 
     @staticmethod
@@ -180,6 +180,10 @@ class Algorithm(Strategy):
 
     def __init__(self, heuristic: AlgorithmHeuristic, cache: Cache=None, allowed_time: float = None,keep_cache: bool = False):
         super().__init__(heuristic)
+        # if isinstance(cache,type):
+        #     if cache_size ==None:
+        #         cache_size = 500*max_depth
+        #     cache = cache(cache_size)
         self.cache = cache
         self.allowed_time = allowed_time
         self.keep_cache = keep_cache # ERROR can be source of heuristic evaluation error, only uses if a deeper search was done prior a less deeper search

@@ -16,6 +16,10 @@ class MinimaxTypeASearch(Algorithm):
         self.hit = 0
         self.node_expanded = 0
 
+    def __repr__(self):
+        # At {super().__repr__()} 
+        return f'\n\t <==>  Id:{id(self)} =>{self.__class__.__name__}(cache={self.cache.__class__.__name__}-Size:{self.cache.maxsize}, max_depth={self.max_depth}, heuristics={self.main_heuristic.h_list})'
+
     def _search(self):
         cost, action_star = self._minimax(self.current_state, True, float(
             '-inf'), float('inf'), 0, self.max_depth)
@@ -94,9 +98,10 @@ class MinimaxTypeASearch(Algorithm):
         return self._filter_action(state)
 
     def _clear_cache(self):
+        # BUG when self.max_depth is none
         if (MAX_STEP - self.current_state.step) <= self.max_depth:
             print('Not clearing the cache cause we already compute it')
-            super()._clear_cache()
+        super()._clear_cache()
 
 
 class MinimaxHybridSearch(MinimaxTypeASearch):
