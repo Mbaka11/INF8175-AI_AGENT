@@ -25,8 +25,11 @@ class PointDifferenceHeuristic(AlgorithmHeuristic):
 
 class ControlIndexHeuristic(AlgorithmHeuristic):
 
-    def __init__(self):
-        super().__init__(0, 1,)
+    def __init__(self,ctrl_weight=.35,dist_weight=.65,):
+        super().__init__(0, 900,L=11)
+        self.ctrl_weight = ctrl_weight
+        self.dist_weight= dist_weight
+        self.total_weight = ctrl_weight + dist_weight
 
     def _evaluation(self, current_state, **kwargs):
         my_piece_type = kwargs['my_piece_type']
@@ -39,7 +42,7 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
         (my_current_moves, my_current_ic), (opp_current_moves, opp_current_ic) = self._filter_moves_control_index(
             original_env, my_piece_type)
 
-        ic_control_index = self._maximize_score_diff(
+        control_index = self._maximize_score_diff(
             my_current_ic, opp_current_ic, my_ic_state, opp_ic_state)
 
         my_current_dist = self._compute_distances(
@@ -55,12 +58,11 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
         dist_index = self._maximize_score_diff(
             my_current_dist, opp_current_dist, my_state_dist, opp_state_dist)
 
-        # print('IC index:',ic_control_index)
-        # print('Distance index:',dist_index)
-        # print('Evaluation:',ic_control_index+dist_index)
-        # print('--'*10)
+        control_index =self._compute_control_index(control_index)
+        dist_index = self._compute_distance_index(dist_index)
 
-        return ic_control_index + dist_index  #NOTE we can add weight it depends on which is more important
+        return (control_index*self.ctrl_weight + dist_index*self.dist_weight)/self.total_weight  #NOTE we can add weight it depends on which is more important
+
 
     def _compute_distances(self, pieces_type: str, added_moves: dict[tuple, str], state_env: dict[tuple, str]):
         score = 0
@@ -84,15 +86,15 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
                 p_color, _, p_owner = state_env[computed_pos].piece_type
 
                 if c == p_color and pieces_type == p_owner:  # same color and same ownership
-                    score += (5 if in_horizontal else 10)
-
-                elif c == p_color and pieces_type != p_owner:  # same color but diff ownership
-                    score += (15 if in_horizontal else 10)
-
+                    score += (10 if in_horizontal else 15)
+                
                 elif c != p_color and pieces_type == p_owner:  # diff color but same ownership
                     score += (15 if in_horizontal else 10)
-                else:                # different ownership and diff_color
-                    score += (20 if in_horizontal else 15)
+
+                elif c == p_color and pieces_type != p_owner:  # same color but diff ownership
+                    score += (25 if in_horizontal else 20)      
+                else:                                           # different ownership and diff_color
+                    score += (30 if in_horizontal else 25)
 
         return score
 
@@ -113,12 +115,16 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
                 opp_moves[pos] = piece_type[:2]
                 opp_ic += control_index(pos)
 
-        # if return_ic:
-        #     # return (my_moves,my_ic),(opp_moves,my_ic)
-        #     return my_ic, opp_ic
-
         return (my_moves, my_ic), (opp_moves, opp_ic)
 
+    def _compute_control_index(self,x:float):
+        return self._range_scaling(x,3,52)
+    
+    def _compute_distance_index(self,x:float):
+        return self._range_scaling(x,100,700)
+
+    def normalize(self, x):
+        return x
 
 class PiecesVarianceHeuristic(AlgorithmHeuristic):
 
@@ -130,15 +136,13 @@ class PiecesVarianceHeuristic(AlgorithmHeuristic):
     def _evaluation(self, current_state, **kwargs):
         opponent_pieces = current_state.players_pieces_left[kwargs['opponent_id']]
         my_pieces = current_state.players_pieces_left[kwargs['my_id']]
-
         #####
         my_state_var = self._pieces_var(my_pieces)
         opp_state_var = self._pieces_var(opponent_pieces)
 
-        return  opp_state_var-my_state_var
+        #return  opp_state_var-my_state_var
+        return -my_state_var
         
-        
-
     def _pieces_var(self, pieces: dict[str, int]):
         city_val = np.array([pieces[cn] for cn in CityNames._member_names_])
         ress_val = np.array([pieces[rn]
