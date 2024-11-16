@@ -114,7 +114,7 @@ class MyPlayer(PlayerDivercite):
                         adjacent_resource_count = len(adjacent_colors)
                         unique_colors = set(adjacent_colors)
                         if len(unique_colors) == 4:
-                            score -= 3s00
+                            score -= 300
                         
                 elif not adjacent_cities:
                     score -= 50
