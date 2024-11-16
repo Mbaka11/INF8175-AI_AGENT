@@ -92,11 +92,11 @@ class AlgorithmHeuristic(Heuristic):
     def __repr__(self):
         return f'{self.__class__.__name__}:{self.weight}'
     
-    def _maximize_score_diff(self,my_original,opp_original,my_state,opp_state):
-        my_delta_score = my_state - my_original
+    def _maximize_score_diff(self,my_current,opp_current,my_state,opp_state):
+        my_delta_score = my_state - my_current
         delta_state = my_state - opp_state
-        cross_diff = (my_state - opp_original) - \
-            (opp_state-my_original)
+        cross_diff = (my_state - opp_current) - \
+            (opp_state-my_current)
 
         return my_delta_score+delta_state+cross_diff
 

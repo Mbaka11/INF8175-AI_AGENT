@@ -20,7 +20,7 @@ class PointDifferenceHeuristic(AlgorithmHeuristic):
         my_current_score = kwargs['my_score']
         opponent_current_score = kwargs['opponent_score']
 
-        return self._maximize_score_diff(my_current_score, opponent_current_score,my_state_score, opponent_state_score)
+        return self._maximize_score_diff(my_current_score, opponent_current_score, my_state_score, opponent_state_score)
 
 
 class ControlIndexHeuristic(AlgorithmHeuristic):
@@ -34,72 +34,69 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
         opp_piece_type = kwargs['opponent_piece_type']
         state_env = current_state.rep.env
 
-        (my_state_moves,my_ic_state), (opp_ic_state,opp_state_moves) = self._filter_moves_control_index(
+        (my_state_moves, my_ic_state), (opp_state_moves, opp_ic_state) = self._filter_moves_control_index(
             current_state.rep.env, my_piece_type)
-        my_current_ic, opp_current_ic = self._filter_moves_control_index(
-            original_env, my_piece_type,False)
-        
-        ic_control_index = self._maximize_score_diff(my_current_ic,opp_current_ic,my_ic_state,opp_ic_state)
-        print('IC index:',ic_control_index)
+        (my_current_moves, my_current_ic), (opp_current_moves, opp_current_ic) = self._filter_moves_control_index(
+            original_env, my_piece_type)
 
-        added_keys = state_env.keys()-original_env.keys()
-        diff_env = {keys: state_env[keys] for keys in added_keys}
-        my_added_moves, opp_added_moves = self._filter_moves_control_index(
-            diff_env, my_piece_type, return_ic=False)
-        
-        
-        
-        my_score_dist = self._compute_distances(my_piece_type,my_added_moves,state_env)
-        opp_score_dist = self._compute_distances(opp_piece_type,opp_added_moves,state_env)
-        
+        ic_control_index = self._maximize_score_diff(
+            my_current_ic, opp_current_ic, my_ic_state, opp_ic_state)
 
+        my_current_dist = self._compute_distances(
+            my_piece_type, my_current_moves, original_env)
+        opp_current_dist = self._compute_distances(
+            opp_piece_type, opp_current_moves, original_env)
 
-        print('My Sore:',my_score_dist)
-        print('Opp Score:',opp_score_dist)
-        print('-'*20)
-        return random()
+        my_state_dist = self._compute_distances(
+            my_piece_type, my_state_moves, state_env)
+        opp_state_dist = self._compute_distances(
+            opp_piece_type, opp_state_moves, state_env)
 
-    def _control_index(self, moves: dict):
-        score = 0
-        for pos in moves:
-            score += control_index(pos)
-        return score
+        dist_index = self._maximize_score_diff(
+            my_current_dist, opp_current_dist, my_state_dist, opp_state_dist)
+
+        # print('IC index:',ic_control_index)
+        # print('Distance index:',dist_index)
+        # print('Evaluation:',ic_control_index+dist_index)
+        # print('--'*10)
+
+        return ic_control_index + dist_index  #NOTE we can add weight it depends on which is more important
 
     def _compute_distances(self, pieces_type: str, added_moves: dict[tuple, str], state_env: dict[tuple, str]):
-        score=0
-        index=0
+        score = 0
+        index = 0
         for move_pos, pieces in added_moves.items():
 
             m_x, m_y = move_pos
             c, _ = pieces
 
             for pos in horizontal_vertical_compute + diagonal_compute:
-                index+=1
-                in_horizontal= index <=4
+                index += 1
+                in_horizontal = index <= 4
 
                 i, j = pos
 
                 computed_pos = m_x+i, m_y + j
                 if not is_in_board(computed_pos):
                     continue
-                if not computed_pos in state_env: # check neighbours
+                if not computed_pos in state_env:  # check neighbours
                     continue
                 p_color, _, p_owner = state_env[computed_pos].piece_type
-                
-                if c == p_color and pieces_type ==p_owner: # same color and same ownership
+
+                if c == p_color and pieces_type == p_owner:  # same color and same ownership
                     score += (5 if in_horizontal else 10)
-                    
-                elif c == p_color and pieces_type!=p_owner: # same color but diff ownership
+
+                elif c == p_color and pieces_type != p_owner:  # same color but diff ownership
                     score += (15 if in_horizontal else 10)
 
-                elif c!=p_color and pieces_type == p_owner: # diff color but same ownership
+                elif c != p_color and pieces_type == p_owner:  # diff color but same ownership
                     score += (15 if in_horizontal else 10)
                 else:                # different ownership and diff_color
                     score += (20 if in_horizontal else 15)
-        
+
         return score
 
-    def _filter_moves_control_index(self, env: dict[tuple, Any], my_piece_type: str, return_ic=True):
+    def _filter_moves_control_index(self, env: dict[tuple, Any], my_piece_type: str):
         my_moves = {}
         opp_moves = {}
         my_ic = 0
@@ -111,18 +108,16 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
                 continue
             if piece_type.endswith(my_piece_type):
                 my_moves[pos] = piece_type[:2]
-                if return_ic:
-                    my_ic += control_index(pos)
+                my_ic += control_index(pos)
             else:
                 opp_moves[pos] = piece_type[:2]
-                if return_ic:
-                    opp_ic += control_index(pos)
+                opp_ic += control_index(pos)
 
-        if return_ic:
-            # return (my_moves,my_ic),(opp_moves,my_ic)
-            return my_ic, opp_ic
+        # if return_ic:
+        #     # return (my_moves,my_ic),(opp_moves,my_ic)
+        #     return my_ic, opp_ic
 
-        return (my_moves,my_ic), (opp_moves,opp_ic)
+        return (my_moves, my_ic), (opp_moves, opp_ic)
 
 
 class PiecesVarianceHeuristic(AlgorithmHeuristic):
@@ -136,22 +131,13 @@ class PiecesVarianceHeuristic(AlgorithmHeuristic):
         opponent_pieces = current_state.players_pieces_left[kwargs['opponent_id']]
         my_pieces = current_state.players_pieces_left[kwargs['my_id']]
 
-        my_original_pieces = kwargs['my_pieces']
-        opponent_original_pieces = kwargs['opponent_pieces']
-
         #####
-
-        my_original_var = self._pieces_var(my_original_pieces)
-        opponent_original_var = self._pieces_var(opponent_original_pieces)
-
         my_state_var = self._pieces_var(my_pieces)
         opp_state_var = self._pieces_var(opponent_pieces)
 
-        opp_diff = opp_state_var-opponent_original_var
-        state_diff = opp_state_var-my_state_var
-        my_diff = my_state_var-my_original_var
-        # print(my_state_var)
-        return -my_state_var
+        return  opp_state_var-my_state_var
+        
+        
 
     def _pieces_var(self, pieces: dict[str, int]):
         city_val = np.array([pieces[cn] for cn in CityNames._member_names_])
