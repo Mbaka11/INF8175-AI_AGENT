@@ -47,10 +47,10 @@ pvr:
 	python Divercite/main_divercite.py -t local Divercite/${prince} Divercite/random_player_divercite.py  -r -g
 
 prince_vs_marsel:
-	cd Divercite && python main_divercite.py -t local ${prince} ${marsel} -r -g
+	python Divercite/main_divercite.py -t local Divercite/${prince} Divercite/${marsel} -r -g
 
 marsel_vs_prince:
-	cd Divercite && python main_divercite.py -t local ${marsel} ${prince} -r -g
+	python Divercite/main_divercite.py -t local Divercite/${marsel} Divercite/${prince} -r -g
 	
 
 
