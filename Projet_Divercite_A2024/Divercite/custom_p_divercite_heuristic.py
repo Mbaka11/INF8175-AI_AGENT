@@ -82,7 +82,7 @@ class MyPlayer(PlayerDivercite):
                     opponent_city_count = len([city for city in adjacent_cities.values() if city[2] != self.piece_type])
                     
                     # Reward placements near friendly cities but penalize or ignore placements near opponent cities
-                    score += 15 * friendly_city_count - 20 * opponent_city_count
+                    score += 15 * friendly_city_count - 25 * opponent_city_count
                 
         return score
         
@@ -116,20 +116,39 @@ class MyPlayer(PlayerDivercite):
             adjacent_colors = self.get_colors_around_city(state, city_pos)
             unique_colors = set(adjacent_colors)\
             
-            # Case 1: Full divercité (4 unique colors + 4 ressources => 5 points)
-            if len(unique_colors) == 4:
-                score += 200
-            # Case 2: Full unique color ( 1 unique color + 4 ressources => 4 points)
+            # Case 1: Full divercité (4 unique colors + 4 resources => 5 points)
+            if len(unique_colors) == 4 and len(adjacent_colors) == 4:
+                score += 200  # Full divercité, highest score
+
+            # Case 2: Full same color (1 unique color + 4 resources => 4 points)
             elif len(unique_colors) == 1 and len(adjacent_colors) == 4:
-                score += 125
+                score += 125  # Same color fully surrounding the city
+                
+            # Case 3: 3 unique colors + 3 resources => one step toward divercité
             elif len(unique_colors) == 3 and len(adjacent_colors) == 3:
                 missing_color = self.get_missing_colors_for_divercite(unique_colors)
-                if missing_color in {piece[0] for piece in state.players_pieces_left[state.next_player.get_id()]}:
-                    score += 50
-            elif len(unique_colors) == 2 and len(adjacent_colors) == 2 :
-                score += 25
+                # Check if the missing color is available in the player's remaining pieces
+                if missing_color in {piece[0] for piece in state.players_pieces_left[self.get_id()]}:
+                    score += 50  # Prioritize this city as it is close to divercité
+                
+            # Case 4: 2 unique colors + 2 resources => early progress
+            elif len(unique_colors) == 2 and len(adjacent_colors) == 2:
+                score += 25  # Moderate reward for potential progress
+                
+            # Case 5: 1 unique color + 1 resource => initial placement
+            elif len(unique_colors) == 1 and len(adjacent_colors) == 1:
+                score += 10  # Minimal progress, lowest reward
+                
+            # Case 6: 3 unique colors + 4 resources => incomplete divercité
+            elif len(unique_colors) == 3 and len(adjacent_colors) == 4:
+                missing_color = self.get_missing_colors_for_divercite(unique_colors)
+                if not missing_color:
+                    score -= 10  # Penalize since divercité is not possible
     
-        return score
+            # Case 7: 2 unique colors + 4 resources (Locked city)
+            elif len(unique_colors) == 2 and len(adjacent_colors) == 4:
+                score -= 10  # Penalize lightly for inefficiency
+            return score
     
     def heuristic_evaluation(self, state: GameState) -> float:
         score_divercite = self.calculate_divercite_score(state)
