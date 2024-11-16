@@ -35,6 +35,10 @@ class MyPlayer(PlayerDivercite):
                 # print(f"Player {player} has a city at {pos} of type {piece_type}")
         
         return player_cities
+
+    def get_total_pieces_on_board(self, state: GameState) -> int:
+        board = state.get_rep().get_env()
+        return len([piece for piece in board.values() if piece != 'EMPTY'])
     
     def get_colors_around_city(self, state: GameState, city_pos: tuple) -> list:
         adjacent_positions = state.get_neighbours(city_pos[0], city_pos[1])
@@ -48,12 +52,62 @@ class MyPlayer(PlayerDivercite):
         return adjacent_colors
            
     def get_missing_colors_for_divercite(self, current_colors: set) -> str:
-        all_colors = {'R', 'G', 'B'}
+        all_colors = {'R', 'G', 'B', 'Y'}
         missing_colors = all_colors - current_colors
         return missing_colors.pop() if missing_colors else None
+
+    def get_cities_affected_by_ressource(self, state: GameState, ressource_pos: tuple) -> dict:
+        adjacent_positions = state.get_neighbours(ressource_pos[0], ressource_pos[1])
+        adjacent_cities = {}
+        
+        for direction, (piece, pos) in adjacent_positions.items():
+            if piece != 'EMPTY' and hasattr(piece, 'get_type'):
+                piece_type = piece.get_type()
+                if piece_type[1] == 'C':
+                    adjacent_cities.update({pos: piece_type})
+        
+        return adjacent_cities
+
+    def evaluate_ressource_placement(self, state: GameState) -> float:
+        # Heuristic to boost the placement of ressources next to cities
+        score = 0
+        board = state.get_rep().get_env()
+        
+        for pos, piece in board.items():
+            piece_type = piece.get_type()
+            if piece_type[1] == 'R':
+                adjacent_cities = self.get_cities_affected_by_ressource(state, pos)
+                if adjacent_cities:
+                    friendly_city_count = len([city for city in adjacent_cities.values() if city[2] == self.piece_type])
+                    opponent_city_count = len([city for city in adjacent_cities.values() if city[2] != self.piece_type])
+                    
+                    # Reward placements near friendly cities but penalize or ignore placements near opponent cities
+                    score += 15 * friendly_city_count - 20 * opponent_city_count
+                
+        return score
+        
+    def calculate_blocking_score(self, state: GameState) -> float:
+        # Heuristic to boost the blocking of cities with 3 different colors around them
+        score = 0
+        opponent_symbol = 'B' if self.piece_type == 'W' else 'W'
+        opponent_cities = self.get_placed_cities_by_player(state, opponent_symbol)
+        
+        for city_pos in opponent_cities.keys():
+            adjacent_colors = self.get_colors_around_city(state, city_pos)
+            unique_colors = set(adjacent_colors)
+            city_color = opponent_cities[city_pos][0]
+            blocking_color = next(
+                (color for color in unique_colors if color != city_color),
+                None
+            )
+            
+            if len(unique_colors) == 3 and len(adjacent_colors) == 4 and adjacent_colors.count(blocking_color) == 2:
+                score += 125
+            elif len(unique_colors) == 2 and len(adjacent_colors) == 3 and adjacent_colors.count(blocking_color) == 1:
+                score += 50
+        return score
          
-    def divercite_heuristic(self, state: GameState) -> float:
-        # Heuristic to boost the completion of own cities with 3 different colors around them
+    def calculate_divercite_score(self, state: GameState) -> float:
         score = 0
         player_symbol = self.piece_type
         player_cities = self.get_placed_cities_by_player(state, player_symbol)
@@ -64,29 +118,46 @@ class MyPlayer(PlayerDivercite):
             
             # Case 1: Full divercité (4 unique colors + 4 ressources => 5 points)
             if len(unique_colors) == 4:
-                score += 100
+                score += 200
             # Case 2: Full unique color ( 1 unique color + 4 ressources => 4 points)
             elif len(unique_colors) == 1 and len(adjacent_colors) == 4:
-                score += 75
-            # Case 3: 3 unique colors + 3 ressources => 1 point (NEED TO SEE IF THE SAME COLOR IS THERE OR BOOST THIS ONE) and moving towards divercité
+                score += 125
             elif len(unique_colors) == 3 and len(adjacent_colors) == 3:
                 missing_color = self.get_missing_colors_for_divercite(unique_colors)
-                print(f"PLayer piueces left: {state.players_pieces_left[state.next_player.get_id()]}")
-                if missing_color in state.players_pieces_left[state.next_player.get_id()] :
+                if missing_color in {piece[0] for piece in state.players_pieces_left[state.next_player.get_id()]}:
                     score += 50
-            # Case 4: 2 unique colors + 2 ressources =>  point and moving towards divercité
             elif len(unique_colors) == 2 and len(adjacent_colors) == 2 :
                 score += 25
     
         return score
     
     def heuristic_evaluation(self, state: GameState) -> float:
+        score_divercite = self.calculate_divercite_score(state)
+        score_bloquage = self.calculate_blocking_score(state)
         player_actual_score = state.scores[self.get_id()]
-        player_pieces_left = state.players_pieces_left[self.get_id()]
-        divercite_heuristic_score = self.divercite_heuristic(state)
+
+        progress = ( self.get_total_pieces_on_board(state) / 42 ) * 100
+
+        # Adjust weights dynamically    
+        w_divercite = 1.0 if progress < 50 else 0.5
+        w_bloquage = 0.8 if progress < 50 else 1.5
+
+        score_divercite = self.calculate_divercite_score(state)
+        score_bloquage = self.calculate_blocking_score(state)
+        score_ressource_placement = self.evaluate_ressource_placement(state)
         
-        # return player_actual_score + player_pieces_left + divercite_heuristic_score
-        return divercite_heuristic_score + player_actual_score
+        total_score = (
+            w_divercite * score_divercite +
+            w_bloquage * score_bloquage +
+            score_ressource_placement +
+            player_actual_score
+        )
+        
+        print(f"Divercite score: {score_divercite}, Blocking score: {score_bloquage}, "
+            f"Ressource placement score: {score_ressource_placement},")
+        print(f"Total score: {total_score}")
+
+        return total_score
         
     def max_value(self, state : GameState, depth : int, max_depth : int, alpha : float, beta : float) -> float:
         if depth == max_depth:
