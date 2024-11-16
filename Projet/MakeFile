@@ -1,5 +1,6 @@
-player_name = my_player.py
+prince = my_player.py
 src_file = src_2147174_2117902
+marsel = custom_p_divercite_heuristic.py
 
 install	:
 	pip install -r requirements.txt
@@ -18,14 +19,14 @@ move:
 	mv *.json data/
 
 abyss:
-	cp Divercite/${player_name} ./
+	cp Divercite/${prince} ./
 	mkdir ${src_file}
 	cp Divercite/${src_file}/*.py ./${src_file}
-	zip abyss_2147174_2117902.zip requirements.txt ${player_name} ${src_file}/*.py
-	rm ${player_name} ${src_file} -f -R
+	zip abyss_2147174_2117902.zip requirements.txt ${prince} ${src_file}/*.py
+	rm ${prince} ${src_file} -f -R
 
 hvp:
-	python Divercite/main_divercite.py -t human_vs_computer Divercite/${player_name}
+	python Divercite/main_divercite.py -t human_vs_computer Divercite/${prince}
 
 hvr:
 	python Divercite/main_divercite.py -t human_vs_computer Divercite/random_player_divercite.py
@@ -34,13 +35,22 @@ hvg:
 	python Divercite/main_divercite.py -t human_vs_computer Divercite/greedy_player_divercite.py
 
 gvp:
-	python Divercite/main_divercite.py -t local Divercite/greedy_player_divercite.py Divercite/${player_name} -r -g
+	python Divercite/main_divercite.py -t local Divercite/greedy_player_divercite.py Divercite/${prince} -r -g
 
 pvg:
-	python Divercite/main_divercite.py -t local Divercite/${player_name} Divercite/greedy_player_divercite.py  -r -g
+	python Divercite/main_divercite.py -t local Divercite/${prince} Divercite/greedy_player_divercite.py  -r -g
 
 pvh:
-	cd Divercite && python main_divercite.py -t human_vs_computer ${player_name}
+	cd Divercite && python main_divercite.py -t human_vs_computer ${prince}
 
 pvr:
-	python Divercite/main_divercite.py -t local Divercite/${player_name} Divercite/random_player_divercite.py  -r -g
+	python Divercite/main_divercite.py -t local Divercite/${prince} Divercite/random_player_divercite.py  -r -g
+
+prince_vs_marsel:
+	cd Divercite && python main_divercite.py -t local ${prince} ${marsel} -r -g
+
+marsel_vs_prince:
+	cd Divercite && python main_divercite.py -t local ${marsel} ${prince} -r -g
+	
+
+
