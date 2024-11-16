@@ -32,20 +32,23 @@ class OpeningMoveStrategy(Strategy):
         self.force_same_color = force_same_color
         self.last_color_played = None
         self.center_city_position = center_city_position.copy()
-    
+        self.no_corner_city_position = no_corner_city_position.copy()
+
 
     def _search(self) -> LightAction:
        # NOTE forcing the same color or a different might not necessary be a better move
-        if self.is_first_to_play and  self.current_state.step ==0 :
+        if self.is_first_to_play and  self.current_state.step == 0 :
             city = choice(CityNames._member_names_)
             self.last_color_played,_ = city
             pos=choice(list(center_city_position))
             self.center_city_position.difference_update([pos])
             return LightAction({POSITION_KEY: pos, PIECE_KEY: city})
      
+        self.center_city_position.difference_update(self.moves)
+        self.no_corner_city_position.difference_update(self.moves)
+        
         pieces:Piece = self.current_state.rep.env[self.last_move]
         c,t,_ = pieces.piece_type
-
 
         if  self.current_state.step >=2:
             if c == self.last_color_played:
@@ -57,11 +60,10 @@ class OpeningMoveStrategy(Strategy):
             self.last_color_played,_= piece
 
 
-        self.center_city_position.difference_update([self.last_move])
+        
         if t == CITY_KEY:
                 
                 if self.last_move in center_city_position:
-                    
                     index_compute = horizontal_vertical_compute if self.force_same_color else diagonal_compute # BUG Hyperparameter to test, based on statistic wether we play the same color or not 
                     return LightAction({POSITION_KEY: check_certain_position(self.last_move,index_compute,self.center_city_position), PIECE_KEY: piece })
 
@@ -81,12 +83,15 @@ class OpeningMoveStrategy(Strategy):
 
             neighbors = self.current_state.get_neighbours(self.last_move[0],self.last_move[1])
             neighbors = [ v[1] for _,v in neighbors.items()]
-            print(neighbors)
-            neighbors = choice(list(self.center_city_position.intersection(neighbors)))
-            self.last_color_played = c
-            return LightAction({POSITION_KEY: neighbors, PIECE_KEY: c+CITY_KEY})
-
-        pos = minimize_maximize_distance(self.last_move,self.center_city_position)
+            neighbors = list(self.center_city_position.intersection(neighbors))
+            if len(neighbors)!=0:
+                neighbors = choice(neighbors)
+                self.last_color_played = c
+                return LightAction({POSITION_KEY: neighbors, PIECE_KEY: c+CITY_KEY})
+            pos = minimize_maximize_distance(self.last_move,self.no_corner_city_position)
+            return LightAction({POSITION_KEY: pos, PIECE_KEY: piece})
+            
         
+        pos = minimize_maximize_distance(self.last_move,self.center_city_position)
         return LightAction({POSITION_KEY: pos, PIECE_KEY: piece})
 

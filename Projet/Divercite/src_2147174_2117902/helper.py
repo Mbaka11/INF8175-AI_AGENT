@@ -32,7 +32,7 @@ def check_certain_position(pos, index_compute, preferred_pos=no_corner_city_posi
         return choice(list(fallback_pos))
 
 def minimize_maximize_distance(x, preferred_position: set, is_min=True):
-        # NOTE might put in a helper
+        
         available_position = list(preferred_position)
         distances = (np.array(available_position) - np.array([x]))**2
         dist_position: np.ndarray = np.apply_along_axis(
