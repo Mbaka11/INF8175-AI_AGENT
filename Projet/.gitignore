@@ -1,5 +1,10 @@
 Divercite/*
+Divercite/src_2147174_2117902/__pycache__/
 !Divercite/my_player.py
 !Divercite/tools.py
+!Divercite/src_2147174_2117902
 *.pdf
 .venv
+*.json
+*.ipynb
+*.zip

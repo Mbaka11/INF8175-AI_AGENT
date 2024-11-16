@@ -9,6 +9,11 @@ import psutil,os
 
 
 
+############################################      CONSTANT        ###########################################
+MAX_TIME = 60*15
+MAX_RAM =   4_294_967_296/2
+
+
 ############################################      Utils        ###########################################
 
 
@@ -352,10 +357,14 @@ def Monitor(func:Callable):
         
         end_mem = process.memory_info().rss
         end_cpu = process.cpu_percent(interval=None)
-        
-        print(f"Memory usage: {end_mem - start_mem} bytes")
-        print(f"CPU usage: {end_cpu - start_cpu}%")
-        print(f"Execution time: {end_time - start_time} seconds")
+
+        used_mem = abs(end_mem-start_mem)
+        computed_time = end_time - start_time
+
+        print(f"Memory usage: {used_mem} bytes")
+        print(f"CPU usage: {(end_cpu - start_cpu)}%")
+        print(f"Execution time: {computed_time:.4f} seconds")
+        print(f'Environnement: {used_mem*100/MAX_RAM:.4f} RAM USED % -',f'{computed_time*100/MAX_TIME:.4f} TIME USED %' )
         
         return result
     return wrapper
