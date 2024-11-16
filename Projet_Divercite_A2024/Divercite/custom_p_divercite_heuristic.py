@@ -159,7 +159,7 @@ class MyPlayer(PlayerDivercite):
             )
             
             if len(unique_colors) == 3 and len(adjacent_colors) == 4 and adjacent_colors.count(blocking_color) == 2:
-                score += 200
+                score += 500
             elif len(unique_colors) == 2 and len(adjacent_colors) == 3 and adjacent_colors.count(blocking_color) == 1:
                 score += 50
         return score
