@@ -29,13 +29,15 @@ class MyPlayer(PlayerDivercite):
         super().__init__(piece_type, name)
         pointDiffHeuristic = PointDifferenceHeuristic()
         piecesVarianceHeuristic = PiecesVarianceHeuristic()
+        controlIndexHeuristic = ControlIndexHeuristic()
         
-        hybrid = pointDiffHeuristic*3 + piecesVarianceHeuristic*7
+        hybrid = pointDiffHeuristic*8 + controlIndexHeuristic + piecesVarianceHeuristic
 
         self._controller: StrategyController = StrategyController().add_strategy(
-            OpeningMoveStrategy(True), 2).add_strategy(
-                #MinimaxTypeASearch(piecesVarianceHeuristic,3,LRUCache(2500),3)).add_strategy(
-                MinimaxTypeASearch(hybrid,4,LRUCache(1500)),12).add_strategy(
+            OpeningMoveStrategy(False), 2).add_strategy(
+                #MinimaxTypeASearch(controlIndexHeuristic,4,LRUCache(2500),3)).add_strategy(
+                MinimaxTypeASearch(hybrid,4,LRUCache(2500)),5).add_strategy(
+                MinimaxTypeASearch(pointDiffHeuristic*8 + piecesVarianceHeuristic*2,4,LRUCache(2500)),7).add_strategy(
                 MinimaxTypeASearch(pointDiffHeuristic,6,LRUCache(2500)),)    
                 
 
