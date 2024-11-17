@@ -47,16 +47,29 @@ class AlgorithmHeuristic(Heuristic):
         return sum(vals)/self.total_weight # TODO add weighted sum 
 
     def evaluate(self, current_state: GameStateDivercite,**kwargs) -> float:
-        return self._sigmoid(self._evaluation(current_state,**kwargs))
+        return self.normalize(self._evaluation(current_state,**kwargs))
 
     def _evaluation(self,current_state:GameStateDivercite,**kwargs)-> float:
         ...
 
-    def _sigmoid(self, x: float):
-        x_scaled = (x - (self.min_value + self.max_value) / 2) / \
-            ((self.max_value - self.min_value) / 2) * self.L
+    def _sigmoid(self, x: float,min_value,max_value,L):
+        x_scaled = (x - (min_value + max_value) / 2) / \
+            ((max_value - min_value) / 2) * L
         return 2 / (1 + np.exp(-x_scaled)) - 1
+    
+    def normalize(self,x:float):
+        #return self._sigmoid(x,self.min_value,self.max_value,L)
+        return self._range_scaling(x,self.min_value,self.max_value)
+    
+    def _range_scaling(self,value, min_value, max_value):
+        if min_value == max_value:
+            raise ValueError("min_value and max_value must be different for scaling.")
 
+        normalized_value = (value - min_value) / (max_value - min_value)
+        scaled_value = 2 * normalized_value - 1
+    
+        return scaled_value
+        
     def __mul__(self,weight):
         # BUG if there is other parameter then change the __mul__ in the kid class
         clone = self.__class__()
@@ -230,11 +243,14 @@ class Algorithm(Strategy):
         return my_scores-opponent_scores
         
 
-    def _is_our_turn(self):
-        if self.is_first_to_play and self.current_state.step % 2 == 0:
+    def _is_our_turn(self, step = None):
+        if step ==None:
+            step = self.current_state.step 
+
+        if self.is_first_to_play and step % 2 == 0:
             return True
 
-        if not self.is_first_to_play and self.current_state.step % 2 == 1:
+        if not self.is_first_to_play and step % 2 == 1:
             return True
 
         return False

@@ -296,7 +296,7 @@ def Time(func: Callable):
         result = func(*args, **kwargs)
         end_time = perf_counter()
         print(
-            f'Time {func.__name__} - {hash_args((args,kwargs))}: {end_time-start_time} sec')
+            f'Func: {func.__name__}\nArgs: {hash_args((args,kwargs))}\nTime: {end_time-start_time} sec')
         return result
 
     return wrapper
