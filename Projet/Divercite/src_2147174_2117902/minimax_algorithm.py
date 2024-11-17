@@ -12,13 +12,13 @@ class MinimaxTypeASearch(Algorithm):
 
     def __init__(self, typeA_heuristic: AlgorithmHeuristic, max_depth: int | None, cache: Cache, allowed_time: float = None):
         super().__init__(typeA_heuristic, cache, allowed_time)
-        self.max_depth = max_depth
+        self.max_depth = max_depth if max_depth != None else MAX_STEP
         self.hit = 0
         self.node_expanded = 0
 
     def __repr__(self):
         # At {super().__repr__()} 
-        return f'\n\t <==>  Id:{id(self)} =>{self.__class__.__name__}(cache={self.cache.__class__.__name__}-Size:{self.cache.maxsize}, max_depth={self.max_depth}, heuristics={self.main_heuristic.h_list})'
+        return f'\n\t<==>  Id:{id(self)} =>{self.__class__.__name__}(cache={self.cache.__class__.__name__}-Size:{self.cache.maxsize}, max_depth={self.max_depth}, heuristics={self.main_heuristic.h_list})'
 
     def _search(self):
         cost, action_star = self._minimax(self.current_state, True, float(
@@ -77,7 +77,6 @@ class MinimaxTypeASearch(Algorithm):
             else:
                 beta = min(beta, v_star)
 
-            # ERROR if it is stricly higher or lower the search will be quicker
             if v_star >= beta and isMaximize:
                 return v_star, m_star
             if v_star <= alpha and not isMaximize:
@@ -102,9 +101,9 @@ class MinimaxTypeASearch(Algorithm):
         return self._filter_action(state)
 
     def _clear_cache(self):
-        # BUG when self.max_depth is none
         if (MAX_STEP - self.current_state.step) <= self.max_depth:
             print('Not clearing the cache cause we already compute it')
+            return
         super()._clear_cache()
 
 
@@ -112,7 +111,7 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
 
     MAX_THRESHOLD = 0
 
-    def __init__(self, cache: Cache, typeB_heuristic: AlgorithmHeuristic, allowed_time: float = None, typeA_heuristic: AlgorithmHeuristic = None, threshold: float = 0.5, n_expanded: int | None = None, max_depth: int = MAX_STEP):
+    def __init__(self, cache: Cache, typeB_heuristic: AlgorithmHeuristic, allowed_time: float = None, typeA_heuristic: AlgorithmHeuristic = None, threshold: float = 0.5, n_expanded: int | None = None, max_depth: int = None):
         super().__init__(typeA_heuristic, max_depth, cache, allowed_time)
         self.n_max_expanded = n_expanded
         self.typeB_heuristic = typeB_heuristic
@@ -147,10 +146,6 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
     def _filter_action(self, states):
         # TODO
         return super()._filter_action(states)
-
-    def _isQuiescent(self, state, pred_utility):
-        # TODO If the step is less than the last step, we should check if the moves is safe
-        return True
 
     def _transition(self, state, action):
         return super()._transition(state, action[0])

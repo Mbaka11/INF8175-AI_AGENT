@@ -45,14 +45,14 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
         control_index = self._maximize_score_diff(
             my_current_ic, opp_current_ic, my_ic_state, opp_ic_state)
 
-        my_current_dist = self._compute_distances(
+        my_current_dist = self._compute_neighborhood_distances(
             my_piece_type, my_current_moves, original_env)
-        opp_current_dist = self._compute_distances(
+        opp_current_dist = self._compute_neighborhood_distances(
             opp_piece_type, opp_current_moves, original_env)
 
-        my_state_dist = self._compute_distances(
+        my_state_dist = self._compute_neighborhood_distances(
             my_piece_type, my_state_moves, state_env)
-        opp_state_dist = self._compute_distances(
+        opp_state_dist = self._compute_neighborhood_distances(
             opp_piece_type, opp_state_moves, state_env)
 
         dist_index = self._maximize_score_diff(
@@ -64,7 +64,7 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
         return (control_index*self.ctrl_weight + dist_index*self.dist_weight)/self.total_weight  #NOTE we can add weight it depends on which is more important
 
 
-    def _compute_distances(self, pieces_type: str, added_moves: dict[tuple, str], state_env: dict[tuple, str]):
+    def _compute_neighborhood_distances(self, pieces_type: str, added_moves: dict[tuple, str], state_env: dict[tuple, str]):
         score = 0
         index = 0
         for move_pos, pieces in added_moves.items():
@@ -94,7 +94,7 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
                 elif c == p_color and pieces_type != p_owner:  # same color but diff ownership
                     score += (25 if in_horizontal else 20)      
                 else:                                           # different ownership and diff_color
-                    score += (30 if in_horizontal else 25)
+                    score += (35 if in_horizontal else 30)
 
         return score
 
@@ -129,7 +129,7 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
 class PiecesVarianceHeuristic(AlgorithmHeuristic):
 
     def __init__(self, city_weight=.7, ress_weight=.3):
-        super().__init__(-300, -4, L=4.3)
+        super().__init__(-160, 160, L=4.3)
         self.city_weight = city_weight
         self.ress_weight = ress_weight
 
