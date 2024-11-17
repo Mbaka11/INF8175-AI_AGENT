@@ -38,7 +38,7 @@ class MinimaxTypeASearch(Algorithm):
                 state, my_id=self.my_id, opponent_id=self.opponent_id, my_pieces=self.my_pieces, opponent_pieces=self.opponent_pieces,
                 last_move=self.last_move, is_first_to_play=self.is_first_to_play, moves=self.moves,current_env=self.current_env,
                 my_score=self.my_score, opponent_score=self.opponent_score,my_piece_type=self.my_piece_type,opponent_piece_type=self.opponent_piece_type)
-            if self._isQuiescent(state, pred_utility):
+            if self._isQuiescent(state, pred_utility,isMaximize):
                 return pred_utility, None
 
         v_star = float('-inf') if isMaximize else float('inf')
@@ -77,6 +77,7 @@ class MinimaxTypeASearch(Algorithm):
             else:
                 beta = min(beta, v_star)
 
+            # ERROR if it is stricly higher or lower the search will be quicker
             if v_star >= beta and isMaximize:
                 return v_star, m_star
             if v_star <= alpha and not isMaximize:
@@ -84,8 +85,11 @@ class MinimaxTypeASearch(Algorithm):
 
         return v_star, m_star
 
-    def _isQuiescent(self, state: GameStateDivercite, pred_utility: float) -> bool:
-        # TODO
+    def _isQuiescent(self, state: GameStateDivercite, pred_utility: float,isMaximize:bool) -> bool:
+        if not isMaximize:
+            return True
+        # TODO check wether the state is safe or nah
+        
         return True
 
     def _compute_next_max_depth(self, current_max_depth: int, *args) -> int:

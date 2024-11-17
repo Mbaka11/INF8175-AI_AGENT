@@ -243,11 +243,14 @@ class Algorithm(Strategy):
         return my_scores-opponent_scores
         
 
-    def _is_our_turn(self):
-        if self.is_first_to_play and self.current_state.step % 2 == 0:
+    def _is_our_turn(self, step = None):
+        if step ==None:
+            step = self.current_state.step 
+
+        if self.is_first_to_play and step % 2 == 0:
             return True
 
-        if not self.is_first_to_play and self.current_state.step % 2 == 1:
+        if not self.is_first_to_play and step % 2 == 1:
             return True
 
         return False

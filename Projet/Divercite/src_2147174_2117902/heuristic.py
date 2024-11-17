@@ -10,7 +10,7 @@ from random import random
 class PointDifferenceHeuristic(AlgorithmHeuristic):
 
     def __init__(self):
-        super().__init__(-30, 30, L=6)
+        super().__init__(-35, 35, L=6)
 
     def _evaluation(self, current_state, **kwargs):
         my_state_score = current_state.get_scores()[kwargs['my_id']]
@@ -19,7 +19,7 @@ class PointDifferenceHeuristic(AlgorithmHeuristic):
 
         my_current_score = kwargs['my_score']
         opponent_current_score = kwargs['opponent_score']
-
+        # BUG Might want to revisit the way we quantify this heuristic and remove the cross diff
         return self._maximize_score_diff(my_current_score, opponent_current_score, my_state_score, opponent_state_score)
 
 
@@ -140,19 +140,26 @@ class PiecesVarianceHeuristic(AlgorithmHeuristic):
         my_state_var = self._pieces_var(my_pieces)
         opp_state_var = self._pieces_var(opponent_pieces)
 
-        #return  opp_state_var-my_state_var
-        return -my_state_var
+        return  opp_state_var-my_state_var
+        #return -my_state_var
         
     def _pieces_var(self, pieces: dict[str, int]):
         city_val = np.array([pieces[cn] for cn in CityNames._member_names_])
-        ress_val = np.array([pieces[rn]
-                            for rn in RessourcesNames._member_names_])
-        score_city = np.var(city_val)*100
-        score_ress = np.var(ress_val)*100
+        ress_val = np.array([pieces[rn] for rn in RessourcesNames._member_names_])
+        
+        is_tuning = ress_val.sum() > city_val.sum()
+        if is_tuning:
+            city_val +=1
 
-        score_city = 25 if score_city == 0 else score_city
-        score_ress = 40 if score_ress == 0 else score_ress
-        return (score_city*self.city_weight + score_ress*self.ress_weight)/self._h_tot_weight
+        score_city = float(np.var(city_val))*100
+        score_ress = float(np.var(ress_val))*100
+        city_penalty = 30 if is_tuning else 20
+        ress_penalty = 20 if is_tuning else 30
+
+        score_city = city_penalty if score_city ==0 else score_city
+        score_ress = ress_penalty if score_ress ==0 else score_ress
+
+        return score_city + score_ress
 
         ##################################
         # city_val = np.var(city_val)
