@@ -12,8 +12,14 @@ from game_state_divercite import GameStateDivercite
 from cachetools import FIFOCache, LFUCache, TTLCache, LRUCache, cachedmethod, Cache
 from gc import collect
 from seahorse.utils.custom_exceptions import ActionNotPermittedError
+from enum import Enum
+from inspect import signature
 
 L = 4.1
+
+class Optimization(Enum):
+    MAXIMIZE = 1
+    MINIMIZE = -1
 
 ARGS_KEYS= Literal['opponent_score','my_score','last_move','my_pieces','opponent_pieces','moves','is_first_to_play','my_id','opponent_id','current_env']
 
@@ -31,13 +37,15 @@ class Heuristic:
 class AlgorithmHeuristic(Heuristic):
     # BUG Need tweak for the weights adds
 
-    def __init__(self, min_value: float, max_value: float,L=L,weight=1,h_list=None):
+    def __init__(self, min_value: float, max_value: float,L=L,weight=1,h_list=None,optimization = Optimization.MAXIMIZE):
         self.h_list: list[AlgorithmHeuristic] = [self] if h_list ==None else h_list
         self.min_value = min_value
         self.max_value = max_value
         self.weight = weight
         self.total_weight=weight
         self.L = L
+        self.optimization = optimization
+
 
     def __call__(self, *args, **kwds) -> float: 
         if len(self.h_list) == 1:
@@ -85,14 +93,16 @@ class AlgorithmHeuristic(Heuristic):
     
     def _compute_added_args(self):
         temp_args = self.__dict__.copy()
+        #print(signature(AlgorithmHeuristic.__init__))
+        # TODO dynamically remove every parameter from the init func
         del temp_args['weight']
         del temp_args['min_value']
         del temp_args['max_value']
         del temp_args['L']
         del temp_args['h_list']
+        del temp_args['optimization']
         return temp_args
     
-
     def __add__(self, other):
         other:AlgorithmHeuristic = other
         total_weight =self.weight + other.weight
@@ -113,7 +123,9 @@ class AlgorithmHeuristic(Heuristic):
 
         return my_delta_score+delta_state+cross_diff
 
-    
+    def _maximized_potential(self,opp_state,my_state):
+        return self.optimization.value*((my_state - opp_state) + my_state)
+            
 
 ############################################# Base Strategy Classes ##############################################
 
