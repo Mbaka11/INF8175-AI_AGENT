@@ -128,7 +128,7 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
 class PiecesVarianceHeuristic(AlgorithmHeuristic):
 
     def __init__(self, city_weight=.7, ress_weight=.3):
-        super().__init__(-160, 160, L=4.3,optimization=Optimization.MINIMIZE) # URGENT-TODO Recheck the scaling depends on minimize or maximize
+        super().__init__(-160, 120, L=4.3,optimization=Optimization.MINIMIZE) # URGENT-TODO Recheck the scaling depends on minimize or maximize
         self.city_weight = city_weight
         self.ress_weight = ress_weight
 
@@ -138,8 +138,9 @@ class PiecesVarianceHeuristic(AlgorithmHeuristic):
         #####
         my_state_var = self._pieces_var(my_pieces)
         opp_state_var = self._pieces_var(opponent_pieces)
-        #print('Optimized Potential:',self._maximized_potential(opp_state_var,my_state_var))
-        return  opp_state_var-my_state_var
+
+        return self._maximized_potential(opp_state_var,my_state_var)
+        #return  opp_state_var-my_state_var
         #return -my_state_var
         
     def _pieces_var(self, pieces: dict[str, int]):
@@ -180,7 +181,6 @@ class PiecesVarianceHeuristic(AlgorithmHeuristic):
 class DiverciteHeuristic(AlgorithmHeuristic):
     def __init__(self,):
         super().__init__(-2500,2500, )
-
     
     def get_placed_cities_by_player(self, state: GameStateDivercite, player: str) -> dict:
         player_cities = {}
