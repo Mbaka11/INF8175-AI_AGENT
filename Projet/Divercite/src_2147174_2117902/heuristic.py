@@ -1,6 +1,6 @@
 from typing import Any
 from game_state_divercite import GameStateDivercite
-from .definition import AlgorithmHeuristic, Heuristic, ARGS_KEYS
+from .definition import AlgorithmHeuristic, Heuristic, ARGS_KEYS, Optimization
 from .constant import *
 from .helper import *
 import numpy as np
@@ -128,7 +128,7 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
 class PiecesVarianceHeuristic(AlgorithmHeuristic):
 
     def __init__(self, city_weight=.7, ress_weight=.3):
-        super().__init__(-160, 160, L=4.3) # URGENT-TODO Recheck the scaling depends on minimize or maximize
+        super().__init__(-160, 160, L=4.3,optimization=Optimization.MINIMIZE) # URGENT-TODO Recheck the scaling depends on minimize or maximize
         self.city_weight = city_weight
         self.ress_weight = ress_weight
 
@@ -138,8 +138,8 @@ class PiecesVarianceHeuristic(AlgorithmHeuristic):
         #####
         my_state_var = self._pieces_var(my_pieces)
         opp_state_var = self._pieces_var(opponent_pieces)
-
-        return  opp_state_var-my_state_var # URGENT-TODO Compute potential
+        #print('Optimized Potential:',self._maximized_potential(opp_state_var,my_state_var))
+        return  opp_state_var-my_state_var
         #return -my_state_var
         
     def _pieces_var(self, pieces: dict[str, int]):
@@ -178,8 +178,8 @@ class PiecesVarianceHeuristic(AlgorithmHeuristic):
         return self.city_weight+self.ress_weight
 
 class DiverciteHeuristic(AlgorithmHeuristic):
-    def __init__(self, min_value, max_value,L=...):
-        super().__init__(min_value, max_value, L)
+    def __init__(self,):
+        super().__init__(-2500,2500, )
 
     
     def get_placed_cities_by_player(self, state: GameStateDivercite, player: str) -> dict:
@@ -226,12 +226,12 @@ class DiverciteHeuristic(AlgorithmHeuristic):
         
         return adjacent_cities
 
-    def evaluate_resource_scarcity(self, state: GameStateDivercite) -> float:
+    def evaluate_resource_scarcity(self, state: GameStateDivercite,player_id) -> float:
         """
         Penalize excessive use of scarce resources.
         """
         score = 0
-        player_pieces_left = state.players_pieces_left[self.get_id()]
+        player_pieces_left = state.players_pieces_left[player_id]
         total_pieces = sum(player_pieces_left.values())
 
         # Penalize if a specific resource color is disproportionately used
@@ -245,7 +245,7 @@ class DiverciteHeuristic(AlgorithmHeuristic):
 
         return score
 
-    def evaluate_ressource_placement(self, state: GameStateDivercite) -> float:
+    def evaluate_ressource_placement(self, state: GameStateDivercite,piece_type:str) -> float:
         # Heuristic to boost the placement of ressources next to cities
         score = 0
         board = state.get_rep().get_env()
@@ -255,15 +255,15 @@ class DiverciteHeuristic(AlgorithmHeuristic):
             if piece_type[1] == 'R':
                 adjacent_cities = self.get_cities_affected_by_ressource(state, pos)
                 if adjacent_cities:
-                    friendly_city_count = len([city for city in adjacent_cities.values() if city[2] == self.piece_type])
-                    opponent_city_count = len([city for city in adjacent_cities.values() if city[2] != self.piece_type])
+                    friendly_city_count = len([city for city in adjacent_cities.values() if city[2] == piece_type])
+                    opponent_city_count = len([city for city in adjacent_cities.values() if city[2] != piece_type])
                     
                     # Reward placements benefiting friendly cities
                     score += 50 * friendly_city_count
                     # Penalize placements helping opponent cities
                     score -= 100 * opponent_city_count
                 
-                    opponent_cities = [city for city in adjacent_cities.values() if city[2] != self.piece_type]
+                    opponent_cities = [city for city in adjacent_cities.values() if city[2] != piece_type]
                     for city in opponent_cities:
                         city_color = city[0]
                         if city_color == piece_type[0]:
@@ -279,14 +279,14 @@ class DiverciteHeuristic(AlgorithmHeuristic):
                 
         return score
     
-    def evaluate_city_placement(self, state: GameStateDivercite) -> float:
+    def evaluate_city_placement(self, state: GameStateDivercite,player_symbol:str) -> float:
         # Heuristic to boost the placement of cities near resources
         score = 0
         board = state.get_rep().get_env()
         
         for pos, piece in board.items():
             piece_type = piece.get_type()
-            if piece_type[1] == 'C':
+            if piece_type[1] == 'C' and piece_type[2]==player_symbol: # NOTE changed to the point of view of the player
                 adjacent_colors = self.get_colors_around_city(state, pos)
                 adjacent_resource_count = len(adjacent_colors)
                 unique_colors = set(adjacent_colors)
@@ -301,10 +301,10 @@ class DiverciteHeuristic(AlgorithmHeuristic):
                     
         return score
         
-    def calculate_blocking_score(self, state: GameStateDivercite) -> float:
+    def calculate_blocking_score(self, state: GameStateDivercite,piece_type:str) -> float:
         # Heuristic to boost the blocking of cities with 3 different colors around them
         score = 0
-        opponent_symbol = 'B' if self.piece_type == 'W' else 'W'
+        opponent_symbol = 'B' if piece_type == 'W' else 'W'
         opponent_cities = self.get_placed_cities_by_player(state, opponent_symbol)
         
         for city_pos in opponent_cities.keys():
@@ -322,9 +322,9 @@ class DiverciteHeuristic(AlgorithmHeuristic):
                 score += 50
         return score
          
-    def calculate_divercite_score(self, state: GameStateDivercite) -> float:
+    def calculate_divercite_score(self, state: GameStateDivercite,player_symbol,player_id) -> float:
         score = 0
-        player_symbol = self.piece_type
+
         player_cities = self.get_placed_cities_by_player(state, player_symbol)
 
         for city_pos in player_cities.keys():
@@ -350,7 +350,7 @@ class DiverciteHeuristic(AlgorithmHeuristic):
             elif len(unique_colors) == 3 and len(adjacent_colors) == 3 and city_color in unique_colors:
                 missing_color = self.get_missing_colors_for_divercite(unique_colors)
                 # Check if the missing color is available in the player's remaining pieces
-                if missing_color in {piece[0] for piece in state.players_pieces_left[self.get_id()]}:
+                if missing_color in {piece[0] for piece in state.players_pieces_left[player_id]}:
                     score += 50  # Prioritize this city as it is close to divercité
                 
             # Case 4: 2 unique colors + 2 resources => early progress
@@ -380,12 +380,26 @@ class DiverciteHeuristic(AlgorithmHeuristic):
         return score
     
     def _evaluation(self, state: GameStateDivercite,**kwargs) -> float:
-        score_divercite = self.calculate_divercite_score(state)
-        score_bloquage = self.calculate_blocking_score(state)
-        player_actual_score = state.scores[self.get_id()]
-        score_resource_scarcity = self.evaluate_resource_scarcity(state)
+        opp_id = kwargs['opponent_id']
+        my_id = kwargs['my_id']
+        my_symbol = kwargs['my_piece_type']
+        opponent_symbol = kwargs['opponent_piece_type']
 
-        progress = ( self.get_total_pieces_on_board(state) / 42 ) * 100
+        my_total_score = self._compute_divercite_score(state,my_symbol,my_id)
+        opp_total_score = self._compute_divercite_score(state,opponent_symbol,opp_id)
+
+        # print('My score:',my_total_score)
+        # print('Opp score: ',opp_total_score)
+        # print('Maximized:',self._maximized_potential(opp_total_score,my_total_score))
+
+        return self._maximized_potential(opp_total_score,my_total_score)
+
+    def _compute_divercite_score(self, state:GameStateDivercite,player_symbol:str,player_id:str):
+        #score_divercite = self.calculate_divercite_score(state,player_symbol,player_id)
+        #score_bloquage = self.calculate_blocking_score(state,player_symbol)
+        #player_actual_score = state.scores[self.get_id()]
+        score_resource_scarcity = self.evaluate_resource_scarcity(state,player_id)
+        progress = ( self.get_total_pieces_on_board(state) / 41 ) * 100 #NOTE 41 pieces
 
         # Adjust weights dynamically    
         # w_divercite = 1.0 if progress < 50 else 0.5
@@ -394,23 +408,23 @@ class DiverciteHeuristic(AlgorithmHeuristic):
         w_bloquage = 1
         w_ressource_scacity = 1 if progress < 40 else 0.3
 
-        score_divercite = self.calculate_divercite_score(state)
-        score_bloquage = self.calculate_blocking_score(state)
-        score_ressource_placement = self.evaluate_ressource_placement(state)
-        city_placement_score = self.evaluate_city_placement(state)
+        score_divercite = self.calculate_divercite_score(state,player_symbol,player_id)
+        score_bloquage = self.calculate_blocking_score(state,player_symbol)
+        score_ressource_placement = self.evaluate_ressource_placement(state,player_symbol)
+        city_placement_score = self.evaluate_city_placement(state,player_symbol)
         
         total_score = (
             w_divercite * score_divercite +
             w_bloquage * score_bloquage +
             score_ressource_placement +
-            player_actual_score +
+            #player_actual_score +
             city_placement_score +
             w_ressource_scacity * score_resource_scarcity
         )
         
-        print(f"Divercite score: {score_divercite}, Blocking score: {score_bloquage}, "
-            f"Ressource placement score: {score_ressource_placement}, City placement score: {city_placement_score}")
-        print(f"Total score: {total_score}")
+        # print(f"Divercite score: {score_divercite}, Blocking score: {score_bloquage}, "
+        #     f"Ressource placement score: {score_ressource_placement}, City placement score: {city_placement_score}")
+        # print(f"Total score: {total_score}")
 
         return total_score
         
