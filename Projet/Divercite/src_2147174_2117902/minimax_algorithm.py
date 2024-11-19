@@ -143,10 +143,6 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
         actions = self._filter_action(state)
         return self._order_actions(actions, state)
 
-    def _filter_action(self, states):
-        # TODO
-        return super()._filter_action(states)
-
     def _transition(self, state, action):
         return super()._transition(state, action[0])
 
@@ -157,7 +153,6 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
             return self.max_depth
 
         if _eval < self.MAX_THRESHOLD:
-            print(_eval)
             return current_depth
 
         if random() < self._proba_by_temperature(_eval, current_step):
@@ -173,5 +168,3 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
         return self.n_max_expanded if self.n_max_expanded != None and self.n_max_expanded < n_child else n_child
 
 
-class IterativeDeepeningSearch(Algorithm):
-    ...

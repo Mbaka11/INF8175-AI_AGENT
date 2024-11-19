@@ -1,6 +1,7 @@
 prince = my_player.py
 src_file = src_2147174_2117902
 marsel = custom_p_divercite_heuristic.py
+last_agent = abyss_v3.py
 
 install	:
 	pip install -r requirements.txt
@@ -52,5 +53,11 @@ prince_vs_marsel:
 marsel_vs_prince:
 	python Divercite/main_divercite.py -t local Divercite/${marsel} Divercite/${prince} -r -g
 	
+p_vs_abyss:
+	python Divercite/main_divercite.py -t local Divercite/${prince} Divercite/${last_agent} -r -g
+
+abyss_vs_p:
+	python Divercite/main_divercite.py -t local Divercite/${last_agent} Divercite/${prince} -r -g
+
 
 
