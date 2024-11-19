@@ -26,6 +26,14 @@ abyss:
 	zip abyss_2147174_2117902.zip requirements.txt ${prince} ${src_file}/*.py
 	rm ${prince} ${src_file} -f -R
 
+challonge:
+	cp Divercite/${prince} ./
+	mkdir ${src_file}
+	cp Divercite/${src_file}/*.py ./${src_file}
+	zip LaCiteDeDieu_2147174_2117902.zip requirements.txt ${prince} ${src_file}/*.py
+	rm ${prince} ${src_file} -f -R
+
+
 hvp:
 	python Divercite/main_divercite.py -t human_vs_computer Divercite/${prince}
 
