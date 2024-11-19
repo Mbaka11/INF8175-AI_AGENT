@@ -51,3 +51,4 @@ grasping a better understanding of optimizing an heuristic, better evaluate each
 Better tuning of the Piece Variance Heursitic, by make the city at the same level as the ressource  only when theres less city than ressource which gives a better variance compute, the goal is two have the most color possibilites to create or block divercity
 
 ![1731898067298](image/README/1731898067298.png)
+![1731900233303](image/README/1731900233303.png)
