@@ -12,10 +12,10 @@ class StrategyController:
         self.strategies:list[Strategy] = []
         self.strategy_count = 0
 
-    def __call__(self, *args, **kwds):
-        return self.play_best(*args)
+    def __call__(self, *args, **kwds)->LightAction:
+        return self._compute_action(*args,**kwds)
 
-    def play_best(self):
+    def _compute_action(self) -> LightAction:
         moves_index = Strategy.my_step
         strategy = self[moves_index]
         return strategy.search()
@@ -37,6 +37,9 @@ class StrategyController:
     def __getitem__(self,move_index) -> Strategy:
         return self.strategies[move_index]
     
+    def _setitem__(self,move_index,strategy:Strategy):
+        self.strategies[move_index] = strategy
+
     def strategy_from_dict(self, strategy:dict[int,Strategy],clear=False):
         if clear:
             self.strategies.clear()
@@ -47,9 +50,3 @@ class StrategyController:
     def to_json(self):
         return {}
 ############################################### PREDEFINED STRATEGY ##############################################
-
-pointDiffHeuristic =  PointDifferenceHeuristic()
-
-STRATEGY_CONTROLLER = StrategyController().add_strategy(OpeningMoveStrategy(False),2).add_strategy(MinimaxTypeASearch(pointDiffHeuristic,None,4,LFUCache(200)),7).add_strategy(MinimaxTypeASearch(pointDiffHeuristic,None,6,LFUCache(200)))
-#print(strategyController.strategies)
-#print(strategyController.strategies)

@@ -80,7 +80,8 @@ class AlgorithmHeuristic(Heuristic):
         
     def __mul__(self,weight):
         # BUG if there is other parameter then change the __mul__ in the kid class
-        clone = self.__class__()
+        temp_args = self._compute_added_args()
+        clone = self.__class__(**temp_args)
         clone.weight = weight
         return clone
 
@@ -88,12 +89,10 @@ class AlgorithmHeuristic(Heuristic):
         temp_args = self._compute_added_args()
         clone = self.__class__(**temp_args)
         clone.weight = weight
-
         return clone
     
     def _compute_added_args(self):
         temp_args = self.__dict__.copy()
-        #print(signature(AlgorithmHeuristic.__init__))
         # TODO dynamically remove every parameter from the init func
         del temp_args['weight']
         del temp_args['min_value']
@@ -101,6 +100,8 @@ class AlgorithmHeuristic(Heuristic):
         del temp_args['L']
         del temp_args['h_list']
         del temp_args['optimization']
+        del temp_args['total_weight']
+
         return temp_args
     
     def __add__(self, other):

@@ -27,7 +27,6 @@ class MyPlayer(PlayerDivercite):
             time_limit (float, optional): the time limit in (s)
         """
         super().__init__(piece_type, name)
-        
         pointDiffHeuristic = PointDifferenceHeuristic()
         piecesVarianceHeuristic = PiecesVarianceHeuristic()
         controlIndexHeuristic = ControlIndexHeuristic()
@@ -39,9 +38,9 @@ class MyPlayer(PlayerDivercite):
         self._controller: StrategyController = StrategyController().add_strategy(
             OpeningMoveStrategy(False), 2).add_strategy(
                 #MinimaxTypeASearch(controlIndexHeuristic,4,LRUCache(2500),3)).add_strategy(
-                MinimaxTypeASearch(hybrid2,3,LRUCache(2500)),5).add_strategy(
-                MinimaxTypeASearch(hybrid,3,LRUCache(2500)),6).add_strategy(
-                MinimaxTypeASearch(pointDiffHeuristic,7,LRUCache(2500)),)    
+                MinimaxTypeASearch(hybrid2,4,LRUCache(4500)),5).add_strategy(
+                MinimaxTypeASearch(hybrid,4,LRUCache(4500)),6).add_strategy(
+                MinimaxTypeASearch(pointDiffHeuristic,6,LRUCache(2500)),)    
                 
 
     @Monitor
@@ -57,4 +56,4 @@ class MyPlayer(PlayerDivercite):
         """
         # TODO
         Strategy.set_current_state(current_state, remaining_time)
-        return self._controller.play_best()
+        return self._controller()
