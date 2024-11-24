@@ -250,9 +250,9 @@ class MyPlayer(PlayerDivercite):
             w_ressource_scacity * score_resource_scarcity
         )
         
-        print(f"Divercite score: {score_divercite}, Blocking score: {score_bloquage}, "
-            f"Ressource placement score: {score_ressource_placement}, City placement score: {city_placement_score}")
-        print(f"Total score: {total_score}")
+        # print(f"Divercite score: {score_divercite}, Blocking score: {score_bloquage}, "
+        #     f"Ressource placement score: {score_ressource_placement}, City placement score: {city_placement_score}")
+        # print(f"Total score: {total_score}")
 
         return total_score
         
