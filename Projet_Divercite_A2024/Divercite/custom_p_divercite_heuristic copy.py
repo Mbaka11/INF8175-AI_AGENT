@@ -32,7 +32,6 @@ class MyPlayer(PlayerDivercite):
             piece_type = piece.get_type()
             if piece_type[1] == 'C' and piece_type[2] == player:
                 player_cities[pos] = piece_type  # Store position as key and piece type as value
-                # print(f"Player {player} has a city at {pos} of type {piece_type}")
         
         return player_cities
 
@@ -80,10 +79,10 @@ class MyPlayer(PlayerDivercite):
         for piece, count in player_pieces_left.items():
             color = piece[0]  # Extract the color
             if count == 0:  # Resource depleted
-                score -= 90  # Heavy penalty for completely depleting a color
+                score -= 150  # Heavy penalty for completely depleting a color
             else:
                 scarcity_ratio = count / total_pieces
-                score -= (1 - scarcity_ratio) * 20  # Penalize if resource is scarce
+                score -= (1 - scarcity_ratio) * 100  # Penalize if resource is scarce
 
         return score
 
@@ -91,33 +90,49 @@ class MyPlayer(PlayerDivercite):
         # Heuristic to boost the placement of ressources next to cities
         score = 0
         board = state.get_rep().get_env()
+        corner_ressource_position = set([
+            (4, 0), (0, 4), (8, 4), (4, 8)
+        ])
         
         for pos, piece in board.items():
             piece_type = piece.get_type()
             if piece_type[1] == 'R':
                 adjacent_cities = self.get_cities_affected_by_ressource(state, pos)
                 if adjacent_cities:
-                    friendly_city_count = len([city for city in adjacent_cities.values() if city[2] == self.piece_type])
-                    opponent_city_count = len([city for city in adjacent_cities.values() if city[2] != self.piece_type])
+                    opponent_cities = [city for city in adjacent_cities.values() if city[2] != self.piece_type]
+                    friendly_cities = [city for city in adjacent_cities.values() if city[2] == self.piece_type]
+                    friendly_city_count = len(friendly_cities)
+                    opponent_city_count = len(opponent_cities)
                     
                     # Reward placements benefiting friendly cities
-                    score += 50 * friendly_city_count
+                    score += 20 * friendly_city_count
                     # Penalize placements helping opponent cities
-                    score -= 100 * opponent_city_count
-                
-                    opponent_cities = [city for city in adjacent_cities.values() if city[2] != self.piece_type]
-                    for city in opponent_cities:
-                        city_color = city[0]
-                        if city_color == piece_type[0]:
-                            score -= 100
-                        adjacent_colors = self.get_colors_around_city(state, pos)
-                        adjacent_resource_count = len(adjacent_colors)
-                        unique_colors = set(adjacent_colors)
-                        if len(unique_colors) == 4:
-                            score -= 300
+                    score -= 25 * opponent_city_count
+                    
+                    if friendly_city_count == 0:
+                        score -= 75 * (opponent_city_count ** 2)
+                    
+                    if pos in corner_ressource_position and opponent_city_count > 0:
+                        score -= 250
+                    
+                    opponent_cities_dict = {city_pos: city_type for city_pos, city_type in adjacent_cities.items() if city_type[2] != self.piece_type}
+                    for opponent_city_pos, opponent_city_type in opponent_cities_dict.items():
+                        opponent_city_color = opponent_city_type[0]
+                        piece_color = piece_type[0]
                         
+                        if opponent_city_color == piece_color:
+                            score -= 30 * len([city for city in adjacent_cities.values() if city[0] == piece_color])
+                        
+                        adjacent_colors = self.get_colors_around_city(state, opponent_city_pos)
+                        unique_colors = set(adjacent_colors)
+                        
+                        if len(unique_colors) == 4 : 
+                            score -= 200
+                        elif len(unique_colors) == 3 and len(adjacent_colors) == 3:
+                            score -= 100
+                    
                 elif not adjacent_cities:
-                    score -= 50
+                    score -= 20
                 
         return score
     
@@ -133,13 +148,31 @@ class MyPlayer(PlayerDivercite):
                 adjacent_resource_count = len(adjacent_colors)
                 unique_colors = set(adjacent_colors)
                 city_color = piece_type[0]
+                repeated_colors = [color for color in adjacent_colors if adjacent_colors.count(color) > 1]
                 
-                if len(unique_colors) == 1 :
-                    score += 10 * adjacent_resource_count
-                elif city_color not in unique_colors and unique_colors:
-                    score -= 150
-                elif len(unique_colors) == 4:
+                if len(unique_colors) == 4:
                     score += 200
+                # elif len(unique_colors) == 3 and adjacent_resource_count == 3:
+                #     missing_color = self.get_missing_colors_for_divercite(unique_colors)
+                    
+                #     color_ressources_left = state.players_pieces_left[self.get_id()]
+                #     keys_to_remove = [key for key, value in color_ressources_left.items() if (value == 0 and key[1] == "R") or key[1] == 'C']
+                #     for key in keys_to_remove:
+                #         color_ressources_left.pop(key)
+                        
+                #     if missing_color in color_ressources_left:
+                #         score += 100
+                elif len(unique_colors) == 2 and adjacent_resource_count > 2 and city_color not in unique_colors:
+                    score -= 50
+
+                elif len(unique_colors) == 1 and city_color in unique_colors:
+                    score += 20 * adjacent_resource_count
+                    
+                elif city_color in unique_colors: 
+                    score += 30 * len(unique_colors)
+                
+                elif adjacent_resource_count == 0 and self.get_total_pieces_on_board(state) > 5:
+                    score -= 100
                     
         return score
         
@@ -159,9 +192,46 @@ class MyPlayer(PlayerDivercite):
             )
             
             if len(unique_colors) == 3 and len(adjacent_colors) == 4 and adjacent_colors.count(blocking_color) == 2:
-                score += 500
-            elif len(unique_colors) == 2 and len(adjacent_colors) == 3 and adjacent_colors.count(blocking_color) == 1:
-                score += 50
+                # Count occurrences of each color
+                color_counts = {color: adjacent_colors.count(color) for color in unique_colors}
+                
+                # Identify if there's a repeated color that makes DiverCité impossible
+                repeated_colors = [color for color, count in color_counts.items() if count > 1]
+                
+                if len(repeated_colors) > 0:
+                    # DiverCité impossible due to repeated colors
+                    continue  # Skip this city as no threat exists
+                
+                ennemy_color_ressource_left = state.players_pieces_left[self.next_player.get_id()]
+                keys_to_remove = [key for key, value in ennemy_color_ressource_left.items() if (value == 0 and key[1] == "R") or key[1] == 'C']
+                for key in keys_to_remove:
+                    ennemy_color_ressource_left.pop(key)
+                
+                missing_color = self.get_missing_colors_for_divercite(unique_colors)
+                
+                if missing_color + "R" in ennemy_color_ressource_left:
+                    print("Missing color: ", missing_color)
+                    score += 200
+                
+            elif len(unique_colors) == 2 and len(adjacent_colors) == 4 and adjacent_colors.count(blocking_color) == 1:
+                # Check for blocking potential with only 2 resources
+                # Ensure no color is repeated that prevents DiverCité
+                color_counts = {color: adjacent_colors.count(color) for color in unique_colors}
+                repeated_colors = [color for color, count in color_counts.items() if count > 1]
+                
+                if len(repeated_colors) == 0:
+                    score += 100 
+                    
+            elif len(unique_colors) == 3 and len(adjacent_colors) == 3 and adjacent_colors.count(blocking_color) == 1:
+                # Check for blocking potential with only 3 resources
+                # Ensure no color is repeated that prevents DiverCité
+                color_counts = {color: adjacent_colors.count(color) for color in unique_colors}
+                repeated_colors = [color for color, count in color_counts.items() if count > 1]
+                
+                if len(repeated_colors) == 0:
+                    # DiverCité is still theoretically possible, valid blocking
+                    score -= 50
+                    
         return score
          
     def calculate_divercite_score(self, state: GameState) -> float:
@@ -176,48 +246,73 @@ class MyPlayer(PlayerDivercite):
             
             # Case 1: Full divercité (4 unique colors + 4 resources => 5 points)
             if len(unique_colors) == 4 and len(adjacent_colors) == 4:
-                score += 500  # Full divercité, highest score
+                score += 600  # Full divercité, highest score
 
-            # Case 2: Full same color (1 unique color + 4 resources => 4 points)
-            elif len(unique_colors) == 1 and len(adjacent_colors) == 4 and city_color in unique_colors:
-                score += 125  # Same color fully surrounding the city
-            
-            elif len(unique_colors) == 1 and len(adjacent_colors) == 3 and city_color in unique_colors:
-                score += 30
+            elif len(unique_colors) == 1 and city_color in unique_colors:
+                if len(adjacent_colors) == 4:
+                    score += 100
+                else:
+                    score += 15 * len(adjacent_colors) 
                 
-            elif len(unique_colors) == 1 and len(adjacent_colors) == 2 and city_color in unique_colors:
-                score += 15
-                
-            # Case 3: 3 unique colors + 3 resources => one step toward divercité
             elif len(unique_colors) == 3 and len(adjacent_colors) == 3 and city_color in unique_colors:
                 missing_color = self.get_missing_colors_for_divercite(unique_colors)
-                # Check if the missing color is available in the player's remaining pieces
-                if missing_color in {piece[0] for piece in state.players_pieces_left[self.get_id()]}:
-                    score += 50  # Prioritize this city as it is close to divercité
+                empty_positions = [
+                            pos for _, (piece, pos) in state.get_neighbours(city_pos[0], city_pos[1]).items() if piece == 'EMPTY'
+                        ]
+                if empty_positions:
+                    for empty_pos in empty_positions:
+                        adjacent_cities = self.get_cities_affected_by_ressource(state, empty_pos)
+                        opponent_cities = [city for city in adjacent_cities.values() if city[2] != self.piece_type]
+                        opponent_cities_colors = [city[0] for city in opponent_cities]
+                        
+                        color_ressources_left = state.players_pieces_left[self.get_id()]
+                        # Collect keys to remove in a separate list+
+                        keys_to_remove = [key for key, value in color_ressources_left.items() if (value == 0 and key[1] == "R") or key[1] == 'C']
+
+                        # Remove the keys after the iteration
+                        for key in keys_to_remove:
+                            color_ressources_left.pop(key)
+                        
+                        if missing_color in color_ressources_left and opponent_cities:
+                            score -= 100 * len(opponent_cities)
+                            
+                        elif missing_color + "R" in color_ressources_left :
+                            score += 60
+                            
+                        else:
+                            score -= 100
                 
-            # Case 4: 2 unique colors + 2 resources => early progress
+            # # Case 4: 2 unique colors + 2 resources => early progress
             elif len(unique_colors) == 2 and len(adjacent_colors) == 2 and city_color in unique_colors:
-                score += 15  # Moderate reward for potential progress
+                missing_color = self.get_missing_colors_for_divercite(unique_colors)
+                color_ressources_left = state.players_pieces_left[self.get_id()]
+                keys_to_remove = [key for key, value in color_ressources_left.items() if (value == 0 and key[1] == "R") or key[1] == 'C']
+                for key in keys_to_remove:
+                    color_ressources_left.pop(key)
                 
-            # Case 5: 1 unique color + 1 resource => initial placement
-            elif len(unique_colors) == 1 and len(adjacent_colors) == 1 and city_color in unique_colors:
-                score += 10  # Minimal progress, lowest reward
+                if missing_color in color_ressources_left:
+                    score += 50
+                
+            # # Case 5: 1 unique color + 1 resource => initial placement
+            # elif len(unique_colors) == 1 and len(adjacent_colors) == 1 and city_color in unique_colors:
+            #     score += 10  # Minimal progress, lowest reward
                 
             # Case 6: 3 unique colors + 4 resources => incomplete divercité
-            elif len(unique_colors) == 3 and len(adjacent_colors) == 4:
-                missing_color = self.get_missing_colors_for_divercite(unique_colors)
-                if not missing_color:
-                    score -= 20  # Penalize since divercité is not possible
+            elif len(unique_colors) == 3 and len(adjacent_colors) == 4 and adjacent_colors.count(city_color) < 3:
+                score -= 50  # Penalize since divercité is not possible
     
             # Case 7: 2 unique colors + 4 resources (Locked city)
-            elif len(unique_colors) == 2 and len(adjacent_colors) == 4:
-                score -= 20  # Penalize lightly for inefficiency
+            elif len(unique_colors) == 2 and len(adjacent_colors) == 4 and city_color not in unique_colors:
+                score -= 50  # Penalize lightly for inefficiency
+            
+            elif len(unique_colors) == 2 and len(adjacent_colors) == 3 and adjacent_colors.count(city_color) < 2:
+                score -= 100
             
             elif city_color not in unique_colors and unique_colors:
                 score -= 50  # Penalize for placing a city with no adjacent resources of the same color
                 
             else :
-                score -= 30
+                score -= 10
                 
         return score
     
@@ -226,20 +321,18 @@ class MyPlayer(PlayerDivercite):
         score_bloquage = self.calculate_blocking_score(state)
         player_actual_score = state.scores[self.get_id()]
         score_resource_scarcity = self.evaluate_resource_scarcity(state)
+        score_ressource_placement = self.evaluate_ressource_placement(state)
+        city_placement_score = self.evaluate_city_placement(state)
 
         progress = ( self.get_total_pieces_on_board(state) / 42 ) * 100
 
         # Adjust weights dynamically    
-        # w_divercite = 1.0 if progress < 50 else 0.5
-        # w_bloquage = 0.8 if progress < 50 else 1.5
-        w_divercite = 1
+        w_divercite = 1.0 if progress < 80 else 0.5
+        # w_bloquage = 0.6 if progress < 50 else 1
+        # w_divercite = 1
         w_bloquage = 1
-        w_ressource_scacity = 1 if progress < 40 else 0.3
+        w_ressource_scarcity = 0.8 if progress < 40 else 0.3
 
-        score_divercite = self.calculate_divercite_score(state)
-        score_bloquage = self.calculate_blocking_score(state)
-        score_ressource_placement = self.evaluate_ressource_placement(state)
-        city_placement_score = self.evaluate_city_placement(state)
         
         total_score = (
             w_divercite * score_divercite +
@@ -247,12 +340,8 @@ class MyPlayer(PlayerDivercite):
             score_ressource_placement +
             player_actual_score +
             city_placement_score +
-            w_ressource_scacity * score_resource_scarcity
+            w_ressource_scarcity * score_resource_scarcity
         )
-        
-        # print(f"Divercite score: {score_divercite}, Blocking score: {score_bloquage}, "
-        #     f"Ressource placement score: {score_ressource_placement}, City placement score: {city_placement_score}")
-        # print(f"Total score: {total_score}")
 
         return total_score
         
