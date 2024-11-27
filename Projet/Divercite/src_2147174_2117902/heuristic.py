@@ -1,6 +1,6 @@
 from typing import Any
 from game_state_divercite import GameStateDivercite
-from .definition import AlgorithmHeuristic, Heuristic, ARGS_KEYS, Optimization,Normalization_Type
+from .definition import AlgorithmHeuristic, Heuristic, ARGS_KEYS, Optimization,Normalization_Type, OptimizationComputingType
 from .constant import *
 from .helper import *
 import numpy as np
@@ -9,8 +9,8 @@ from random import random
 
 class ScoreHeuristic(AlgorithmHeuristic):
 
-    def __init__(self,normalization_type:Normalization_Type='sigmoid'):
-        super().__init__(normalization_type,-45,45, L=4.5)
+    def __init__(self,normalization_type:Normalization_Type='sigmoid',optimization_type:OptimizationComputingType ='evolution' ):
+        super().__init__(normalization_type,optimization_type,-45,45, L=4.5)
 
     def _evaluation(self, current_state, **kwargs):
         my_state_score = current_state.get_scores()[kwargs['my_id']]
@@ -19,13 +19,21 @@ class ScoreHeuristic(AlgorithmHeuristic):
 
         my_current_score = kwargs['my_score']
         opponent_current_score = kwargs['opponent_score']
-        # BUG Might want to revisit the way we quantify this heuristic and remove the cross diff
-        return self._maximize_score_diff(my_current_score, opponent_current_score, my_state_score, opponent_state_score)
+
+        match self.optimization_type:
+            case 'evolution':
+                        # BUG Might want to revisit the way we quantify this heuristic and remove the cross diff
+                return self._maximize_score_diff(my_current_score, opponent_current_score, my_state_score, opponent_state_score) 
+            case 'potential':
+                return self._maximized_potential(opponent_state_score,my_state_score)
+            case 'raw_eval':
+                return my_state_score
+
 
 class ControlIndexHeuristic(AlgorithmHeuristic):
 
-    def __init__(self,normalization_type:Normalization_Type='range_scaling',ctrl_weight=.35,dist_weight=.65,):
-        super().__init__(normalization_type,0, 900,L=11)
+    def __init__(self,normalization_type:Normalization_Type='range_scaling',optimization_type = 'raw_eval',ctrl_weight=.35,dist_weight=.65,):
+        super().__init__(normalization_type,optimization_type,0, 900,L=11)
         self.ctrl_weight = ctrl_weight
         self.dist_weight= dist_weight
         self.total_weight = ctrl_weight + dist_weight
@@ -127,8 +135,8 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
 
 class PiecesVarianceHeuristic(AlgorithmHeuristic):
 
-    def __init__(self,normalization_type:Normalization_Type='range_scaling', city_weight=.7, ress_weight=.3):
-        super().__init__(normalization_type,-160, 120, L=4.3,optimization=Optimization.MINIMIZE) # URGENT-TODO Recheck the scaling depends on minimize or maximize
+    def __init__(self,normalization_type:Normalization_Type='range_scaling',optimization_type:OptimizationComputingType='potential', city_weight=.7, ress_weight=.3):
+        super().__init__(normalization_type,optimization_type,-160, 120, L=4.3,optimization=Optimization.MINIMIZE) # URGENT-TODO Recheck the scaling depends on minimize or maximize
         self.city_weight = city_weight
         self.ress_weight = ress_weight
 
@@ -138,10 +146,12 @@ class PiecesVarianceHeuristic(AlgorithmHeuristic):
         #####
         my_state_var = self._pieces_var(my_pieces)
         opp_state_var = self._pieces_var(opponent_pieces)
-
-        return self._maximized_potential(opp_state_var,my_state_var)
-        #return  opp_state_var-my_state_var
-        #return -my_state_var
+        
+        if self.optimization_type =='potential':
+            return self._maximized_potential(opp_state_var,my_state_var)
+        if self.optimization_type =='diff':
+            return  opp_state_var-my_state_var
+        return -my_state_var
         
     def _pieces_var(self, pieces: dict[str, int]):
         city_val = np.array([pieces[cn] for cn in CityNames._member_names_])
@@ -179,8 +189,8 @@ class PiecesVarianceHeuristic(AlgorithmHeuristic):
         return self.city_weight+self.ress_weight
 
 class DiverciteHeuristic(AlgorithmHeuristic):
-    def __init__(self,normalization_type:Normalization_Type='sigmoid'):
-        super().__init__(normalization_type,-7500,7500, L=9.5)
+    def __init__(self,normalization_type:Normalization_Type='sigmoid',optimization_type:OptimizationComputingType = 'potential'):
+        super().__init__(normalization_type,optimization_type,-7500,7500, L=9.5)
     
     def get_placed_cities_by_player(self, state: GameStateDivercite, player_symbol: str) -> dict:
         player_cities = {}
@@ -510,7 +520,13 @@ class DiverciteHeuristic(AlgorithmHeuristic):
         # print('My score:',my_total_score)
         # print('Opp score: ',opp_total_score)
         # print('Maximized:',self._maximized_potential(opp_total_score,my_total_score))
+        if self.optimization_type == 'potential':
+            return self._maximized_potential(opp_total_score,my_total_score)
 
-        return self._maximized_potential(opp_total_score,my_total_score)
+        if self.optimization_type == 'diff':
+            return my_total_score - opp_total_score
+        
+        return my_total_score
+            
         #return my_total_score
 

@@ -22,7 +22,7 @@ class Optimization(Enum):
 
 ARGS_KEYS= Literal['opponent_score','my_score','last_move','my_pieces','opponent_pieces','moves','is_first_to_play','my_id','opponent_id','current_env']
 Normalization_Type = Literal['range_scaling','sigmoid']
-Optimization_Type = Literal['potential','evolution']
+OptimizationComputingType = Literal['potential','evolution','raw_eval','diff']
 ############################################ Base Heuristic class  #############################################
 
 
@@ -36,8 +36,9 @@ class Heuristic:
 
 class AlgorithmHeuristic(Heuristic):
     
-    def __init__(self,normalization_type:Normalization_Type, min_value: float, max_value: float,L=L,weight=1,h_list=None,optimization = Optimization.MAXIMIZE,):
-        self.heuristic_list: list[AlgorithmHeuristic] = [self] if h_list ==None else h_list
+    #NOTE needs to be same nam
+    def __init__(self,normalization_type:Normalization_Type,optimization_type:OptimizationComputingType, min_value: float, max_value: float,L=L,weight=1,heuristic_list=None,optimization = Optimization.MAXIMIZE):
+        self.heuristic_list: list[AlgorithmHeuristic] = [self] if heuristic_list ==None else heuristic_list
         self.min_value = min_value
         self.max_value = max_value
         self.weight = weight
@@ -45,6 +46,7 @@ class AlgorithmHeuristic(Heuristic):
         self.L = L
         self.optimization = optimization
         self.normalization_type:Normalization_Type = normalization_type
+        self.optimization_type:OptimizationComputingType = optimization_type
 
 
     def __call__(self, *args, **kwds) -> float: 
@@ -95,15 +97,12 @@ class AlgorithmHeuristic(Heuristic):
  
     def _compute_added_args(self):
         temp_args = self.__dict__.copy()
-
-        del temp_args['weight']
-        del temp_args['min_value']
-        del temp_args['max_value']
-        del temp_args['L']
-        del temp_args['heuristic_list']
-        del temp_args['optimization']
+        for param in signature(AlgorithmHeuristic.__init__).parameters.values():
+            if param.name == 'self':
+                continue
+            del temp_args[param.name]
+            
         del temp_args['total_weight']
-
         return temp_args
     
     def __add__(self, other):
@@ -111,7 +110,7 @@ class AlgorithmHeuristic(Heuristic):
         total_weight =self.weight + other.weight
         temp = self.heuristic_list + other.heuristic_list
 
-        clone = AlgorithmHeuristic(None,1,1,h_list=temp)
+        clone = AlgorithmHeuristic(None,None,1,1,heuristic_list=temp)
         clone.total_weight = total_weight
         return clone
     
