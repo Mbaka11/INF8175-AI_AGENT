@@ -27,21 +27,29 @@ class MyPlayer(PlayerDivercite):
             time_limit (float, optional): the time limit in (s)
         """
         super().__init__(piece_type, name)
-        pointDiffHeuristic = PointDifferenceHeuristic()
+        scoreHeuristic = ScoreHeuristic()
         piecesVarianceHeuristic = PiecesVarianceHeuristic()
         controlIndexHeuristic = ControlIndexHeuristic()
-        diverciteHeuristic  =DiverciteHeuristic()
+        diverciteHeuristic = DiverciteHeuristic()
+
+        hybrid = scoreHeuristic*8 + controlIndexHeuristic + piecesVarianceHeuristic
+        hybrid2 = scoreHeuristic*8 + diverciteHeuristic*4 + \
+            piecesVarianceHeuristic*4 + controlIndexHeuristic*2
+        hybrid3 = diverciteHeuristic*70 + scoreHeuristic*30
+        print(hybrid3)
         
-        hybrid = pointDiffHeuristic*8 + controlIndexHeuristic + piecesVarianceHeuristic
-        hybrid2 = pointDiffHeuristic*8+ diverciteHeuristic*4 + piecesVarianceHeuristic*4 + controlIndexHeuristic*2
 
         self._controller: StrategyController = StrategyController().add_strategy(
             OpeningMoveStrategy(True), 2).add_strategy(
-                #MinimaxTypeASearch(controlIndexHeuristic,4,LRUCache(2500),3)).add_strategy(
-                MinimaxTypeASearch(hybrid2,3,LRUCache(3500)),5).add_strategy(
-                MinimaxTypeASearch(hybrid,3,LRUCache(3500)),7).add_strategy(
-                MinimaxTypeASearch(pointDiffHeuristic,6,LRUCache(3500)),)    
-                
+                # MinimaxTypeASearch(controlIndexHeuristic,4,LRUCache(2500),3)).add_strategy(
+     
+                MinimaxTypeASearch( diverciteHeuristic, 3, 4500), 12).add_strategy(
+                MinimaxTypeASearch( diverciteHeuristic, 5, 4500), 3).add_strategy(
+
+                #MinimaxHybridSearch(diverciteHeuristic,4500,4,typeA_heuristic=scoreHeuristic,cut_depth_activation=False),6).add_strategy(
+
+                #MinimaxTypeASearch( hybrid3, 3, LRUCache(4500)), 12).add_strategy(
+                MinimaxTypeASearch(scoreHeuristic, 6, LRUCache(5000)),)
 
     @Monitor
     def compute_action(self, current_state: GameStateDivercite, remaining_time: int = 1e9, **kwargs) -> Action:

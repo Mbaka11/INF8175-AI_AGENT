@@ -2,13 +2,12 @@ from abc import abstractmethod
 from typing import Literal, Any
 from game_state_divercite import GameStateDivercite
 import numpy as np
-from seahorse.game.light_action import LightAction, Action
-from random import choice, shuffle
+from seahorse.game.light_action import LightAction
 from .constant import *
 from .helper import *
 from typing import Generator
 from game_state_divercite import GameStateDivercite
-from cachetools import FIFOCache, LFUCache, TTLCache, LRUCache, cachedmethod, Cache,TLRUCache
+from cachetools import LRUCache,Cache
 from gc import collect
 from seahorse.utils.custom_exceptions import ActionNotPermittedError
 from enum import Enum
@@ -20,8 +19,10 @@ class Optimization(Enum):
     MAXIMIZE = 1
     MINIMIZE = -1
 
+
 ARGS_KEYS= Literal['opponent_score','my_score','last_move','my_pieces','opponent_pieces','moves','is_first_to_play','my_id','opponent_id','current_env']
 Normalization_Type = Literal['range_scaling','sigmoid']
+Optimization_Type = Literal['potential','evolution']
 ############################################ Base Heuristic class  #############################################
 
 

@@ -3,6 +3,9 @@ src_file = src_2147174_2117902
 marsel = custom_p_divercite_heuristic.py
 last_agent = abyss_v3.py
 
+str1 = my_player.py
+str2 = my_player.py
+
 install	:
 	pip install -r requirements.txt
 
@@ -61,11 +64,12 @@ prince_vs_marsel:
 marsel_vs_prince:
 	python Divercite/main_divercite.py -t local Divercite/${marsel} Divercite/${prince} -r -g
 	
-p_vs_abyss:
-	python Divercite/main_divercite.py -t local Divercite/${prince} Divercite/${last_agent} -r -g
 
-abyss_vs_p:
-	python Divercite/main_divercite.py -t local Divercite/${last_agent} Divercite/${prince} -r -g
+str1_vs_str2:
 
+	tmux new-session -d -s mysession "python Divercite/main_divercite.py -t host_game -a 127.0.0.1 Divercite/${str1}"
+	tmux split-window -h "python Divercite/main_divercite.py -t connect -a 127.0.0.1 Divercite/${str2}"
+	tmux attach-session -d
+	
 
 

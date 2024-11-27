@@ -24,7 +24,7 @@ class MinimaxTypeASearch(Algorithm):
 
     def _search(self):
         cost, action_star = self._minimax(self.current_state, True, float('-inf'), float('inf'), 0, self.max_depth)
-        print("Step:",self.my_step,'Type:',self.__class__.__name__,'Depth:',self.max_depth)
+        print('Game Step:',self.current_state.step,"My Step:",self.my_step,'Type:',self.__class__.__name__,'Depth:',self.max_depth)
         print('Main Heuristic:',self.main_heuristic)
         print('Cost:',cost)
         return action_star
@@ -32,7 +32,7 @@ class MinimaxTypeASearch(Algorithm):
     def __del__(self):
         ...
 
-    def _minimax(self, state: GameStateDivercite, isMaximize: bool, alpha: float, beta: float, depth: int, max_depth: int = None):
+    def _minimax(self, state: GameStateDivercite, isMaximize: bool, alpha: float, beta: float, depth: int, max_depth: int):
         if state.is_done():
             return self._utility(state), None
 
