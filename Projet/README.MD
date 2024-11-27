@@ -52,3 +52,7 @@ Better tuning of the Piece Variance Heursitic, by make the city at the same leve
 
 ![1731898067298](image/README/1731898067298.png)
 ![1731900233303](image/README/1731900233303.png)
+
+#### Diverscite Heuristic
+
+amelioration of the difference which gives a better evaluation of our and the opponent divercite potential which help create divercite while blocking oppoennt's, calculating this scores for us and for the opponent's and using the maximation potential give the best moves that optimize this score by minimizing the opponent's score and maximizing our's which means that we will be blocking and acheving more divercite while the opponent will have less chance blocking us or creating divercite

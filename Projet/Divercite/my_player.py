@@ -17,7 +17,7 @@ class MyPlayer(PlayerDivercite):
         piece_type (str): piece type of the player
     """
 
-    def __init__(self, piece_type: str, name: str = "Cité des Dieux"):
+    def __init__(self, piece_type: str, name: str = "LCD_ZePequeno"):
         """
         Initialize the PlayerDivercite instance.
 
