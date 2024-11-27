@@ -64,10 +64,16 @@ prince_vs_marsel:
 marsel_vs_prince:
 	python Divercite/main_divercite.py -t local Divercite/${marsel} Divercite/${prince} -r -g
 	
+str1:
+	python Divercite/main_divercite.py -t host_game -a 127.0.0.2 Divercite/${str1}
+
+str2:
+	python Divercite/main_divercite.py -t connect -a 127.0.0.2 Divercite/${str2}
+	
+
 
 str1_vs_str2:
-
-	tmux new-session -d -s mysession1 "python Divercite/main_divercite.py -t host_game -a 127.0.0.1 Divercite/${str1};read -p "Press Enter to continue...""
+	tmux new-session -d -s mysession1 "python Divercite/main_divercite.py -t host_game -a 127.0.0.1 Divercite/${str1};sleep 100"
 	sleep 1
 	tmux split-window -h "python Divercite/main_divercite.py -t connect -a 127.0.0.1 Divercite/${str2}"
 	tmux attach-session -d
