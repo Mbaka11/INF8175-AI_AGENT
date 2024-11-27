@@ -1,7 +1,6 @@
 from abc import abstractmethod
 from typing import Literal, Any
 from game_state_divercite import GameStateDivercite
-# from cachetools import FIFOCache,LFUCache,TTLCache,LRUCache,cachedmethod, Cache
 import numpy as np
 from seahorse.game.light_action import LightAction, Action
 from random import choice, shuffle
@@ -9,7 +8,7 @@ from .constant import *
 from .helper import *
 from typing import Generator
 from game_state_divercite import GameStateDivercite
-from cachetools import FIFOCache, LFUCache, TTLCache, LRUCache, cachedmethod, Cache
+from cachetools import FIFOCache, LFUCache, TTLCache, LRUCache, cachedmethod, Cache,TLRUCache
 from gc import collect
 from seahorse.utils.custom_exceptions import ActionNotPermittedError
 from enum import Enum
@@ -22,7 +21,7 @@ class Optimization(Enum):
     MINIMIZE = -1
 
 ARGS_KEYS= Literal['opponent_score','my_score','last_move','my_pieces','opponent_pieces','moves','is_first_to_play','my_id','opponent_id','current_env']
-
+Normalization_Type = Literal['range_scaling','sigmoid']
 ############################################ Base Heuristic class  #############################################
 
 
@@ -35,70 +34,72 @@ class Heuristic:
 
 
 class AlgorithmHeuristic(Heuristic):
-    # BUG Need tweak for the weights adds
-
-    def __init__(self, min_value: float, max_value: float,L=L,weight=1,h_list=None,optimization = Optimization.MAXIMIZE):
-        self.h_list: list[AlgorithmHeuristic] = [self] if h_list ==None else h_list
+    
+    def __init__(self,normalization_type:Normalization_Type, min_value: float, max_value: float,L=L,weight=1,h_list=None,optimization = Optimization.MAXIMIZE,):
+        self.heuristic_list: list[AlgorithmHeuristic] = [self] if h_list ==None else h_list
         self.min_value = min_value
         self.max_value = max_value
         self.weight = weight
         self.total_weight=weight
         self.L = L
         self.optimization = optimization
+        self.normalization_type:Normalization_Type = normalization_type
 
 
     def __call__(self, *args, **kwds) -> float: 
-        if len(self.h_list) == 1:
+        if len(self.heuristic_list) == 1:
             return self.evaluate(*args,**kwds)
-
-        vals = [h.weight*h.evaluate(*args,**kwds) for h in self.h_list]
-        return sum(vals)/self.total_weight # TODO add weighted sum 
+        
+        vals = [hrstc.weight * hrstc.evaluate(*args,**kwds) for hrstc in self.heuristic_list]
+        return sum(vals)/self.total_weight
 
     def evaluate(self, current_state: GameStateDivercite,**kwargs) -> float:
-        return self.normalize(self._evaluation(current_state,**kwargs))
+        state_eval = self._evaluation(current_state,**kwargs)
+        return self.normalize(state_eval)
 
     def _evaluation(self,current_state:GameStateDivercite,**kwargs)-> float:
         ...
 
-    def _sigmoid(self, x: float,min_value,max_value,L):
+    def _sigmoid(self, x: float,min_value,max_value,L=L):
         x_scaled = (x - (min_value + max_value) / 2) / \
             ((max_value - min_value) / 2) * L
         return 2 / (1 + np.exp(-x_scaled)) - 1
     
     def normalize(self,x:float):
-        #return self._sigmoid(x,self.min_value,self.max_value,L)
+        if self.normalization_type == 'sigmoid':
+            return self._sigmoid(x,self.min_value,self.max_value,self.L)
+     
         return self._range_scaling(x,self.min_value,self.max_value)
-    
+        
     def _range_scaling(self,value, min_value, max_value):
         if min_value == max_value:
             raise ValueError("min_value and max_value must be different for scaling.")
-
+        
         normalized_value = (value - min_value) / (max_value - min_value)
         scaled_value = 2 * normalized_value - 1
-    
         return scaled_value
         
     def __mul__(self,weight):
-        # BUG if there is other parameter then change the __mul__ in the kid class
-        temp_args = self._compute_added_args()
-        clone = self.__class__(**temp_args)
-        clone.weight = weight
-        return clone
+        return self._clone(weight)
 
     def __truediv__(self,weight):
+        return self._clone(weight)
+    
+    def _clone(self, weight):
         temp_args = self._compute_added_args()
         clone = self.__class__(**temp_args)
         clone.weight = weight
+        #clone.h_list = self.h_list
         return clone
-    
+ 
     def _compute_added_args(self):
         temp_args = self.__dict__.copy()
-        # TODO dynamically remove every parameter from the init func
+
         del temp_args['weight']
         del temp_args['min_value']
         del temp_args['max_value']
         del temp_args['L']
-        del temp_args['h_list']
+        del temp_args['heuristic_list']
         del temp_args['optimization']
         del temp_args['total_weight']
 
@@ -107,14 +108,16 @@ class AlgorithmHeuristic(Heuristic):
     def __add__(self, other):
         other:AlgorithmHeuristic = other
         total_weight =self.weight + other.weight
-        temp = self.h_list + other.h_list
-    
-        clone = AlgorithmHeuristic(1,1,1,h_list=temp)
+        temp = self.heuristic_list + other.heuristic_list
+
+        clone = AlgorithmHeuristic(None,1,1,h_list=temp)
         clone.total_weight = total_weight
         return clone
     
     def __repr__(self):
-        return f'{self.__class__.__name__}:{self.weight}'
+        if len(self.heuristic_list) <= 1:
+            return f'{self.__class__.__name__}:{self.weight}'
+        return f'{self.__class__.__name__}:{self.total_weight} - {self.heuristic_list}'
     
     def _maximize_score_diff(self,my_current,opp_current,my_state,opp_state):
         my_delta_score = my_state - my_current
@@ -229,13 +232,12 @@ class Strategy:
 
 class Algorithm(Strategy):
 
-    def __init__(self, heuristic: AlgorithmHeuristic, cache: Cache=None, allowed_time: float = None,keep_cache: bool = False):
+    def __init__(self, heuristic: AlgorithmHeuristic, cache: int=None, allowed_time: float = None,keep_cache: bool = False):
         super().__init__(heuristic)
-        # if isinstance(cache,type):
-        #     if cache_size ==None:
-        #         cache_size = 500*max_depth
-        #     cache = cache(cache_size)
-        self.cache = cache
+        if isinstance(cache,Cache):
+            self.cache = cache
+        else:
+            self.cache = None if cache == None else LRUCache(cache)
         self.allowed_time = allowed_time
         self.keep_cache = keep_cache # ERROR can be source of heuristic evaluation error, only uses if a deeper search was done prior a less deeper search
 
@@ -243,16 +245,6 @@ class Algorithm(Strategy):
         scores = state.get_scores()
         my_scores = scores[self.my_id]
         opponent_scores = scores[self.opponent_id]
-
-        # if my_scores > opponent_scores:
-        #     return 1
-
-        # if my_scores < opponent_scores:
-        #     return -1
-
-        # if my_scores == opponent_scores:
-        #     return 0
-
         return my_scores-opponent_scores
         
 

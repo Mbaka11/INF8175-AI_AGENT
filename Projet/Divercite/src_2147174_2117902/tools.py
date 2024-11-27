@@ -360,11 +360,12 @@ def Monitor(func:Callable):
 
         used_mem = abs(end_mem-start_mem)
         computed_time = end_time - start_time
-
+        print('*'*30)
         print(f"Memory usage: {used_mem} bytes")
         print(f"CPU usage: {(end_cpu - start_cpu)}%")
         print(f"Execution time: {computed_time:.4f} seconds")
         print(f'Environnement: {used_mem*100/MAX_RAM:.4f} RAM USED % -',f'{computed_time*100/MAX_TIME:.4f} TIME USED %' )
+        print('*'*30)
         
         return result
     return wrapper
