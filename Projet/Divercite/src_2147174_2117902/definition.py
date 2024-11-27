@@ -92,6 +92,7 @@ class AlgorithmHeuristic(Heuristic):
         temp_args = self._compute_added_args()
         clone = self.__class__(**temp_args)
         clone.weight = weight
+        clone.total_weight = weight
         #clone.h_list = self.h_list
         return clone
  
@@ -107,9 +108,8 @@ class AlgorithmHeuristic(Heuristic):
     
     def __add__(self, other):
         other:AlgorithmHeuristic = other
-        total_weight =self.weight + other.weight
+        total_weight =self.total_weight + other.weight
         temp = self.heuristic_list + other.heuristic_list
-
         clone = AlgorithmHeuristic(None,None,1,1,heuristic_list=temp)
         clone.total_weight = total_weight
         return clone

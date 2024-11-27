@@ -515,18 +515,22 @@ class DiverciteHeuristic(AlgorithmHeuristic):
         my_symbol = kwargs['my_piece_type']
         opponent_symbol = kwargs['opponent_piece_type']
 
+        original_state = kwargs['original_state']
+
         my_total_score = self._compute_divercite_score(state,my_symbol,my_id,opp_id)
         opp_total_score = self._compute_divercite_score(state,opponent_symbol,opp_id,my_id)
 
-        # print('My score:',my_total_score)
-        # print('Opp score: ',opp_total_score)
-        # print('Maximized:',self._maximized_potential(opp_total_score,my_total_score))
         if self.optimization_type == 'potential':
             return self._maximized_potential(opp_total_score,my_total_score)
 
         if self.optimization_type == 'diff':
             return my_total_score - opp_total_score
         
+        if self.optimization_type == 'evolution':
+            my_original_score = self._compute_divercite_score(original_state,my_symbol,my_id,opp_id)
+            opp_original_score = self._compute_divercite_score(original_state,opponent_symbol,opp_id,my_id)
+            return self._maximize_score_diff(my_original_score,opp_original_score,my_total_score,opp_total_score)
+
         return my_total_score
             
         #return my_total_score
