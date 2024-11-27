@@ -154,8 +154,9 @@ class PiecesVarianceHeuristic(AlgorithmHeuristic):
         return -my_state_var
         
     def _pieces_var(self, pieces: dict[str, int]):
-        city_val = np.array([pieces[cn] for cn in CityNames._member_names_])
-        ress_val = np.array([pieces[rn] for rn in RessourcesNames._member_names_])
+        
+        city_val = np.array([pieces[cn] if cn in pieces else 0 for cn in CityNames._member_names_])
+        ress_val = np.array([pieces[rn] if rn in pieces else 0 for rn in RessourcesNames._member_names_])
         
         is_tuning = ress_val.sum() > city_val.sum()
         if is_tuning:
