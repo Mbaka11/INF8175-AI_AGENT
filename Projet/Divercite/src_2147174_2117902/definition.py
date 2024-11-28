@@ -119,9 +119,6 @@ class AlgorithmHeuristic(Heuristic):
             del temp_args[param.name]
             
         del temp_args['total_weight']
-        del temp_args['max_compute']
-        del temp_args['min_compute']
-
         return temp_args
     
     def __add__(self, other):
