@@ -22,7 +22,7 @@ class Optimization(Enum):
 
 ARGS_KEYS= Literal['opponent_score','my_score','last_move','my_pieces','opponent_pieces','moves','is_first_to_play','my_id','opponent_id','current_env']
 NormalizationType = Literal['range_scaling','sigmoid']
-GainType = Literal['potential','evolution','evolution_no_cross_diff','raw_eval','diff','raw_eval_opp','dispersion','delta','opp_delta']
+LossFunction = Literal['potential','evolution','evolution_no_cross_diff','raw_eval','diff','raw_eval_opp','dispersion','delta','opp_delta']
 
 
 ############################################  Exception class  #############################################
@@ -40,8 +40,8 @@ class NegativeOrNullTimeException(Exception):
             
 
 class OptimizationTypeNotPermittedException(Exception):
-    def __init__(self,class_name:str,op_type:GainType):
-        super().__init__(f'Optimization Type ({op_type}) not permitted in {class_name}')
+    def __init__(self,class_name:str,loss_func:LossFunction):
+        super().__init__(f'Optimization Type ({loss_func}) not permitted in {class_name}')
 
 class ActionNotFoundException(Exception):
     def __init__(self,my_step:int,step:int, search_type:str):
@@ -60,7 +60,7 @@ class Heuristic:
 class AlgorithmHeuristic(Heuristic):
     
     #NOTE needs to be same nam
-    def __init__(self,normalization_type:NormalizationType,gain_type:GainType, min_value: float, max_value: float,L=L,weight=1,heuristic_list=None,optimization = Optimization.MAXIMIZE):
+    def __init__(self,normalization_type:NormalizationType,loss_func:LossFunction, min_value: float, max_value: float,L=L,weight=1,heuristic_list=None,optimization = Optimization.MAXIMIZE):
         self.heuristic_list: list[AlgorithmHeuristic] = [self] if heuristic_list ==None else heuristic_list
         self.min_value = min_value
         self.max_value = max_value
@@ -69,7 +69,7 @@ class AlgorithmHeuristic(Heuristic):
         self.L = L
         self.optimization = optimization
         self.normalization_type:NormalizationType = normalization_type
-        self.gain_type:GainType = gain_type
+        self.loss_func:LossFunction = loss_func
         # self.max_compute = float('-inf')
         # self.min_compute = float('inf')
 
@@ -143,7 +143,7 @@ class AlgorithmHeuristic(Heuristic):
     
     def __repr__(self):
         if len(self.heuristic_list) <= 1:
-            return f'{self.__class__.__name__}(weight = {self.weight}, gain_type: {self.gain_type}, optimization = {self.optimization.name})'
+            return f'{self.__class__.__name__}(weight = {self.weight}, loss_func: {self.loss_func}, optimization = {self.optimization.name})'
         return f'{self.__class__.__name__}:{self.total_weight} - {self.heuristic_list}'
     @staticmethod
     def _maximize_score_diff(my_current,opp_current,my_state,opp_state,optimization:Optimization,cross_diff =True):
@@ -158,8 +158,8 @@ class AlgorithmHeuristic(Heuristic):
         return optimization.value*((my_state - opp_state) + my_state)
     
     @staticmethod
-    def compute_optimization(my_current_score,opponent_current_score,my_state_score,opponent_state_score,gain_type:GainType,optimization:Optimization)->float | int:
-        match gain_type:
+    def compute_optimization(my_current_score,opponent_current_score,my_state_score,opponent_state_score,loss_func:LossFunction,optimization:Optimization)->float | int:
+        match loss_func:
             case 'evolution_no_cross_diff':
                 return AlgorithmHeuristic._maximize_score_diff(my_current_score, opponent_current_score, my_state_score, opponent_state_score,optimization,False) 
             case 'evolution':
@@ -292,7 +292,7 @@ class Strategy:
 
 class Algorithm(Strategy):
 
-    def __init__(self,utility_type:GainType,heuristic: AlgorithmHeuristic, cache: int | Cache=None, allowed_time: float = None,keep_cache: bool = False):
+    def __init__(self,utility_type:LossFunction,heuristic: AlgorithmHeuristic, cache: int | Cache=None, allowed_time: float = None,keep_cache: bool = False):
         super().__init__(heuristic)
         if isinstance(cache,Cache):
             self.cache = cache
@@ -300,7 +300,7 @@ class Algorithm(Strategy):
             self.cache = None if cache == None else LRUCache(cache)
         self.allowed_time = allowed_time
         self.keep_cache = keep_cache # ERROR can be source of heuristic evaluation error, only uses if a deeper search was done prior a less deeper search
-        self.utility_type:GainType = utility_type
+        self.utility_type:LossFunction = utility_type
 
     def _utility(self, state: GameStateDivercite):        
         state_scores = state.get_scores()

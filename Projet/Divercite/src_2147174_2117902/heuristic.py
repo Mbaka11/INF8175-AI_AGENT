@@ -1,6 +1,6 @@
 from typing import Any
 from game_state_divercite import GameStateDivercite
-from .definition import AlgorithmHeuristic, Heuristic, ARGS_KEYS, Optimization,NormalizationType, GainType,OptimizationTypeNotPermittedException
+from .definition import AlgorithmHeuristic, Heuristic, ARGS_KEYS, Optimization,NormalizationType, LossFunction,OptimizationTypeNotPermittedException
 from .constant import *
 from .helper import *
 import numpy as np
@@ -9,9 +9,9 @@ from random import random
 
 class ScoreHeuristic(AlgorithmHeuristic):
 
-    def __init__(self,normalization_type:NormalizationType='sigmoid',gain_type:GainType ='evolution' ):
+    def __init__(self,normalization_type:NormalizationType='sigmoid',loss_func:LossFunction ='evolution' ):
         
-        match gain_type:
+        match loss_func:
             case 'diff':
                 min_value,max_value,l = -30,30,10.5
             case 'potential':
@@ -26,9 +26,9 @@ class ScoreHeuristic(AlgorithmHeuristic):
                 min_value,max_value,l=-30,30,4.8
             
             case _:
-                raise  OptimizationTypeNotPermittedException(self.__class__.__name__,gain_type)
+                raise  OptimizationTypeNotPermittedException(self.__class__.__name__,loss_func)
         
-        super().__init__(normalization_type,gain_type,min_value,max_value, L=l)
+        super().__init__(normalization_type,loss_func,min_value,max_value, L=l)
 
     def _evaluation(self, current_state, **kwargs):
         my_state_score = current_state.get_scores()[kwargs['my_id']]
@@ -38,14 +38,14 @@ class ScoreHeuristic(AlgorithmHeuristic):
         my_current_score = kwargs['my_score']
         opponent_current_score = kwargs['opponent_score']
 
-        return self.compute_optimization(my_current_score, opponent_current_score,my_state_score,opponent_state_score,self.gain_type,self.optimization)
+        return self.compute_optimization(my_current_score, opponent_current_score,my_state_score,opponent_state_score,self.loss_func,self.optimization)
 
 
 
 class ControlIndexHeuristic(AlgorithmHeuristic):
 
-    def __init__(self,normalization_type:NormalizationType='range_scaling',gain_type = 'raw_eval',ctrl_weight=.35,dist_weight=.65,):
-        super().__init__(normalization_type,gain_type,-4.3, 4.3,L=5.65)
+    def __init__(self,normalization_type:NormalizationType='range_scaling',loss_func = 'raw_eval',ctrl_weight=.35,dist_weight=.65,):
+        super().__init__(normalization_type,loss_func,-4.3, 4.3,L=5.65)
         self.ctrl_weight = ctrl_weight
         self.dist_weight= dist_weight
         self.total_weight = ctrl_weight + dist_weight
@@ -144,8 +144,8 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
 
 class PiecesVarianceHeuristic(AlgorithmHeuristic):
 
-    def __init__(self,normalization_type:NormalizationType='range_scaling',gain_type:GainType='potential', city_weight=.7, ress_weight=.3):
-        match gain_type:
+    def __init__(self,normalization_type:NormalizationType='range_scaling',loss_func:LossFunction='potential', city_weight=.7, ress_weight=.3):
+        match loss_func:
             case 'diff':
                 min_value,max_value,l = -286,286,7
             case 'potential':
@@ -156,9 +156,9 @@ class PiecesVarianceHeuristic(AlgorithmHeuristic):
                 min_value,max_value,l = -330,-20,5
 
             case _:
-                raise  OptimizationTypeNotPermittedException(self.__class__.__name__,gain_type)
+                raise  OptimizationTypeNotPermittedException(self.__class__.__name__,loss_func)
             
-        super().__init__(normalization_type,gain_type,min_value, max_value, L=l,optimization=Optimization.MINIMIZE) # URGENT-TODO Recheck the scaling depends on minimize or maximize
+        super().__init__(normalization_type,loss_func,min_value, max_value, L=l,optimization=Optimization.MINIMIZE) # URGENT-TODO Recheck the scaling depends on minimize or maximize
         self.city_weight = city_weight
         self.ress_weight = ress_weight
 
@@ -169,7 +169,7 @@ class PiecesVarianceHeuristic(AlgorithmHeuristic):
         my_state_var = self._pieces_var(my_pieces)
         opp_state_var = self._pieces_var(opponent_pieces)
         
-        return self.compute_optimization(None, None,my_state_var,opp_state_var,self.gain_type,self.optimization)
+        return self.compute_optimization(None, None,my_state_var,opp_state_var,self.loss_func,self.optimization)
              
     def _pieces_var(self, pieces: dict[str, int]):
         
@@ -208,9 +208,9 @@ class PiecesVarianceHeuristic(AlgorithmHeuristic):
         return self.city_weight+self.ress_weight
 
 class DiverciteHeuristic(AlgorithmHeuristic):
-    def __init__(self,normalization_type:NormalizationType='sigmoid',gain_type:GainType = 'potential'):
+    def __init__(self,normalization_type:NormalizationType='sigmoid',loss_func:LossFunction = 'potential'):
         
-        match gain_type:
+        match loss_func:
             case 'potential':
                 min_value,max_value,l = -22000, 16000, 5
             case 'raw_eval':
@@ -220,9 +220,9 @@ class DiverciteHeuristic(AlgorithmHeuristic):
             # case 'evolution':
             #     min_value,max_value,l = -7500,7500,9.5   
             case _:
-                raise  OptimizationTypeNotPermittedException(self.__class__.__name__,gain_type)             
+                raise  OptimizationTypeNotPermittedException(self.__class__.__name__,loss_func)             
 
-        super().__init__(normalization_type,gain_type,min_value,max_value, L=l)
+        super().__init__(normalization_type,loss_func,min_value,max_value, L=l)
     
     def get_placed_cities_by_player(self, state: GameStateDivercite, player_symbol: str) -> dict:
         player_cities = {}
@@ -548,15 +548,15 @@ class DiverciteHeuristic(AlgorithmHeuristic):
 
         my_total_score = self._compute_divercite_score(state,my_symbol,my_id,opp_id)
 
-        if self.gain_type == 'raw_eval':
+        if self.loss_func == 'raw_eval':
             return my_total_score
 
         opp_total_score = self._compute_divercite_score(state,opponent_symbol,opp_id,my_id)
 
-        if self.gain_type == 'potential':
+        if self.loss_func == 'potential':
             return self._maximized_potential(opp_total_score,my_total_score,self.optimization)
 
-        if self.gain_type == 'diff':
+        if self.loss_func == 'diff':
             return my_total_score - opp_total_score
         
     

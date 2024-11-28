@@ -30,7 +30,7 @@ class MyPlayer(PlayerDivercite):
         scoreHeuristic = ScoreHeuristic()
         piecesVarianceHeuristic = PiecesVarianceHeuristic()
         controlIndexHeuristic = ControlIndexHeuristic()
-        diverciteHeuristic = DiverciteHeuristic(gain_type='raw_eval')
+        diverciteHeuristic = DiverciteHeuristic(loss_func='raw_eval')
 
         hybrid = scoreHeuristic*8 + controlIndexHeuristic + piecesVarianceHeuristic
         hybrid2 = scoreHeuristic*8 + diverciteHeuristic*4 + \
