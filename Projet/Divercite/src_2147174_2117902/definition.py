@@ -27,6 +27,18 @@ GainType = Literal['potential','evolution','evolution_no_cross_diff','raw_eval',
 
 ############################################  Exception class  #############################################
 
+
+class TimeConvertException(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+class NegativeOrNullTimeException(Exception):
+
+    def __init__(self, time_provided:int,):    
+        super().__init__(f"The time returned cannot be {'null' if  time_provided == 0 else 'negative'}: {time_provided}")
+       
+            
+
 class OptimizationTypeNotPermittedException(Exception):
     def __init__(self,class_name:str,op_type:GainType):
         super().__init__(f'Optimization Type ({op_type}) not permitted in {class_name}')
@@ -131,7 +143,7 @@ class AlgorithmHeuristic(Heuristic):
     
     def __repr__(self):
         if len(self.heuristic_list) <= 1:
-            return f'{self.__class__.__name__}(weight = {self.weight}, optimization_type: {self.gain_type}, optimization = {self.optimization.name})'
+            return f'{self.__class__.__name__}(weight = {self.weight}, gain_type: {self.gain_type}, optimization = {self.optimization.name})'
         return f'{self.__class__.__name__}:{self.total_weight} - {self.heuristic_list}'
     @staticmethod
     def _maximize_score_diff(my_current,opp_current,my_state,opp_state,optimization:Optimization,cross_diff =True):
@@ -233,7 +245,7 @@ class Strategy:
     def _search(self) -> LightAction:
         ...
 
-    def search(self):
+    def search(self)-> LightAction:
         collect()
         try:
             return self._search()
@@ -280,7 +292,7 @@ class Strategy:
 
 class Algorithm(Strategy):
 
-    def __init__(self,utility_type:GainType,heuristic: AlgorithmHeuristic, cache: int=None, allowed_time: float = None,keep_cache: bool = False):
+    def __init__(self,utility_type:GainType,heuristic: AlgorithmHeuristic, cache: int | Cache=None, allowed_time: float = None,keep_cache: bool = False):
         super().__init__(heuristic)
         if isinstance(cache,Cache):
             self.cache = cache
@@ -314,7 +326,7 @@ class Algorithm(Strategy):
 
         return False
 
-    def _transition(self, state: GameStateDivercite, action):
+    def _transition(self, state: GameStateDivercite, action) -> GameStateDivercite:
         return state.apply_action(action)
     
     def rotate_moves_90(self,moves:dict[tuple[int,int],Any]):

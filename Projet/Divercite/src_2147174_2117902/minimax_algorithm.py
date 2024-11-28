@@ -25,11 +25,11 @@ class MinimaxTypeASearch(Algorithm):
         return f'\n\t<==>  Id:{id(self)} =>{self.__class__.__name__}(cache={self.cache.__class__.__name__}-Size:{self.cache.maxsize}, max_depth={self.max_depth}, heuristics={self.main_heuristic.heuristic_list})'
 
     def _search(self):
-        cost, action_star = self._minimax(self.current_state, True, float(
-            '-inf'), float('inf'), 0, self.max_depth)
         print('Game Step:', self.current_state.step, "My Step:", self.my_step,
               'Type:', self.__class__.__name__, 'Depth:', self.max_depth)
         print('Main Heuristic:', self.main_heuristic)
+        cost, action_star = self._minimax(self.current_state, True, float(
+            '-inf'), float('inf'), 0, self.max_depth)
         print('Cost:', cost)
         # print('Min Compute:', self.main_heuristic.min_compute)
         # print('Max Compute:', self.main_heuristic.max_compute)

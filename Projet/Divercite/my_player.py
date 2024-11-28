@@ -30,7 +30,7 @@ class MyPlayer(PlayerDivercite):
         scoreHeuristic = ScoreHeuristic()
         piecesVarianceHeuristic = PiecesVarianceHeuristic()
         controlIndexHeuristic = ControlIndexHeuristic()
-        diverciteHeuristic = DiverciteHeuristic(optimization_type='raw_eval')
+        diverciteHeuristic = DiverciteHeuristic(gain_type='raw_eval')
 
         hybrid = scoreHeuristic*8 + controlIndexHeuristic + piecesVarianceHeuristic
         hybrid2 = scoreHeuristic*8 + diverciteHeuristic*4 + \
@@ -47,7 +47,7 @@ class MyPlayer(PlayerDivercite):
                 #MinimaxHybridSearch(diverciteHeuristic,4500,4,typeA_heuristic=scoreHeuristic,cut_depth_activation=False),6).add_strategy(
 
                 #MinimaxTypeASearch( hybrid3, 3, LRUCache(4500)), 12).add_strategy(
-                MinimaxTypeASearch(scoreHeuristic, 6, LRUCache(5000)),)
+                MinimaxTypeASearch(diverciteHeuristic, 6, 5000),)
 
     @Monitor
     def compute_action(self, current_state: GameStateDivercite, remaining_time: int = 1e9, **kwargs) -> Action:
