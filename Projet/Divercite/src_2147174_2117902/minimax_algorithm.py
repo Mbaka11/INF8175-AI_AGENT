@@ -1,6 +1,6 @@
 from typing import Generator
 from cachetools import Cache
-from .definition import AlgorithmHeuristic, Algorithm, ActionNotFoundException, OptimizationComputingType
+from .definition import AlgorithmHeuristic, Algorithm, ActionNotFoundException, GainType
 from game_state_divercite import GameStateDivercite
 import numpy as np
 from .constant import *
@@ -13,7 +13,7 @@ from copy import deepcopy
 
 class MinimaxTypeASearch(Algorithm):
 
-    def __init__(self, typeA_heuristic: AlgorithmHeuristic, max_depth: int | None, cache: Cache | int = 5000, utility_type: OptimizationComputingType = 'diff', allowed_time: float = None, quiescent_threshold=None):
+    def __init__(self, typeA_heuristic: AlgorithmHeuristic, max_depth: int | None, cache: Cache | int = 5000, utility_type: GainType = 'diff', allowed_time: float = None, quiescent_threshold=None):
         super().__init__(utility_type, typeA_heuristic, cache, allowed_time)
         self.max_depth = max_depth if max_depth != None else MAX_STEP
         self.hit = 0
@@ -131,7 +131,7 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
 
     MAX_THRESHOLD = 0
 
-    def __init__(self, typeB_heuristic: AlgorithmHeuristic, cache: Cache | int = 5000, max_depth: int = None, utility_type: OptimizationComputingType = 'diff', allowed_time: float = None, typeA_heuristic: AlgorithmHeuristic = None, cut_depth_activation: bool = True, threshold: float = 0.5, n_expanded: int | None | float = None, quiescent_threshold=None):
+    def __init__(self, typeB_heuristic: AlgorithmHeuristic, cache: Cache | int = 5000, max_depth: int = None, utility_type: GainType = 'diff', allowed_time: float = None, typeA_heuristic: AlgorithmHeuristic = None, cut_depth_activation: bool = True, threshold: float = 0.5, n_expanded: int | None | float = None, quiescent_threshold=None):
         super().__init__(typeA_heuristic, max_depth, cache,
                          utility_type, allowed_time, quiescent_threshold)
         self.n_max_expanded = n_expanded

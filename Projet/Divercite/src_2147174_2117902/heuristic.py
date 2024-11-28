@@ -1,6 +1,6 @@
 from typing import Any
 from game_state_divercite import GameStateDivercite
-from .definition import AlgorithmHeuristic, Heuristic, ARGS_KEYS, Optimization,Normalization_Type, OptimizationComputingType,OptimizationTypeNotPermittedException
+from .definition import AlgorithmHeuristic, Heuristic, ARGS_KEYS, Optimization,NormalizationType, GainType,OptimizationTypeNotPermittedException
 from .constant import *
 from .helper import *
 import numpy as np
@@ -9,7 +9,7 @@ from random import random
 
 class ScoreHeuristic(AlgorithmHeuristic):
 
-    def __init__(self,normalization_type:Normalization_Type='sigmoid',optimization_type:OptimizationComputingType ='evolution' ):
+    def __init__(self,normalization_type:NormalizationType='sigmoid',optimization_type:GainType ='evolution' ):
         
         match optimization_type:
             case 'diff':
@@ -38,13 +38,13 @@ class ScoreHeuristic(AlgorithmHeuristic):
         my_current_score = kwargs['my_score']
         opponent_current_score = kwargs['opponent_score']
 
-        return self.compute_optimization(my_current_score, opponent_current_score,my_state_score,opponent_state_score,self.optimization_type,self.optimization)
+        return self.compute_optimization(my_current_score, opponent_current_score,my_state_score,opponent_state_score,self.gain_type,self.optimization)
 
 
 
 class ControlIndexHeuristic(AlgorithmHeuristic):
 
-    def __init__(self,normalization_type:Normalization_Type='range_scaling',optimization_type = 'raw_eval',ctrl_weight=.35,dist_weight=.65,):
+    def __init__(self,normalization_type:NormalizationType='range_scaling',optimization_type = 'raw_eval',ctrl_weight=.35,dist_weight=.65,):
         super().__init__(normalization_type,optimization_type,-4.3, 4.3,L=5.65)
         self.ctrl_weight = ctrl_weight
         self.dist_weight= dist_weight
@@ -144,7 +144,7 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
 
 class PiecesVarianceHeuristic(AlgorithmHeuristic):
 
-    def __init__(self,normalization_type:Normalization_Type='range_scaling',optimization_type:OptimizationComputingType='potential', city_weight=.7, ress_weight=.3):
+    def __init__(self,normalization_type:NormalizationType='range_scaling',optimization_type:GainType='potential', city_weight=.7, ress_weight=.3):
         match optimization_type:
             case 'diff':
                 min_value,max_value,l = -286,286,7
@@ -169,7 +169,7 @@ class PiecesVarianceHeuristic(AlgorithmHeuristic):
         my_state_var = self._pieces_var(my_pieces)
         opp_state_var = self._pieces_var(opponent_pieces)
         
-        return self.compute_optimization(None, None,my_state_var,opp_state_var,self.optimization_type,self.optimization)
+        return self.compute_optimization(None, None,my_state_var,opp_state_var,self.gain_type,self.optimization)
              
     def _pieces_var(self, pieces: dict[str, int]):
         
@@ -208,7 +208,7 @@ class PiecesVarianceHeuristic(AlgorithmHeuristic):
         return self.city_weight+self.ress_weight
 
 class DiverciteHeuristic(AlgorithmHeuristic):
-    def __init__(self,normalization_type:Normalization_Type='sigmoid',optimization_type:OptimizationComputingType = 'potential'):
+    def __init__(self,normalization_type:NormalizationType='sigmoid',optimization_type:GainType = 'potential'):
         
         match optimization_type:
             case 'potential':
@@ -548,15 +548,15 @@ class DiverciteHeuristic(AlgorithmHeuristic):
 
         my_total_score = self._compute_divercite_score(state,my_symbol,my_id,opp_id)
 
-        if self.optimization_type == 'raw_eval':
+        if self.gain_type == 'raw_eval':
             return my_total_score
 
         opp_total_score = self._compute_divercite_score(state,opponent_symbol,opp_id,my_id)
 
-        if self.optimization_type == 'potential':
+        if self.gain_type == 'potential':
             return self._maximized_potential(opp_total_score,my_total_score,self.optimization)
 
-        if self.optimization_type == 'diff':
+        if self.gain_type == 'diff':
             return my_total_score - opp_total_score
         
     
