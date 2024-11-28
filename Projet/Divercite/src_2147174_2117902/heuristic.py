@@ -26,8 +26,15 @@ class ScoreHeuristic(AlgorithmHeuristic):
                 return self._maximize_score_diff(my_current_score, opponent_current_score, my_state_score, opponent_state_score) 
             case 'potential':
                 return self._maximized_potential(opponent_state_score,my_state_score)
+            
+            case 'diff':
+                return my_state_score - opponent_state_score
+
             case 'raw_eval':
                 return my_state_score
+
+            case 'raw_eval_opp':
+                return self.optimization.value*-1 *opponent_state_score
 
 
 class ControlIndexHeuristic(AlgorithmHeuristic):
@@ -130,9 +137,6 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
     def _compute_distance_index(self,x:float):
         return self._range_scaling(x,100,700)
 
-    def normalize(self, x):
-        return x
-
 class PiecesVarianceHeuristic(AlgorithmHeuristic):
 
     def __init__(self,normalization_type:Normalization_Type='range_scaling',optimization_type:OptimizationComputingType='potential', city_weight=.7, ress_weight=.3):
@@ -149,9 +153,16 @@ class PiecesVarianceHeuristic(AlgorithmHeuristic):
         
         if self.optimization_type =='potential':
             return self._maximized_potential(opp_state_var,my_state_var)
+        
         if self.optimization_type =='diff':
             return  opp_state_var-my_state_var
+        
+        if self.optimization_type == 'raw_eval_opp':
+            return self.optimization.value*-1*opp_state_var
+
         return -my_state_var
+        
+        
         
     def _pieces_var(self, pieces: dict[str, int]):
         
@@ -191,7 +202,18 @@ class PiecesVarianceHeuristic(AlgorithmHeuristic):
 
 class DiverciteHeuristic(AlgorithmHeuristic):
     def __init__(self,normalization_type:Normalization_Type='sigmoid',optimization_type:OptimizationComputingType = 'potential'):
-        super().__init__(normalization_type,optimization_type,-7500,7500, L=9.5)
+        
+        match optimization_type:
+            case 'potential':
+                min_value,max_value,l = -7500,7500,9.5
+            case 'raw_eval':
+                min_value, max_value,l = -2600,2600,5.4
+            case 'diff':
+                min_value,max_value,l = -7500,7500,5.3
+            case _:
+                min_value,max_value,l = -7500,7500,9.5                
+
+        super().__init__(normalization_type,optimization_type,min_value,max_value, L=l)
     
     def get_placed_cities_by_player(self, state: GameStateDivercite, player_symbol: str) -> dict:
         player_cities = {}
@@ -518,6 +540,9 @@ class DiverciteHeuristic(AlgorithmHeuristic):
         original_state = kwargs['original_state']
 
         my_total_score = self._compute_divercite_score(state,my_symbol,my_id,opp_id)
+        if self.optimization_type == 'raw_eval':
+            return my_total_score
+
         opp_total_score = self._compute_divercite_score(state,opponent_symbol,opp_id,my_id)
 
         if self.optimization_type == 'potential':
@@ -527,11 +552,10 @@ class DiverciteHeuristic(AlgorithmHeuristic):
             return my_total_score - opp_total_score
         
         if self.optimization_type == 'evolution':
+            #FIXME this creates a lot error and need to be avoided
             my_original_score = self._compute_divercite_score(original_state,my_symbol,my_id,opp_id)
             opp_original_score = self._compute_divercite_score(original_state,opponent_symbol,opp_id,my_id)
             return self._maximize_score_diff(my_original_score,opp_original_score,my_total_score,opp_total_score)
 
         return my_total_score
             
-        #return my_total_score
-

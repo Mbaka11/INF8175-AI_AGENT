@@ -22,9 +22,15 @@ class Optimization(Enum):
 
 ARGS_KEYS= Literal['opponent_score','my_score','last_move','my_pieces','opponent_pieces','moves','is_first_to_play','my_id','opponent_id','current_env']
 Normalization_Type = Literal['range_scaling','sigmoid']
-OptimizationComputingType = Literal['potential','evolution','raw_eval','diff']
-############################################ Base Heuristic class  #############################################
+OptimizationComputingType = Literal['potential','evolution','raw_eval','diff','raw_eval_opp']
 
+############################################  Exception class  #############################################
+
+class ActionNotFoundException(Exception):
+    def __init__(self,my_step:int,step:int, search_type:str):
+        super().__init__('Action not found')
+
+############################################ Base Heuristic class  #############################################
 
 class Heuristic:
     def evaluate(self, current_state: GameStateDivercite,**kwargs) -> Any:
@@ -47,7 +53,6 @@ class AlgorithmHeuristic(Heuristic):
         self.optimization = optimization
         self.normalization_type:Normalization_Type = normalization_type
         self.optimization_type:OptimizationComputingType = optimization_type
-
 
     def __call__(self, *args, **kwds) -> float: 
         if len(self.heuristic_list) == 1:
@@ -174,9 +179,9 @@ class Strategy:
         Code taken from the template
         '''
 
-        possible_actions = Strategy.current_state.generate_possible_light_actions()
-        best_action = next(possible_actions)
-        best_score = Strategy.current_state.apply_action(best_action).scores[Strategy.my_id]
+        possible_actions = Strategy.current_state.get_possible_light_actions()
+        best_action = None
+        best_score = Strategy.current_state.scores[Strategy.my_id]
 
         for action in possible_actions:
             state = Strategy.current_state.apply_action(action)
@@ -194,8 +199,13 @@ class Strategy:
         collect()
         try:
             return self._search()
+        
         except ActionNotPermittedError as e:
             print(e.__class__.__name__,f': {e.args}')
+        
+        except ActionNotFoundException as e:
+            print(e.__class__.__name__,f': {e.args}')
+
         except Exception as e:
             print('Warning... !:',e.__class__.__name__,f': {e.args}')
         
