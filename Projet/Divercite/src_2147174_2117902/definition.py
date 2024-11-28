@@ -22,9 +22,14 @@ class Optimization(Enum):
 
 ARGS_KEYS= Literal['opponent_score','my_score','last_move','my_pieces','opponent_pieces','moves','is_first_to_play','my_id','opponent_id','current_env']
 Normalization_Type = Literal['range_scaling','sigmoid']
-OptimizationComputingType = Literal['potential','evolution','raw_eval','diff','raw_eval_opp']
+OptimizationComputingType = Literal['potential','evolution','evolution_no_cross_diff','raw_eval','diff','raw_eval_opp','dispersion','delta','opp_delta']
+
 
 ############################################  Exception class  #############################################
+
+class OptimizationTypeNotPermittedException(Exception):
+    def __init__(self,class_name:str,op_type:OptimizationComputingType):
+        super().__init__(f'Optimization Type ({op_type}) not permitted in {class_name}')
 
 class ActionNotFoundException(Exception):
     def __init__(self,my_step:int,step:int, search_type:str):
@@ -53,6 +58,8 @@ class AlgorithmHeuristic(Heuristic):
         self.optimization = optimization
         self.normalization_type:Normalization_Type = normalization_type
         self.optimization_type:OptimizationComputingType = optimization_type
+        # self.max_compute = float('-inf')
+        # self.min_compute = float('inf')
 
     def __call__(self, *args, **kwds) -> float: 
         if len(self.heuristic_list) == 1:
@@ -74,6 +81,9 @@ class AlgorithmHeuristic(Heuristic):
         return 2 / (1 + np.exp(-x_scaled)) - 1
     
     def normalize(self,x:float):
+        # self.max_compute = max(self.max_compute,x)
+        # self.min_compute = min(self.min_compute,x)
+        # return x
         if self.normalization_type == 'sigmoid':
             return self._sigmoid(x,self.min_value,self.max_value,self.L)
      
@@ -109,6 +119,9 @@ class AlgorithmHeuristic(Heuristic):
             del temp_args[param.name]
             
         del temp_args['total_weight']
+        del temp_args['max_compute']
+        del temp_args['min_compute']
+
         return temp_args
     
     def __add__(self, other):
@@ -121,20 +134,48 @@ class AlgorithmHeuristic(Heuristic):
     
     def __repr__(self):
         if len(self.heuristic_list) <= 1:
-            return f'{self.__class__.__name__}:{self.weight}'
+            return f'{self.__class__.__name__}(weight = {self.weight}, optimization_type: {self.optimization_type}, optimization = {self.optimization.name})'
         return f'{self.__class__.__name__}:{self.total_weight} - {self.heuristic_list}'
-    
-    def _maximize_score_diff(self,my_current,opp_current,my_state,opp_state):
+    @staticmethod
+    def _maximize_score_diff(my_current,opp_current,my_state,opp_state,optimization:Optimization,cross_diff =True):
         my_delta_score = my_state - my_current
         delta_state = my_state - opp_state
         cross_diff = (my_state - opp_current) - \
-            (opp_state-my_current)
+            (opp_state-my_current) if cross_diff else 0
 
-        return my_delta_score+delta_state+cross_diff
+        return optimization.value*(my_delta_score+delta_state+cross_diff)
+    @staticmethod
+    def _maximized_potential(opp_state,my_state,optimization:Optimization,):
+        return optimization.value*((my_state - opp_state) + my_state)
+    
+    @staticmethod
+    def compute_optimization(my_current_score,opponent_current_score,my_state_score,opponent_state_score,optimization_type:OptimizationComputingType,optimization:Optimization)->float | int:
+        match optimization_type:
+            case 'evolution_no_cross_diff':
+                return AlgorithmHeuristic._maximize_score_diff(my_current_score, opponent_current_score, my_state_score, opponent_state_score,optimization,False) 
+            case 'evolution':
+                        # BUG Might want to revisit the way we quantify this heuristic and remove the cross diff
+                return AlgorithmHeuristic._maximize_score_diff(my_current_score, opponent_current_score, my_state_score, opponent_state_score,optimization) 
+            case 'potential':
+                return AlgorithmHeuristic._maximized_potential(opponent_state_score,my_state_score,optimization)
 
-    def _maximized_potential(self,opp_state,my_state):
-        return self.optimization.value*((my_state - opp_state) + my_state)
+            case 'diff':
+                return optimization.value*(my_state_score - opponent_state_score)
+
+            case 'raw_eval':
+                return optimization.value*my_state_score
+
+            case 'raw_eval_opp':
+                return optimization.value*-1 *opponent_state_score
+
+            case 'delta':
+                return optimization.value*(my_state_score-my_current_score)
+
+            case 'dispersion':
+                return optimization.value*(my_state_score-opponent_current_score)
             
+            case 'opp_delta':
+                return optimization.value*-1*(opponent_state_score-opponent_current_score)
 
 ############################################# Base Strategy Classes ##############################################
 
@@ -242,7 +283,7 @@ class Strategy:
 
 class Algorithm(Strategy):
 
-    def __init__(self, heuristic: AlgorithmHeuristic, cache: int=None, allowed_time: float = None,keep_cache: bool = False):
+    def __init__(self,utility_type:OptimizationComputingType,heuristic: AlgorithmHeuristic, cache: int=None, allowed_time: float = None,keep_cache: bool = False):
         super().__init__(heuristic)
         if isinstance(cache,Cache):
             self.cache = cache
@@ -250,12 +291,18 @@ class Algorithm(Strategy):
             self.cache = None if cache == None else LRUCache(cache)
         self.allowed_time = allowed_time
         self.keep_cache = keep_cache # ERROR can be source of heuristic evaluation error, only uses if a deeper search was done prior a less deeper search
+        self.utility_type:OptimizationComputingType = utility_type
 
-    def _utility(self, state: GameStateDivercite):
-        scores = state.get_scores()
-        my_scores = scores[self.my_id]
-        opponent_scores = scores[self.opponent_id]
-        return my_scores-opponent_scores
+    def _utility(self, state: GameStateDivercite):        
+        state_scores = state.get_scores()
+        my_state_score = state_scores[self.my_id]
+        opponent_state_score = state_scores[self.opponent_id]
+
+        current_scores = self.current_state.get_scores()
+        my_current_score = current_scores[self.my_id]
+        opponent_current_score = current_scores[self.opponent_id]
+
+        return AlgorithmHeuristic.compute_optimization(my_current_score, opponent_current_score,my_state_score,opponent_state_score,self.utility_type,Optimization.MAXIMIZE)
         
 
     def _is_our_turn(self, step = None):

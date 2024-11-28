@@ -1,6 +1,6 @@
 from typing import Generator
 from cachetools import Cache
-from .definition import AlgorithmHeuristic, Algorithm, ActionNotFoundException
+from .definition import AlgorithmHeuristic, Algorithm, ActionNotFoundException, OptimizationComputingType
 from game_state_divercite import GameStateDivercite
 import numpy as np
 from .constant import *
@@ -10,27 +10,33 @@ import math
 
 from copy import deepcopy
 
+
 class MinimaxTypeASearch(Algorithm):
 
-    def __init__(self, typeA_heuristic: AlgorithmHeuristic, max_depth: int | None, cache: Cache|int=5000, allowed_time: float = None,quiescent_threshold=None):
-        super().__init__(typeA_heuristic, cache, allowed_time)
+    def __init__(self, typeA_heuristic: AlgorithmHeuristic, max_depth: int | None, cache: Cache | int = 5000, utility_type: OptimizationComputingType = 'diff', allowed_time: float = None, quiescent_threshold=None):
+        super().__init__(utility_type, typeA_heuristic, cache, allowed_time)
         self.max_depth = max_depth if max_depth != None else MAX_STEP
         self.hit = 0
         self.node_expanded = 0
         self.quiescent_threshold = quiescent_threshold
 
     def __repr__(self):
-        # At {super().__repr__()} 
+        # At {super().__repr__()}
         return f'\n\t<==>  Id:{id(self)} =>{self.__class__.__name__}(cache={self.cache.__class__.__name__}-Size:{self.cache.maxsize}, max_depth={self.max_depth}, heuristics={self.main_heuristic.heuristic_list})'
 
     def _search(self):
-        cost, action_star = self._minimax(self.current_state, True, float('-inf'), float('inf'), 0, self.max_depth)
-        print('Game Step:',self.current_state.step,"My Step:",self.my_step,'Type:',self.__class__.__name__,'Depth:',self.max_depth)
-        print('Main Heuristic:',self.main_heuristic)
-        print('Cost:',cost)
+        cost, action_star = self._minimax(self.current_state, True, float(
+            '-inf'), float('inf'), 0, self.max_depth)
+        print('Game Step:', self.current_state.step, "My Step:", self.my_step,
+              'Type:', self.__class__.__name__, 'Depth:', self.max_depth)
+        print('Main Heuristic:', self.main_heuristic)
+        print('Cost:', cost)
+        # print('Min Compute:', self.main_heuristic.min_compute)
+        # print('Max Compute:', self.main_heuristic.max_compute)
 
         if action_star == None:
-            raise ActionNotFoundException(self.my_step,self.current_state.step,self.__class__.__name__)
+            raise ActionNotFoundException(
+                self.my_step, self.current_state.step, self.__class__.__name__)
         return action_star
 
     def __del__(self):
@@ -43,11 +49,11 @@ class MinimaxTypeASearch(Algorithm):
         if depth >= max_depth:
             pred_utility: float = self.main_heuristic(
                 state, my_id=self.my_id, opponent_id=self.opponent_id, my_pieces=self.my_pieces, opponent_pieces=self.opponent_pieces,
-                last_move=self.last_move, is_first_to_play=self.is_first_to_play, moves=self.moves,current_env=self.current_env,
-                my_score=self.my_score, opponent_score=self.opponent_score,my_piece_type=self.my_piece_type,opponent_piece_type=self.opponent_piece_type,
-                original_state=self.current_state)
-            
-            if self._isQuiescent(state, pred_utility,isMaximize):
+                last_move=self.last_move, is_first_to_play=self.is_first_to_play, moves=self.moves, current_env=self.current_env,
+                my_score=self.my_score, opponent_score=self.opponent_score, my_piece_type=self.my_piece_type, opponent_piece_type=self.opponent_piece_type,
+            )
+
+            if self._isQuiescent(state, pred_utility, isMaximize):
                 return pred_utility, None
 
         v_star = float('-inf') if isMaximize else float('inf')
@@ -93,7 +99,7 @@ class MinimaxTypeASearch(Algorithm):
 
         return v_star, m_star
 
-    def _isQuiescent(self, state: GameStateDivercite, pred_utility: float,isMaximize:bool) -> bool:
+    def _isQuiescent(self, state: GameStateDivercite, pred_utility: float, isMaximize: bool) -> bool:
         if not isMaximize:
             return True
         # TODO check wether the state is safe or nah
@@ -125,8 +131,9 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
 
     MAX_THRESHOLD = 0
 
-    def __init__(self,typeB_heuristic: AlgorithmHeuristic, cache: Cache|int=5000, max_depth: int = None, allowed_time: float = None, typeA_heuristic: AlgorithmHeuristic = None,cut_depth_activation:bool = True ,threshold: float = 0.5, n_expanded: int | None | float= None,quiescent_threshold=None ):
-        super().__init__(typeA_heuristic, max_depth, cache, allowed_time,quiescent_threshold)
+    def __init__(self, typeB_heuristic: AlgorithmHeuristic, cache: Cache | int = 5000, max_depth: int = None, utility_type: OptimizationComputingType = 'diff', allowed_time: float = None, typeA_heuristic: AlgorithmHeuristic = None, cut_depth_activation: bool = True, threshold: float = 0.5, n_expanded: int | None | float = None, quiescent_threshold=None):
+        super().__init__(typeA_heuristic, max_depth, cache,
+                         utility_type, allowed_time, quiescent_threshold)
         self.n_max_expanded = n_expanded
         self.typeB_heuristic = typeB_heuristic
         if threshold < self.MAX_THRESHOLD:
@@ -142,8 +149,8 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
             return self.typeB_heuristic(current_state.apply_action(a[0]), my_id=self.my_id, opponent_id=self.opponent_id,
                                         my_pieces=self.my_pieces, opponent_pieces=self.opponent_pieces,
                                         last_move=self.last_move, is_first_to_play=self.is_first_to_play, moves=self.moves,
-                                        my_score=self.my_score, opponent_score=self.opponent_score,current_env=self.current_env,
-                                        my_piece_type=self.my_piece_type,opponent_piece_type=self.opponent_piece_type,original_state=self.current_state)
+                                        my_score=self.my_score, opponent_score=self.opponent_score, current_env=self.current_env,
+                                        my_piece_type=self.my_piece_type, opponent_piece_type=self.opponent_piece_type)
 
         returned_actions = np.fromiter(actions, dtype=np.object_)
         vals = np.apply_along_axis(
@@ -153,7 +160,7 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
             current_state.step, n_child)
         my_turn = self._is_our_turn(current_state.step)
 
-        if  my_turn:
+        if my_turn:
             vals_indice = vals.argsort(axis=0)[::-1][:max_child_expanded]
         else:
             vals_indice = vals.argsort(axis=0)[:max_child_expanded]
@@ -172,7 +179,7 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
         _eval: float = action[1]
         if not self.cut_depth_activation:
             return self.max_depth
-        
+
         if _eval >= self.threshold:
             return self.max_depth
 
@@ -189,9 +196,7 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
 
     def _compute_n_expanded(self, cur_step: int, n_child: int):
         # TODO dynamically update the number of nodes expanded
-        if isinstance(self.n_max_expanded,float) and self.n_max_expanded>0 and self.n_max_expanded<1:
+        if isinstance(self.n_max_expanded, float) and self.n_max_expanded > 0 and self.n_max_expanded < 1:
             return math.ceil(self.n_max_expanded * n_child)
-        
+
         return self.n_max_expanded if self.n_max_expanded != None and self.n_max_expanded < n_child else n_child
-
-

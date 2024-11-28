@@ -1,6 +1,6 @@
 from typing import Any
 from game_state_divercite import GameStateDivercite
-from .definition import AlgorithmHeuristic, Heuristic, ARGS_KEYS, Optimization,Normalization_Type, OptimizationComputingType
+from .definition import AlgorithmHeuristic, Heuristic, ARGS_KEYS, Optimization,Normalization_Type, OptimizationComputingType,OptimizationTypeNotPermittedException
 from .constant import *
 from .helper import *
 import numpy as np
@@ -10,7 +10,25 @@ from random import random
 class ScoreHeuristic(AlgorithmHeuristic):
 
     def __init__(self,normalization_type:Normalization_Type='sigmoid',optimization_type:OptimizationComputingType ='evolution' ):
-        super().__init__(normalization_type,optimization_type,-45,45, L=4.5)
+        
+        match optimization_type:
+            case 'diff':
+                min_value,max_value,l = -30,30,10.5
+            case 'potential':
+                min_value,max_value,l=-42,42,5.5
+            case 'raw_eval':
+                min_value,max_value,l = -40,40,5.2
+            case 'raw_eval_opp':
+                min_value,max_value,l=-50,0,4.3
+            case 'evolution':
+                min_value,max_value,l=-81,81,5.7
+            case 'evolution_no_cross_diff':
+                min_value,max_value,l=-30,30,4.8
+            
+            case _:
+                raise  OptimizationTypeNotPermittedException(self.__class__.__name__,optimization_type)
+        
+        super().__init__(normalization_type,optimization_type,min_value,max_value, L=l)
 
     def _evaluation(self, current_state, **kwargs):
         my_state_score = current_state.get_scores()[kwargs['my_id']]
@@ -20,27 +38,14 @@ class ScoreHeuristic(AlgorithmHeuristic):
         my_current_score = kwargs['my_score']
         opponent_current_score = kwargs['opponent_score']
 
-        match self.optimization_type:
-            case 'evolution':
-                        # BUG Might want to revisit the way we quantify this heuristic and remove the cross diff
-                return self._maximize_score_diff(my_current_score, opponent_current_score, my_state_score, opponent_state_score) 
-            case 'potential':
-                return self._maximized_potential(opponent_state_score,my_state_score)
-            
-            case 'diff':
-                return my_state_score - opponent_state_score
+        return self.compute_optimization(my_current_score, opponent_current_score,my_state_score,opponent_state_score,self.optimization_type,self.optimization)
 
-            case 'raw_eval':
-                return my_state_score
-
-            case 'raw_eval_opp':
-                return self.optimization.value*-1 *opponent_state_score
 
 
 class ControlIndexHeuristic(AlgorithmHeuristic):
 
     def __init__(self,normalization_type:Normalization_Type='range_scaling',optimization_type = 'raw_eval',ctrl_weight=.35,dist_weight=.65,):
-        super().__init__(normalization_type,optimization_type,0, 900,L=11)
+        super().__init__(normalization_type,optimization_type,-4.3, 4.3,L=5.65)
         self.ctrl_weight = ctrl_weight
         self.dist_weight= dist_weight
         self.total_weight = ctrl_weight + dist_weight
@@ -57,7 +62,7 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
             original_env, my_piece_type)
 
         control_index = self._maximize_score_diff(
-            my_current_ic, opp_current_ic, my_ic_state, opp_ic_state)
+            my_current_ic, opp_current_ic, my_ic_state, opp_ic_state,self.optimization)
 
         my_current_dist = self._compute_neighborhood_distances(
             my_piece_type, my_current_moves, original_env)
@@ -70,7 +75,7 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
             opp_piece_type, opp_state_moves, state_env)
 
         dist_index = self._maximize_score_diff(
-            my_current_dist, opp_current_dist, my_state_dist, opp_state_dist)
+            my_current_dist, opp_current_dist, my_state_dist, opp_state_dist,self.optimization)
 
         control_index =self._compute_control_index(control_index)
         dist_index = self._compute_distance_index(dist_index)
@@ -140,7 +145,20 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
 class PiecesVarianceHeuristic(AlgorithmHeuristic):
 
     def __init__(self,normalization_type:Normalization_Type='range_scaling',optimization_type:OptimizationComputingType='potential', city_weight=.7, ress_weight=.3):
-        super().__init__(normalization_type,optimization_type,-160, 120, L=4.3,optimization=Optimization.MINIMIZE) # URGENT-TODO Recheck the scaling depends on minimize or maximize
+        match optimization_type:
+            case 'diff':
+                min_value,max_value,l = -286,286,7
+            case 'potential':
+                min_value,max_value,l=-400,400,7
+            case 'raw_eval_opp':
+                min_value,max_value,l=20,330,5
+            case 'raw_eval':
+                min_value,max_value,l = -330,-20,5
+
+            case _:
+                raise  OptimizationTypeNotPermittedException(self.__class__.__name__,optimization_type)
+            
+        super().__init__(normalization_type,optimization_type,min_value, max_value, L=l,optimization=Optimization.MINIMIZE) # URGENT-TODO Recheck the scaling depends on minimize or maximize
         self.city_weight = city_weight
         self.ress_weight = ress_weight
 
@@ -151,19 +169,8 @@ class PiecesVarianceHeuristic(AlgorithmHeuristic):
         my_state_var = self._pieces_var(my_pieces)
         opp_state_var = self._pieces_var(opponent_pieces)
         
-        if self.optimization_type =='potential':
-            return self._maximized_potential(opp_state_var,my_state_var)
-        
-        if self.optimization_type =='diff':
-            return  opp_state_var-my_state_var
-        
-        if self.optimization_type == 'raw_eval_opp':
-            return self.optimization.value*-1*opp_state_var
-
-        return -my_state_var
-        
-        
-        
+        return self.compute_optimization(None, None,my_state_var,opp_state_var,self.optimization_type,self.optimization)
+             
     def _pieces_var(self, pieces: dict[str, int]):
         
         city_val = np.array([pieces[cn] if cn in pieces else 0 for cn in CityNames._member_names_])
@@ -205,13 +212,15 @@ class DiverciteHeuristic(AlgorithmHeuristic):
         
         match optimization_type:
             case 'potential':
-                min_value,max_value,l = -7500,7500,9.5
+                min_value,max_value,l = -22000, 16000, 5
             case 'raw_eval':
-                min_value, max_value,l = -2600,2600,5.4
+                min_value, max_value,l = -8000,4000,5.2
             case 'diff':
-                min_value,max_value,l = -7500,7500,5.3
+                min_value,max_value,l = -20000,12000,5
+            # case 'evolution':
+            #     min_value,max_value,l = -7500,7500,9.5   
             case _:
-                min_value,max_value,l = -7500,7500,9.5                
+                raise  OptimizationTypeNotPermittedException(self.__class__.__name__,optimization_type)             
 
         super().__init__(normalization_type,optimization_type,min_value,max_value, L=l)
     
@@ -537,25 +546,19 @@ class DiverciteHeuristic(AlgorithmHeuristic):
         my_symbol = kwargs['my_piece_type']
         opponent_symbol = kwargs['opponent_piece_type']
 
-        original_state = kwargs['original_state']
-
         my_total_score = self._compute_divercite_score(state,my_symbol,my_id,opp_id)
+
         if self.optimization_type == 'raw_eval':
             return my_total_score
 
         opp_total_score = self._compute_divercite_score(state,opponent_symbol,opp_id,my_id)
 
         if self.optimization_type == 'potential':
-            return self._maximized_potential(opp_total_score,my_total_score)
+            return self._maximized_potential(opp_total_score,my_total_score,self.optimization)
 
         if self.optimization_type == 'diff':
             return my_total_score - opp_total_score
         
-        if self.optimization_type == 'evolution':
-            #FIXME this creates a lot error and need to be avoided
-            my_original_score = self._compute_divercite_score(original_state,my_symbol,my_id,opp_id)
-            opp_original_score = self._compute_divercite_score(original_state,opponent_symbol,opp_id,my_id)
-            return self._maximize_score_diff(my_original_score,opp_original_score,my_total_score,opp_total_score)
-
+    
         return my_total_score
             
