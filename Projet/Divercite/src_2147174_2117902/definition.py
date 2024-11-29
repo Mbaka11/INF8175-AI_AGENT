@@ -242,7 +242,7 @@ class Strategy:
         Code taken from the template
         '''
 
-        possible_actions = Strategy.current_state.get_possible_light_actions()
+        possible_actions = Strategy.current_state.get_possible_light_actions().copy()
         best_action = None
         best_score = Strategy.current_state.scores[Strategy.my_id]
 
@@ -252,7 +252,6 @@ class Strategy:
             if score > best_score:
                 best_action = action
         
-        print('Error')
         return best_action
 
     def _search(self) -> LightAction:
@@ -272,7 +271,12 @@ class Strategy:
         except Exception as e:
             print('Warning... !:',e.__class__.__name__,f': {e.args}')
         
-        return Strategy.greedy_fallback_move()
+        try:
+            return Strategy.greedy_fallback_move()
+        except:
+            print('Error in fallback moves! Testing Last resort',)
+        
+        return choice(list(self.current_state.get_possible_light_actions().copy()))
 
     @property
     def my_pieces(self):
@@ -420,7 +424,7 @@ class StochasticActionInterface(ActionOrderInterface):
     
 
     def _compute_action(self,state:GameStateDivercite):
-        actions_ = list(state.generate_possible_light_actions())
+        actions_ = list(state.get_possible_light_actions())
         if self.distribution_type == 'random':
             return choice(actions_)
         

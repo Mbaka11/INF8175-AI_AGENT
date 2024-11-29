@@ -4,12 +4,12 @@ from typing import Any
 from cachetools import Cache
 from .minimax_algorithm import MinimaxTypeASearch
 from game_state_divercite import GameStateDivercite
-from .definition import Algorithm, AlgorithmHeuristic, LossFunction, TimeConvertException, NegativeOrNullTimeException,StochasticActionInterface,DistributionType,AlphaOutOfRangeException
+from .definition import ActionNotFoundException, Algorithm, AlgorithmHeuristic, LossFunction, TimeConvertException, NegativeOrNullTimeException,StochasticActionInterface,DistributionType,AlphaOutOfRangeException
 from seahorse.game.light_action import LightAction
 from random import choice
 from time import time
 from pytimeparse import parse
-from .constant import MAX_STEP
+from .constant import MAX_MOVES, MAX_STEP
 import math
 import numpy as np
 
@@ -55,6 +55,7 @@ class MCTSSearch(Algorithm,StochasticActionInterface):
         StochasticActionInterface.__init__(self,typeB_heuristic,distribution_type,std)
         self.n_playouts = n_playouts
         self.C = C
+        self.ucb_flag = False
     
     def _pred_utility(self, state:GameStateDivercite):
         total_pred =0
@@ -64,21 +65,25 @@ class MCTSSearch(Algorithm,StochasticActionInterface):
         return total_pred/self.n_playouts
 
     def _search(self) -> LightAction:
+        print(f'Allowed time {self.allowed_time} (s)')
+        print(f'Game Step: {self.current_state.step}/{MAX_STEP} - My Step: {self.my_step}/{MAX_MOVES} - {self.__class__.__name__} - Distribution: {self.distribution_type}')
         root_node = Node(self.current_state)
         start_time = time()
+        self.ucb_flag = False
 
         while time() - start_time <= self.allowed_time:
             node: Node = self._select(root_node)
             reward = self._pred_utility(node.state)
             self._back_propagate(node, reward)
             self.n_simulation += 1
-
+        self.ucb_flag = True
+        print(f'Search Done with {self.n_simulation} simulations')
         # TODO best_child based on some type of score, UCT1,UCTtuned, UCTminimax, 
-        return self._best_action(root_node.children).state
+        return self._best_action(root_node.children).action_taken
 
     def _select(self,node:Node) -> Node:
         while not node.state.is_done():
-            if not node.is_fully_expanded():
+            if not node.is_fully_expanded:
                 return self._expand(node)
             else:
                 node = self._best_action(node.children)
@@ -90,6 +95,7 @@ class MCTSSearch(Algorithm,StochasticActionInterface):
         for action in legal_actions:
             if action not in tried_actions:
                 next_state = self._transition(node.state,action)
+                
                 # Use cache to avoid redundant node creation
 
                 if self.cache != None:
@@ -103,11 +109,14 @@ class MCTSSearch(Algorithm,StochasticActionInterface):
                             self.cache[hash_state] = Node(next_state, action_taken=action,parent=node)
                             child_node = self.cache[hash_state]        
                             node.children.append(child_node)
+                            return child_node
+
                 else :
                     child_node = Node(next_state, action_taken=action,parent=node)
                     node.children.append(child_node)
                 
-                return child_node
+                    return child_node
+        raise ActionNotFoundException()
 
     def _back_propagate(self, node: Node, reward: float):
         while node is not None:
@@ -116,7 +125,9 @@ class MCTSSearch(Algorithm,StochasticActionInterface):
             node = node.parent
 
     def _best_action(self,children:list[Node])->Node: 
-        return self._iter_state(children,self._apply)
+        vals,_action_state = self._iter_state(children,self._apply)
+        best_indices = vals.argmax(axis=0)
+        return _action_state[best_indices]
     
     def _apply(self,node_):
         n:Node= node_[0]
@@ -139,9 +150,9 @@ class MCTSSearch(Algorithm,StochasticActionInterface):
 
 
 
-class MCTSHybridMinimaxBckpsSearch(MCTSSearch):
+class MCTSHybridMinimaxBackupsSearch(MCTSSearch):
     
-    def __init__(self, typeB_heuristic, allowed_time, distribution_type,C:float,alpha:float,minimax_details:dict[str,Any], filter_heuristic:AlgorithmHeuristic=None, n_max_filtered:int=None,std = None, n_playouts = 1, cache = 5000):
+    def __init__(self, typeB_heuristic:AlgorithmHeuristic, allowed_time:str, distribution_type:DistributionType,C:float,alpha:float,minimax_details:dict[str,Any], filter_heuristic:AlgorithmHeuristic=None, n_max_filtered:int=None,std = None, n_playouts = 1, cache = 5000):
         super().__init__(typeB_heuristic, allowed_time, distribution_type,C, std, n_playouts, cache)
         self.filter_heuristic = typeB_heuristic if filter_heuristic == None else filter_heuristic
         self.n_max_filtered = n_max_filtered
@@ -152,9 +163,16 @@ class MCTSHybridMinimaxBckpsSearch(MCTSSearch):
 
     def _apply(self, node_):
         n:Node = node_[0]
-        _t = self.minimax_details['type']
-        args = self.minimax_details['args']
-        minimax_search:MinimaxTypeASearch =  _t(**args)
+        if self.ucb_flag:
+            return n.UCB1(self.C)
+        
+        if isinstance(self.minimax_details,dict):
+            _t = self.minimax_details['type']
+            args = self.minimax_details['args']
+            minimax_search:MinimaxTypeASearch =  _t(**args)
+        else:
+            minimax_search = self.minimax_details
+
         v0,_ = minimax_search._minimax(n.state,True,float('-inf'), float('inf'), 0, minimax_search.max_depth)
         return n.UCB1_Minimax(self.C,self.alpha,v0)
     

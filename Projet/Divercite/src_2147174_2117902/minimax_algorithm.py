@@ -19,6 +19,7 @@ class MinimaxTypeASearch(Algorithm):
         self.hit = 0
         self.node_expanded = 0
         self.quiescent_threshold = quiescent_threshold
+        self.best_cost = None
 
     def __repr__(self):
         # At {super().__repr__()}
@@ -31,6 +32,7 @@ class MinimaxTypeASearch(Algorithm):
         cost, action_star = self._minimax(self.current_state, True, float(
             '-inf'), float('inf'), 0, self.max_depth)
         print('Cost:', cost)
+        self.best_cost = cost
         # print('Min Compute:', self.main_heuristic.min_compute)
         # print('Max Compute:', self.main_heuristic.max_compute)
 

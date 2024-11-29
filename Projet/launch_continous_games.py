@@ -5,18 +5,17 @@ import json
 import shutil
 from datetime import datetime, timedelta
 from threading import Timer
-from jinja2 import Template
 from time import sleep
 from random import randbytes,randint
 
 import os
 # Configuration
-MATCH_DURATION = 10 * 60  # 30 minutes in seconds
+MATCH_DURATION = 30 * 60  # 30 minutes in seconds
 RESULTS_DIR = "./"
 ARCHIVE_DIR = "data/"
 CURRENT_ADDR = '127.0.0.10'
 
-COUNT = 1
+COUNT = 10
 
 STATS = {}
 
@@ -70,8 +69,9 @@ def compute_stats(player1,player2):
             sleep(10)
             # Update stats here (custom logic depending on JSON structure)
             scores:dict = data[-1]['scores']
-            scores_p1,scores_p2 = scores.items()
-            match_id = randbytes(5)
+
+            (_,scores_p1),(_,scores_p2) = scores.items()
+            match_id = str(randbytes(5))
             d1 = {
 
                 'match-id':match_id,
@@ -98,11 +98,11 @@ def compute_stats(player1,player2):
             STATS[player1]['games_lost']+= 1 if scores_p1 < scores_p2 else 0
 
 
-            STATS[player1]['my_total_score']+=scores_p2
-            STATS[player1]['opp_total_score']+=scores_p1
-            STATS[player1]['games'].append(d2)
-            STATS[player1]['games_won']+= 1 if scores_p2 > scores_p1 else 0
-            STATS[player1]['games_lost']+= 1 if scores_p2 < scores_p1 else 0
+            STATS[player2]['my_total_score']+=scores_p2
+            STATS[player2]['opp_total_score']+=scores_p1
+            STATS[player2]['games'].append(d2)
+            STATS[player2]['games_won']+= 1 if scores_p2 > scores_p1 else 0
+            STATS[player2]['games_lost']+= 1 if scores_p2 < scores_p1 else 0
 
 
     
@@ -174,7 +174,7 @@ def main():
                 sleep(5)
                 os.system('cls')
                 compute_stats(player1,player2)
-                run_git_bash_command('make move')
+                run_git_bash_command('mv *.json data/')
 
 
 
@@ -189,13 +189,13 @@ def main():
                 sleep(5)
                 os.system('cls')
                 compute_stats(player2,player1)
-                run_git_bash_command('make move')
+                run_git_bash_command('mv *.json data/')
 
     
     os.system('cls')
     print("All matches completed. Results archived.")
-    json.dump(STATS,open(f'simulation_{randint(0,1000000000000)}.sim.json','r'))
-    run_git_bash_command('move *.json sim/')
+    json.dump(STATS,open(f'simulation_{randint(0,1000000000000)}.sim.json','x'))
+    run_git_bash_command('mv *sim.json sim/')
 
 if __name__ == "__main__":
     main()
