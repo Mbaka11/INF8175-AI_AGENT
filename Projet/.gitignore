@@ -4,9 +4,15 @@ Divercite/src_2147174_2117902/__pycache__/
 !Divercite/tools.py
 !Divercite/src_2147174_2117902
 !Divercite/custom_p_divercite_heuristic.py
+!Divercite/continuous_game.py
 *.pdf
 .venv
 *.json
 *.ipynb
 *.zip
 image/
+results/
+archived_results/
+data/
+sim/
+.vscode/
