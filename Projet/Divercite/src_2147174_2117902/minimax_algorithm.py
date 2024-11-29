@@ -1,6 +1,6 @@
 from typing import Generator
 from cachetools import Cache
-from .definition import AlgorithmHeuristic, Algorithm, ActionNotFoundException, LossFunction
+from .definition import AlgorithmHeuristic, Algorithm, ActionNotFoundException, LossFunction,ActionOrderInterface,StochasticActionInterface
 from game_state_divercite import GameStateDivercite
 import numpy as np
 from .constant import *
@@ -47,11 +47,7 @@ class MinimaxTypeASearch(Algorithm):
             return self._utility(state), None
 
         if depth >= max_depth:
-            pred_utility: float = self.main_heuristic(
-                state, my_id=self.my_id, opponent_id=self.opponent_id, my_pieces=self.my_pieces, opponent_pieces=self.opponent_pieces,
-                last_move=self.last_move, is_first_to_play=self.is_first_to_play, moves=self.moves, current_env=self.current_env,
-                my_score=self.my_score, opponent_score=self.opponent_score, my_piece_type=self.my_piece_type, opponent_piece_type=self.opponent_piece_type,
-            )
+            pred_utility = self._pred_utility(state)
 
             if self._isQuiescent(state, pred_utility, isMaximize):
                 return pred_utility, None
@@ -99,6 +95,15 @@ class MinimaxTypeASearch(Algorithm):
 
         return v_star, m_star
 
+    def _pred_utility(self, state):
+        pred_utility: float = self.main_heuristic(
+            state, my_id=self.my_id, opponent_id=self.opponent_id, my_pieces=self.my_pieces, opponent_pieces=self.opponent_pieces,
+            last_move=self.last_move, is_first_to_play=self.is_first_to_play, moves=self.moves, current_env=self.current_env,
+            my_score=self.my_score, opponent_score=self.opponent_score, my_piece_type=self.my_piece_type, opponent_piece_type=self.opponent_piece_type,
+        )
+
+        return pred_utility
+
     def _isQuiescent(self, state: GameStateDivercite, pred_utility: float, isMaximize: bool) -> bool:
         if not isMaximize:
             return True
@@ -127,12 +132,12 @@ class MinimaxTypeASearch(Algorithm):
         super()._clear_cache()
 
 
-class MinimaxHybridSearch(MinimaxTypeASearch):
+class MinimaxHybridSearch(MinimaxTypeASearch,ActionOrderInterface):
 
     MAX_THRESHOLD = 0
 
     def __init__(self, typeB_heuristic: AlgorithmHeuristic, cache: Cache | int = 5000, max_depth: int = None, utility_type: LossFunction = 'diff', allowed_time: float = None, typeA_heuristic: AlgorithmHeuristic = None, cut_depth_activation: bool = True, threshold: float = 0.5, n_expanded: int | None | float = None, quiescent_threshold=None):
-        super().__init__(typeA_heuristic, max_depth, cache,
+        MinimaxTypeASearch.__init__(self,typeA_heuristic, max_depth, cache,
                          utility_type, allowed_time, quiescent_threshold)
         self.n_max_expanded = n_expanded
         self.typeB_heuristic = typeB_heuristic
@@ -143,18 +148,16 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
             self.main_heuristic = typeB_heuristic
 
         self.cut_depth_activation = cut_depth_activation
+        ActionOrderInterface.__init__(self,self.typeB_heuristic)
 
-    def _order_actions(self, actions: Generator | list, current_state: GameStateDivercite) -> list[tuple]:
-        def _apply(a):
-            return self.typeB_heuristic(current_state.apply_action(a[0]), my_id=self.my_id, opponent_id=self.opponent_id,
+
+    def _order_actions(self, actions: Generator | list, current_state: GameStateDivercite,**kwargs) -> list[tuple]:
+        temp = ActionOrderInterface._order_actions(self, actions, current_state,my_id=self.my_id, opponent_id=self.opponent_id,
                                         my_pieces=self.my_pieces, opponent_pieces=self.opponent_pieces,
                                         last_move=self.last_move, is_first_to_play=self.is_first_to_play, moves=self.moves,
                                         my_score=self.my_score, opponent_score=self.opponent_score, current_env=self.current_env,
                                         my_piece_type=self.my_piece_type, opponent_piece_type=self.opponent_piece_type)
-
-        returned_actions = np.fromiter(actions, dtype=np.object_)
-        vals = np.apply_along_axis(
-            _apply, axis=0, arr=returned_actions.reshape(1, -1))
+        vals,returned_actions = temp
         n_child = len(returned_actions)
         max_child_expanded = self._compute_n_expanded(
             current_state.step, n_child)
@@ -200,3 +203,21 @@ class MinimaxHybridSearch(MinimaxTypeASearch):
             return math.ceil(self.n_max_expanded * n_child)
 
         return self.n_max_expanded if self.n_max_expanded != None and self.n_max_expanded < n_child else n_child
+
+
+class MinimaxHybridMCTSPlayouts(MinimaxTypeASearch,StochasticActionInterface):
+    def __init__(self, typeB_heuristic, max_depth, distribution_type,n_playouts: int,cache: Cache | int = 5000, utility_type: LossFunction = 'diff', allowed_time: float = None, quiescent_threshold: float | int | None = None):
+        super().__init__(typeB_heuristic, max_depth, cache,
+                         utility_type, allowed_time, quiescent_threshold)
+        
+        StochasticActionInterface.__init__(self,typeB_heuristic,distribution_type)       
+        self.n_playouts = n_playouts
+
+
+    def _pred_utility(self, state):
+        total_pred = 0
+
+        for _ in self.n_playouts:
+            total_pred+=self._simulate(state)
+        
+        return total_pred/self.n_playouts

@@ -12,6 +12,9 @@ from gc import collect
 from seahorse.utils.custom_exceptions import ActionNotPermittedError
 from enum import Enum
 from inspect import signature
+#from scipy.stats import norm
+from numpy.random import normal,uniform
+
 
 L = 4.1
 
@@ -23,10 +26,14 @@ class Optimization(Enum):
 ARGS_KEYS= Literal['opponent_score','my_score','last_move','my_pieces','opponent_pieces','moves','is_first_to_play','my_id','opponent_id','current_env']
 NormalizationType = Literal['range_scaling','sigmoid']
 LossFunction = Literal['potential','evolution','evolution_no_cross_diff','raw_eval','diff','raw_eval_opp','dispersion','delta','opp_delta']
-
+DistributionType = Literal['random','gaussian','uniform']
 
 ############################################  Exception class  #############################################
 
+
+class MissingStdException(Exception):
+    def __init__(self,):
+        super().__init__('Missing standard deviation for the Gaussian Distribution !')
 
 class TimeConvertException(Exception):
     def __init__(self, message):
@@ -38,7 +45,6 @@ class NegativeOrNullTimeException(Exception):
         super().__init__(f"The time returned cannot be {'null' if  time_provided == 0 else 'negative'}: {time_provided}")
        
             
-
 class OptimizationTypeNotPermittedException(Exception):
     def __init__(self,class_name:str,loss_func:LossFunction):
         super().__init__(f'Optimization Type ({loss_func}) not permitted in {class_name}')
@@ -187,7 +193,6 @@ class AlgorithmHeuristic(Heuristic):
                 return optimization.value*-1*(opponent_state_score-opponent_current_score)
 
 ############################################# Base Strategy Classes ##############################################
-
 
 class Strategy:
 
@@ -363,3 +368,71 @@ class Algorithm(Strategy):
         # NOTE See comments in line 170
         self._clear_cache()
         return super().search()
+
+############################################## Interface ###########################################
+
+class ActionOrderInterface():
+
+    def __init__(self, order_heuristic:AlgorithmHeuristic):
+        self.order_heuristic = order_heuristic
+
+    def _order_actions(self, actions: Generator | list, current_state: GameStateDivercite,**kwargs) -> tuple[np.ndarray,np.ndarray]:
+        def _apply(a):
+            return self.order_heuristic(current_state.apply_action(a[0]), **kwargs)
+        
+        returned_actions = np.fromiter(actions, dtype=np.object_)
+        vals = np.apply_along_axis(
+            _apply, axis=0, arr=returned_actions.reshape(1, -1))
+    
+        return vals,returned_actions
+
+class StochasticActionInterface(ActionOrderInterface):
+    
+    def __init__(self, order_heuristic,distribution_type:DistributionType,std:float=None):
+        super().__init__(order_heuristic)
+        self.distribution_type:DistributionType = distribution_type
+        self.std =std
+        if self.std == None and distribution_type =='gaussian':
+            raise 
+
+    
+    def _simulate(self, state: GameStateDivercite)->float:
+        current_state = state
+        while not current_state.is_done():
+            action = self._compute_action(current_state)
+            current_state = self._transition(current_state, action)
+
+        return self._utility(current_state)
+        
+    def _compute_action(self,state:GameStateDivercite):
+        actions_ = state.get_possible_light_actions().copy()
+        if self.distribution_type == 'random':
+            return choice(actions_)
+        
+        vals, returned_actions = self._order_actions(actions_,state,my_id=self.my_id, opponent_id=self.opponent_id,
+                                        my_pieces=self.my_pieces, opponent_pieces=self.opponent_pieces,
+                                        last_move=self.last_move, is_first_to_play=self.is_first_to_play, moves=self.moves,
+                                        my_score=self.my_score, opponent_score=self.opponent_score, current_env=self.current_env,
+                                        my_piece_type=self.my_piece_type, opponent_piece_type=self.opponent_piece_type)
+    
+        moves_index  = self._stochastic_selection(vals)
+        return returned_actions[moves_index]
+    
+    def _stochastic_selection(self,vals:np.ndarray):
+        mean= vals.mean()
+
+        if self.distribution_type == 'gaussian':
+            target = normal(mean,self.std,1)
+        if self.distribution_type == 'uniform':   
+            target = uniform(0,1,1)
+
+        target = float(target[0])
+        
+        diff = float('inf')
+        selected_index = None
+
+        for index,action_eval in enumerate(vals):
+            if np.abs(action_eval-target) < diff:
+                selected_index = index
+                diff = np.abs(action_eval-target)
+        return selected_index
