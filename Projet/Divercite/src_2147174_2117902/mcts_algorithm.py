@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from cachetools import Cache
 from game_state_divercite import GameStateDivercite
-from .definition import Algorithm, LossFunction, TimeConvertException, NegativeOrNullTimeException,StochasticActionInterface
+from .definition import Algorithm, AlgorithmHeuristic, LossFunction, TimeConvertException, NegativeOrNullTimeException,StochasticActionInterface,DistributionType
 from seahorse.game.light_action import LightAction
 from random import choice
 from time import time
@@ -37,11 +37,21 @@ class Node:
 
 
 class MCTSHybridMinimaxBackupsSearch(Algorithm,StochasticActionInterface):
-    def __init__(self, allowed_time: str, cache: int | Cache = 5000, max_depth: int | None = None, utility_type: LossFunction = 'diff', sim_heuristic=None):
+    def __init__(self, typeB_heuristic:AlgorithmHeuristic,allowed_time: str, distribution_type:DistributionType,std:float=None,n_playouts:int=1,cache: int | Cache = 5000, max_depth: int | None = None, utility_type: LossFunction = 'diff',):
         allowed_time = self._convert_to_seconds(allowed_time)
-        super().__init__(utility_type, sim_heuristic, cache, allowed_time)
+        super().__init__(utility_type, typeB_heuristic, cache, allowed_time)
         self.max_depth = max_depth
         self.n_simulation = 0
+        StochasticActionInterface.__init__(self,typeB_heuristic,distribution_type,std)
+        self.n_playouts = n_playouts
+    
+    def _pred_utility(self, state:GameStateDivercite):
+        total_pred =0
+        for _ in range(self.n_playouts):
+            if self._simulate(state)>0:
+                total_pred+=1
+
+        return total_pred
 
     def _search(self) -> LightAction:
         root_node = Node(self.current_state)
@@ -49,7 +59,7 @@ class MCTSHybridMinimaxBackupsSearch(Algorithm,StochasticActionInterface):
 
         while time() - start_time <= self.allowed_time:
             node: Node = self._select(root_node)
-            reward = self._simulate(node.state)
+            reward = self._pred_utility(node.state)
             self._back_propagate(node, reward)
             self.n_simulation += 1
 

@@ -307,7 +307,7 @@ class Algorithm(Strategy):
         self.keep_cache = keep_cache # ERROR can be source of heuristic evaluation error, only uses if a deeper search was done prior a less deeper search
         self.utility_type:LossFunction = utility_type
 
-    def _utility(self, state: GameStateDivercite):        
+    def _utility(self, state: GameStateDivercite) ->float:        
         state_scores = state.get_scores()
         my_state_score = state_scores[self.my_id]
         opponent_state_score = state_scores[self.opponent_id]
@@ -318,6 +318,8 @@ class Algorithm(Strategy):
 
         return AlgorithmHeuristic.compute_optimization(my_current_score, opponent_current_score,my_state_score,opponent_state_score,self.utility_type,Optimization.MAXIMIZE)
         
+    def _pred_utility(self,state:GameStateDivercite)->float:
+        ...
 
     def _is_our_turn(self, step = None):
         if step ==None:

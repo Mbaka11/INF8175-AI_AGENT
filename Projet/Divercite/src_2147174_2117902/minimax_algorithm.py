@@ -22,7 +22,7 @@ class MinimaxTypeASearch(Algorithm):
 
     def __repr__(self):
         # At {super().__repr__()}
-        return f'\n\t<==>  Id:{id(self)} =>{self.__class__.__name__}(cache={self.cache.__class__.__name__}-Size:{self.cache.maxsize}, max_depth={self.max_depth}, heuristics={self.main_heuristic.heuristic_list})'
+        return f'\n\t<==>  Id:{id(self)} =>{self.__class__.__name__}(cache={self.cache.__class__.__name__}-Size:{self.cache.maxsize}, max_depth={self.max_depth}, heuristics={self.main_heuristic})'
 
     def _search(self):
         print('Game Step:', self.current_state.step, "My Step:", self.my_step,
@@ -206,9 +206,8 @@ class MinimaxHybridSearch(MinimaxTypeASearch,ActionOrderInterface):
 
 
 class MinimaxHybridMCTSPlayouts(MinimaxTypeASearch,StochasticActionInterface):
-    def __init__(self, typeB_heuristic, max_depth, distribution_type,n_playouts: int,cache: Cache | int = 5000, utility_type: LossFunction = 'diff', allowed_time: float = None, quiescent_threshold: float | int | None = None):
-        super().__init__(typeB_heuristic, max_depth, cache,
-                         utility_type, allowed_time, quiescent_threshold)
+    def __init__(self, typeB_heuristic, max_depth, distribution_type,n_playouts: int,cache: Cache | int = 5000, allowed_time: float = None, quiescent_threshold: float | int | None = None):
+        super().__init__(typeB_heuristic, max_depth, cache,'diff', allowed_time, quiescent_threshold)
         
         StochasticActionInterface.__init__(self,typeB_heuristic,distribution_type)       
         self.n_playouts = n_playouts
@@ -217,7 +216,8 @@ class MinimaxHybridMCTSPlayouts(MinimaxTypeASearch,StochasticActionInterface):
     def _pred_utility(self, state):
         total_pred = 0
 
-        for _ in self.n_playouts:
-            total_pred+=self._simulate(state)
+        for _ in range(self.n_playouts):
+            if self._simulate(state)> 0:
+                total_pred+=1
         
         return total_pred/self.n_playouts
