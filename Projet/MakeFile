@@ -4,7 +4,7 @@ marsel = custom_p_divercite_heuristic.py
 last_agent = abyss_v3.py
 
 str1 = my_player.py
-str2 = abyss_v3.py
+str2 = my_player.py
 
 install	:
 	pip install -r requirements.txt
