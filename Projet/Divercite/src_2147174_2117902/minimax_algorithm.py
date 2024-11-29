@@ -1,20 +1,20 @@
 from typing import Generator
 from cachetools import Cache
-from .definition import AlgorithmHeuristic, Algorithm, ActionNotFoundException, LossFunction,ActionOrderInterface,StochasticActionInterface
+from .definition import AlgorithmHeuristic, Algorithm, ActionNotFoundException, LossFunction,ActionOrderInterface,StochasticActionInterface,DistributionType
 from game_state_divercite import GameStateDivercite
 import numpy as np
 from .constant import *
 from gc import collect
 from random import random
 import math
-
+from .tools import Time, TimeW_Args
 from copy import deepcopy
 
 
 class MinimaxTypeASearch(Algorithm):
 
-    def __init__(self, typeA_heuristic: AlgorithmHeuristic, max_depth: int | None, cache: Cache | int = 5000, utility_type: LossFunction = 'diff', allowed_time: float = None, quiescent_threshold=None):
-        super().__init__(utility_type, typeA_heuristic, cache, allowed_time)
+    def __init__(self, typeA_heuristic: AlgorithmHeuristic, max_depth: int | None, cache: Cache | int = 5000, utility_type: LossFunction = 'diff', quiescent_threshold=None):
+        super().__init__(utility_type, typeA_heuristic, cache, None)
         self.max_depth = max_depth if max_depth != None else MAX_STEP
         self.hit = 0
         self.node_expanded = 0
@@ -136,9 +136,9 @@ class MinimaxHybridSearch(MinimaxTypeASearch,ActionOrderInterface):
 
     MAX_THRESHOLD = 0
 
-    def __init__(self, typeB_heuristic: AlgorithmHeuristic, cache: Cache | int = 5000, max_depth: int = None, utility_type: LossFunction = 'diff', allowed_time: float = None, typeA_heuristic: AlgorithmHeuristic = None, cut_depth_activation: bool = True, threshold: float = 0.5, n_expanded: int | None | float = None, quiescent_threshold=None):
-        MinimaxTypeASearch.__init__(self,typeA_heuristic, max_depth, cache,
-                         utility_type, allowed_time, quiescent_threshold)
+    def __init__(self, typeB_heuristic: AlgorithmHeuristic, cache: Cache | int = 5000, max_depth: int = None, utility_type: LossFunction = 'diff', typeA_heuristic: AlgorithmHeuristic = None, cut_depth_activation: bool = True, threshold: float = 0.5, n_expanded: int | None | float = None, quiescent_threshold=None):
+        MinimaxTypeASearch.__init__(self,typeA_heuristic, max_depth, cache, utility_type, quiescent_threshold)
+
         self.n_max_expanded = n_expanded
         self.typeB_heuristic = typeB_heuristic
         if threshold < self.MAX_THRESHOLD:
@@ -206,18 +206,15 @@ class MinimaxHybridSearch(MinimaxTypeASearch,ActionOrderInterface):
 
 
 class MinimaxHybridMCTSPlayouts(MinimaxTypeASearch,StochasticActionInterface):
-    def __init__(self, typeB_heuristic, max_depth, distribution_type,n_playouts: int,cache: Cache | int = 5000, allowed_time: float = None, quiescent_threshold: float | int | None = None):
-        super().__init__(typeB_heuristic, max_depth, cache,'diff', allowed_time, quiescent_threshold)
-        
-        StochasticActionInterface.__init__(self,typeB_heuristic,distribution_type)       
-        self.n_playouts = n_playouts
+    def __init__(self, typeB_heuristic:AlgorithmHeuristic, max_depth:int, distribution_type:DistributionType,n_playouts: int,std:float,cache: Cache | int = 5000,quiescent_threshold: float | int | None = None):
 
+        super().__init__(typeB_heuristic, max_depth, cache,'diff', quiescent_threshold)
+        StochasticActionInterface.__init__(self,typeB_heuristic,distribution_type,std)       
+        self.n_playouts = n_playouts
 
     def _pred_utility(self, state):
         total_pred = 0
-
         for _ in range(self.n_playouts):
-            if self._simulate(state)> 0:
-                total_pred+=1
-        
+            total_pred += 1 if self._simulate(state)> 0 else -1
+
         return total_pred/self.n_playouts

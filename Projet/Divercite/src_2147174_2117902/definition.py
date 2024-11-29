@@ -1,5 +1,6 @@
 from abc import abstractmethod
-from typing import Literal, Any
+from typing import Callable, Literal, Any
+from .tools import Time
 from game_state_divercite import GameStateDivercite
 import numpy as np
 from seahorse.game.light_action import LightAction
@@ -30,6 +31,9 @@ DistributionType = Literal['random','gaussian','uniform']
 
 ############################################  Exception class  #############################################
 
+class AlphaOutOfRangeException(Exception):
+    def __init__(self,):
+        super().__init__('Make sure the alpha is within [0,1] !')
 
 class MissingOrderingHeuristicException(Exception):
     def __init__(self,):
@@ -386,11 +390,14 @@ class ActionOrderInterface():
         def _apply(a):
             return self.order_heuristic(current_state.apply_action(a[0]), **kwargs)
         
-        returned_actions = np.fromiter(actions, dtype=np.object_)
+        return self._iter_state(actions,_apply)
+
+
+    def _iter_state(self, _iterator, apply_func:Callable):
+        _iterator_compute = np.fromiter(_iterator, dtype=np.object_)
         vals = np.apply_along_axis(
-            _apply, axis=0, arr=returned_actions.reshape(1, -1))
-    
-        return vals,returned_actions
+            apply_func, axis=0, arr=_iterator_compute.reshape(1, -1))
+        return vals,_iterator_compute
 
 class StochasticActionInterface(ActionOrderInterface):
     
@@ -402,8 +409,7 @@ class StochasticActionInterface(ActionOrderInterface):
             raise MissingStdException()
         if self.order_heuristic == None and distribution_type != 'random':
             raise MissingOrderingHeuristicException()
-
-    
+        
     def _simulate(self, state: GameStateDivercite)->float:
         current_state = state
         while not current_state.is_done():
@@ -411,9 +417,10 @@ class StochasticActionInterface(ActionOrderInterface):
             current_state = self._transition(current_state, action)
 
         return self._utility(current_state)
-        
+    
+
     def _compute_action(self,state:GameStateDivercite):
-        actions_ = state.get_possible_light_actions().copy()
+        actions_ = list(state.generate_possible_light_actions())
         if self.distribution_type == 'random':
             return choice(actions_)
         
@@ -427,8 +434,7 @@ class StochasticActionInterface(ActionOrderInterface):
         return returned_actions[moves_index]
     
     def _stochastic_selection(self,vals:np.ndarray):
-        mean= vals.mean()
-
+        mean = vals.mean()
         if self.distribution_type == 'gaussian':
             target = normal(mean,self.std,1)
         if self.distribution_type == 'uniform':   
