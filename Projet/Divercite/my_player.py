@@ -28,8 +28,8 @@ class MyPlayer(PlayerDivercite):
         """
         super().__init__(piece_type, name)
         scoreHeuristic = ScoreHeuristic()
-        piecesVarianceHeuristic = PiecesVarianceHeuristic()
-        controlIndexHeuristic = ControlIndexHeuristic()
+        piecesVarianceHeuristic = PiecesVarianceHeuristic('sigmoid')
+        controlIndexHeuristic = ControlIndexHeuristic('sigmoid')
         diverciteHeuristic  =DiverciteHeuristic(loss_func='raw_eval')
         
         hybrid = scoreHeuristic*8 + controlIndexHeuristic + piecesVarianceHeuristic

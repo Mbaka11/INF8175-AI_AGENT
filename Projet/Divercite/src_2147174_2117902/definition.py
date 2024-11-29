@@ -31,6 +31,10 @@ DistributionType = Literal['random','gaussian','uniform']
 ############################################  Exception class  #############################################
 
 
+class MissingOrderingHeuristicException(Exception):
+    def __init__(self,):
+        super().__init__('Missing the ordering heuristic for the non-distribution type! ')
+
 class MissingStdException(Exception):
     def __init__(self,):
         super().__init__('Missing standard deviation for the Gaussian Distribution !')
@@ -390,12 +394,14 @@ class ActionOrderInterface():
 
 class StochasticActionInterface(ActionOrderInterface):
     
-    def __init__(self, order_heuristic,distribution_type:DistributionType,std:float=None):
-        super().__init__(order_heuristic)
+    def __init__(self, ordering_heuristic,distribution_type:DistributionType,std:float=None):
+        super().__init__(ordering_heuristic)
         self.distribution_type:DistributionType = distribution_type
         self.std =std
         if self.std == None and distribution_type =='gaussian':
-            raise 
+            raise MissingStdException()
+        if self.order_heuristic == None and distribution_type != 'random':
+            raise MissingOrderingHeuristicException()
 
     
     def _simulate(self, state: GameStateDivercite)->float:
