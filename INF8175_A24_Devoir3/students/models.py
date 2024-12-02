@@ -147,6 +147,21 @@ class DigitClassificationModel(object):
     def __init__(self) -> None:
         # Initialize your model parameters here
         "*** TODO: COMPLETE HERE FOR QUESTION 3 ***"
+        self.input_size = 784
+        # nombre de neurones dans la couche cachée et nombre de pixels dans l'image
+        self.hidden_layer_size = 256
+        # nombre de classes possibles
+        self.output_size = 10
+        
+        # poids de la couche cachée
+        self.w1 = nn.Parameter(self.input_size, self.hidden_layer_size)
+        # biais de la couche cachée
+        self.b1 = nn.Parameter(1, self.hidden_layer_size)
+        
+        # poids de la couche de sortie
+        self.w2 = nn.Parameter(self.hidden_layer_size, self.output_size)
+        # biais de la couche de sortie
+        self.b2 = nn.Parameter(1, self.output_size)
 
     def run(self, x: nn.Constant) -> nn.Node:
         """
@@ -163,6 +178,10 @@ class DigitClassificationModel(object):
                 (also called logits)
         """
         "*** TODO: COMPLETE HERE FOR QUESTION 3 ***"
+        y_pred1 = nn.AddBias(nn.Linear(x, self.w1), self.b1)
+        activation = nn.ReLU(y_pred1)
+        y_pred2 = nn.AddBias(nn.Linear(activation, self.w2), self.b2)
+        return y_pred2
 
     def get_loss(self, x: nn.Constant, y: nn.Constant) -> nn.Node:
         """
@@ -178,9 +197,23 @@ class DigitClassificationModel(object):
         Returns: a loss node
         """
         "*** TODO: COMPLETE HERE FOR QUESTION 3 ***"
+        return nn.SoftmaxLoss(self.run(x), y)
 
     def train(self, dataset: DigitClassificationDataset) -> None:
         """
         Trains the model.
         """
         "*** TODO: COMPLETE HERE FOR QUESTION 3 ***"
+        learning_rate = 0.01
+        validation_precision = 0.97
+        
+        while True:
+            for x, y in dataset.iterate_once(4):
+                grad_w1, grad_b1, grad_w2, grad_b2 = nn.gradients(self.get_loss(x, y), [self.w1, self.b1, self.w2, self.b2])
+                self.w1.update(grad_w1, -learning_rate)
+                self.b1.update(grad_b1, -learning_rate)
+                self.w2.update(grad_w2, -learning_rate)
+                self.b2.update(grad_b2, -learning_rate)
+                
+            if dataset.get_validation_accuracy() > validation_precision:
+                break
