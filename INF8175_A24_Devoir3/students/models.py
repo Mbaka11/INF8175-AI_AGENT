@@ -50,7 +50,7 @@ class PerceptronModel(object):
         while not all_matching:
             all_matching = True
             for x, y in dataset.iterate_once(1):
-                if self.get_prediction(x) != nn.as_scalar(y):           # En d'autres termes, avec les notions du cours: if y_real != y_pred(y_hat)
+                if self.get_prediction(x) != nn.as_scalar(y):           # En d'autres termes, avec les notions du cours: if y_real != y_pred (y_hat)
                     all_matching = False                                # On continue la boucle, car on a trouvé une erreur
                     self.w.update(x, nn.as_scalar(y))                   # On met à jour les poids du perceptron
 
@@ -65,6 +65,18 @@ class RegressionModel(object):
     def __init__(self) -> None:
         # Initialize your model parameters here
         "*** TODO: COMPLETE HERE FOR QUESTION 2 ***"
+        #nombre de neurones dans la couche cachée
+        self.hidden_layer_size = 100
+        
+        #poids de la couche cachée
+        self.w1 = nn.Parameter(1, self.hidden_layer_size)
+        #biais de la couche cachée
+        self.b1 = nn.Parameter(1, self.hidden_layer_size)
+        
+        #poids de la couche de sortie
+        self.w2 = nn.Parameter(self.hidden_layer_size, 1)
+        #biais de la couche de sortie
+        self.b2 = nn.Parameter(1, 1)
 
     def run(self, x: nn.Constant) -> nn.Node:
         """
@@ -76,6 +88,11 @@ class RegressionModel(object):
             A node with shape (batch_size x 1) containing predicted y-values
         """
         "*** TODO: COMPLETE HERE FOR QUESTION 2 ***"
+        y_pred1 = nn.AddBias(nn.Linear(x, self.w1), self.b1)
+        activation = nn.ReLU(y_pred1)
+        y_pred2 = nn.AddBias(nn.Linear(activation, self.w2), self.b2)
+        return y_pred2
+        
 
     def get_loss(self, x: nn.Constant, y: nn.Constant) -> nn.Node:
         """
@@ -88,13 +105,29 @@ class RegressionModel(object):
         Returns: a loss node
         """
         "*** TODO: COMPLETE HERE FOR QUESTION 2 ***"
+        return nn.SquareLoss(self.run(x), y)
 
     def train(self, dataset: RegressionDataset) -> None:
         """
         Trains the model.
         """
         "*** TODO: COMPLETE HERE FOR QUESTION 2 ***"
-
+        learning_rate = 0.01
+        max_loss = 0.02
+        batch_size = 10
+        
+        while True:
+            loss = 0
+            for x, y in dataset.iterate_once(batch_size):
+                loss += nn.as_scalar(self.get_loss(x, y))
+                grad_w1, grad_b1, grad_w2, grad_b2 = nn.gradients(self.get_loss(x, y), [self.w1, self.b1, self.w2, self.b2])
+                self.w1.update(grad_w1, -learning_rate)
+                self.b1.update(grad_b1, -learning_rate)
+                self.w2.update(grad_w2, -learning_rate)
+                self.b2.update(grad_b2, -learning_rate)
+                
+            if loss < max_loss:
+                break
 
 class DigitClassificationModel(object):
     """
