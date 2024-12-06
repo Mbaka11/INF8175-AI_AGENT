@@ -25,7 +25,7 @@ class Optimization(Enum):
 
 
 ARGS_KEYS= Literal['opponent_score','my_score','last_move','my_pieces','opponent_pieces','moves','is_first_to_play','my_id','opponent_id','current_env']
-NormalizationType = Literal['range_scaling','sigmoid']
+NormalizationType = Literal['range_scaling','sigmoid','tanh']
 LossFunction = Literal['potential','evolution','evolution_no_cross_diff','raw_eval','diff','raw_eval_opp','dispersion','delta','opp_delta']
 DistributionType = Literal['random','gaussian','uniform']
 
@@ -84,8 +84,8 @@ class AlgorithmHeuristic(Heuristic):
         self.optimization = optimization
         self.normalization_type:NormalizationType = normalization_type
         self.loss_func:LossFunction = loss_func
-        # self.max_compute = float('-inf')
-        # self.min_compute = float('inf')
+        self.k = 1/(.60*max_value)
+
 
     def __call__(self, *args, **kwds) -> float: 
         if len(self.heuristic_list) == 1:
@@ -105,6 +105,9 @@ class AlgorithmHeuristic(Heuristic):
         x_scaled = (x - (min_value + max_value) / 2) / \
             ((max_value - min_value) / 2) * L
         return 2 / (1 + np.exp(-x_scaled)) - 1
+
+    def _tanh(self,x:float):
+        return float(np.tanh(self.k*x))
     
     def normalize(self,x:float):
         # self.max_compute = max(self.max_compute,x)
@@ -112,7 +115,10 @@ class AlgorithmHeuristic(Heuristic):
         # return x
         if self.normalization_type == 'sigmoid':
             return self._sigmoid(x,self.min_value,self.max_value,self.L)
-     
+
+        if self.normalization_type == 'tanh':
+            return self._tanh(x)
+
         return self._range_scaling(x,self.min_value,self.max_value)
         
     def _range_scaling(self,value, min_value, max_value):

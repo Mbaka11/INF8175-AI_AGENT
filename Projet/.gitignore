@@ -14,5 +14,6 @@ image/
 results/
 archived_results/
 data/
+build/
 sim/
 .vscode/
