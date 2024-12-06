@@ -13,11 +13,9 @@ from copy import deepcopy
 
 class MinimaxTypeASearch(Algorithm):
 
-    def __init__(self, typeA_heuristic: AlgorithmHeuristic, max_depth: int | None, cache: Cache | int = 5000, utility_type: LossFunction = 'diff', quiescent_threshold=None):
-        super().__init__(utility_type, typeA_heuristic, cache, None)
+    def __init__(self, typeA_heuristic: AlgorithmHeuristic, max_depth: int | None, cache: Cache | int = 5000, skip_symmetric = True,utility_type: LossFunction = 'diff', quiescent_threshold=None):
+        super().__init__(utility_type, typeA_heuristic, cache, None,skip_symmetric=skip_symmetric)
         self.max_depth = max_depth if max_depth != None else MAX_STEP
-        self.hit = 0
-        self.node_expanded = 0
         self.quiescent_threshold = quiescent_threshold
         self.best_cost = None
 
@@ -33,8 +31,6 @@ class MinimaxTypeASearch(Algorithm):
             '-inf'), float('inf'), 0, self.max_depth)
         print('Cost:', cost)
         self.best_cost = cost
-        # print('Min Compute:', self.main_heuristic.min_compute)
-        # print('Max Compute:', self.main_heuristic.max_compute)
 
         if action_star == None:
             raise ActionNotFoundException(
@@ -45,6 +41,7 @@ class MinimaxTypeASearch(Algorithm):
         ...
 
     def _minimax(self, state: GameStateDivercite, isMaximize: bool, alpha: float, beta: float, depth: int, max_depth: int):
+        self.node_expanded +=1
         if state.is_done():
             return self._utility(state), None
 
@@ -69,6 +66,7 @@ class MinimaxTypeASearch(Algorithm):
                     flag, _hash = self.check_symmetric_moves_in_cache(
                         new_state.rep.env)
                     if flag:
+                        self.hit+=1
                         hash_state = _hash
                     else:
                         self.cache[hash_state] = self._minimax(
@@ -138,8 +136,8 @@ class MinimaxHybridSearch(MinimaxTypeASearch,ActionOrderInterface):
 
     MAX_THRESHOLD = 0
 
-    def __init__(self, typeB_heuristic: AlgorithmHeuristic, cache: Cache | int = 5000, max_depth: int = None, utility_type: LossFunction = 'diff', typeA_heuristic: AlgorithmHeuristic = None, cut_depth_activation: bool = True, threshold: float = 0.5, n_expanded: int | None | float = None, quiescent_threshold=None):
-        MinimaxTypeASearch.__init__(self,typeA_heuristic, max_depth, cache, utility_type, quiescent_threshold)
+    def __init__(self, typeB_heuristic: AlgorithmHeuristic, cache: Cache | int = 5000, max_depth: int = None, utility_type: LossFunction = 'diff', typeA_heuristic: AlgorithmHeuristic = None,skip_symmetric = True, cut_depth_activation: bool = True, threshold: float = 0.5, n_expanded: int | None | float = None, quiescent_threshold=None):
+        MinimaxTypeASearch.__init__(self,typeA_heuristic, max_depth, cache,skip_symmetric, utility_type, quiescent_threshold)
 
         self.n_max_expanded = n_expanded
         self.typeB_heuristic = typeB_heuristic
@@ -208,13 +206,13 @@ class MinimaxHybridSearch(MinimaxTypeASearch,ActionOrderInterface):
 
 
 class MinimaxHybridMCTSPlayouts(MinimaxTypeASearch,StochasticActionInterface):
-    def __init__(self, typeB_heuristic:AlgorithmHeuristic, max_depth:int, distribution_type:DistributionType,n_playouts: int,std:float,cache: Cache | int = 5000,quiescent_threshold: float | int | None = None):
+    def __init__(self, typeB_heuristic:AlgorithmHeuristic, max_depth:int, distribution_type:DistributionType,n_playouts: int,std:float,cache: Cache | int = 5000,skip_symmetric = True,quiescent_threshold: float | int | None = None):
 
-        super().__init__(typeB_heuristic, max_depth, cache,'diff', quiescent_threshold)
+        super().__init__(typeB_heuristic, max_depth, cache,skip_symmetric,'diff', quiescent_threshold)
         StochasticActionInterface.__init__(self,typeB_heuristic,distribution_type,std)       
         self.n_playouts = n_playouts
 
-    def _pred_utility(self, state):
+    def _pred_utility(self, state:GameStateDivercite):
         total_pred = 0
         for _ in range(self.n_playouts):
             total_pred += 1 if self._simulate(state)> 0 else -1

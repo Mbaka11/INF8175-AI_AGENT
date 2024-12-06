@@ -315,7 +315,7 @@ class Strategy:
 
 class Algorithm(Strategy):
 
-    def __init__(self,utility_type:LossFunction,heuristic: AlgorithmHeuristic, cache: int | Cache=None, allowed_time: float = None,keep_cache: bool = False):
+    def __init__(self,utility_type:LossFunction,heuristic: AlgorithmHeuristic, cache: int | Cache | None=None, allowed_time: float = None,keep_cache: bool = False,skip_symmetric=True):
         super().__init__(heuristic)
         if isinstance(cache,Cache):
             self.cache = cache
@@ -324,7 +324,11 @@ class Algorithm(Strategy):
         self.allowed_time = allowed_time
         self.keep_cache = keep_cache # ERROR can be source of heuristic evaluation error, only uses if a deeper search was done prior a less deeper search
         self.utility_type:LossFunction = utility_type
+        self.skip_symmetric = skip_symmetric
+        self.hit = 0
+        self.node_expanded = 0
 
+        
     def _utility(self, state: GameStateDivercite) ->float:        
         state_scores = state.get_scores()
         my_state_score = state_scores[self.my_id]
@@ -366,13 +370,15 @@ class Algorithm(Strategy):
         temp_env ={pos:piece.piece_type for pos, piece in state_env.items()}
         return frozenset(temp_env.items())
     
-    def check_symmetric_moves_in_cache(self, state_env:dict) -> tuple[bool, None | frozenset]:   
-        temp_env = state_env.copy()
-        for _ in range(3):
-            temp_env= self.rotate_moves_90(temp_env) 
-            temp_env_hash = self._hash_state(temp_env)
-            if temp_env_hash in self.cache:
-                return True, temp_env_hash
+    def check_symmetric_moves_in_cache(self, state_env:dict) -> tuple[bool, None | frozenset]:
+        
+        if self.skip_symmetric:
+            temp_env = state_env.copy()
+            for _ in range(3):
+                temp_env= self.rotate_moves_90(temp_env) 
+                temp_env_hash = self._hash_state(temp_env)
+                if temp_env_hash in self.cache:
+                    return True, temp_env_hash              
         return False, None
     
     def _clear_cache(self):

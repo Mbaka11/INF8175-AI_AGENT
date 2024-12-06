@@ -13,12 +13,6 @@ from .constant import MAX_MOVES, MAX_STEP
 import math
 import numpy as np
 
-'''
-So I restricted the total number of iterations to 6 so that after the 6th iteration, 
-I could get a finite value for all these 6 nodes without creating further child nodes with branches.
-'''
-
-
 # @dataclass
 class Node:
 
@@ -48,9 +42,9 @@ class Node:
 
 
 class MCTSSearch(Algorithm,StochasticActionInterface):
-    def __init__(self, typeB_heuristic:AlgorithmHeuristic,allowed_time: str, distribution_type:DistributionType,C:float,std:float=None,n_playouts:int=1,cache: int | Cache = 5000,):
+    def __init__(self, typeB_heuristic:AlgorithmHeuristic,allowed_time: str, distribution_type:DistributionType,C:float,std:float=None,n_playouts:int=1,cache: int | Cache = 5000,skip_symmetric=True):
         allowed_time = self._convert_to_seconds(allowed_time)
-        super().__init__('diff', typeB_heuristic, cache, allowed_time)
+        super().__init__('diff', typeB_heuristic, cache, allowed_time,skip_symmetric=skip_symmetric)
         self.n_simulation = 0
         StochasticActionInterface.__init__(self,typeB_heuristic,distribution_type,std)
         self.n_playouts = n_playouts
@@ -104,6 +98,7 @@ class MCTSSearch(Algorithm,StochasticActionInterface):
                         flag, _ = self.check_symmetric_moves_in_cache(
                             next_state.rep.env)
                         if flag:
+                            self.hit +=1
                             continue
                         else:
                             self.cache[hash_state] = Node(next_state, action_taken=action,parent=node)
@@ -147,7 +142,6 @@ class MCTSSearch(Algorithm,StochasticActionInterface):
         except Exception as e:
             raise TimeConvertException(
                 f'Error while parsing time string: {time_}')
-
 
 
 class MCTSHybridMinimaxBackupsSearch(MCTSSearch):
