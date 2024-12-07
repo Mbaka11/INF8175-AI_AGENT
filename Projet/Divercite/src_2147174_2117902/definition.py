@@ -149,6 +149,7 @@ class AlgorithmHeuristic(Heuristic):
             del temp_args[param.name]
             
         del temp_args['total_weight']
+        del temp_args['k']
         return temp_args
     
     def __add__(self, other):
@@ -163,6 +164,7 @@ class AlgorithmHeuristic(Heuristic):
         if len(self.heuristic_list) <= 1:
             return f'{self.__class__.__name__}(weight = {self.weight}, loss_func: {self.loss_func}, optimization = {self.optimization.name})'
         return f'{self.__class__.__name__}:{self.total_weight} - {self.heuristic_list}'
+    
     @staticmethod
     def _maximize_score_diff(my_current,opp_current,my_state,opp_state,optimization:Optimization,cross_diff =True):
         my_delta_score = my_state - my_current
