@@ -276,6 +276,7 @@ class Strategy:
 
         except Exception as e:
             print('Warning... !:',e.__class__.__name__,f': {e.args}')
+            e.with_traceback()
         
         try:
             return Strategy.greedy_fallback_move()
@@ -302,7 +303,10 @@ class Strategy:
 
     @property
     def last_move(self):
-        return list(self.current_state.rep.env)[-1]
+        temp =list(self.current_state.rep.env)
+        if not temp:
+            return None
+        return temp[-1]
 
     @property
     def moves(self):

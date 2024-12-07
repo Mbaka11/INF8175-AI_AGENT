@@ -66,11 +66,12 @@ class MinimaxTypeASearch(Algorithm):
                     flag, _hash = self.check_symmetric_moves_in_cache(
                         new_state.rep.env)
                     if flag:
-                        self.hit+=1
                         hash_state = _hash
                     else:
                         self.cache[hash_state] = self._minimax(
                             new_state, (not isMaximize), alpha, beta, depth+1, next_max_depth)
+                else:
+                    self.hit+=1
 
                 v, _ = self.cache[hash_state]
             else:
