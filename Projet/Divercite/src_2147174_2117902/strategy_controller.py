@@ -4,6 +4,22 @@ from .minimax_algorithm import *
 from .opening_moves import *
 from .constant import *
 from .heuristic import *
+import json
+from random import randint
+
+class MatchStatistic:
+    def __init__(self):
+        self.nodes_expanded:list[int] = []
+        self.hits:list[int] = []
+        self.time_taken:list[int] = []
+    
+    def dump(self):
+        stats = {
+            'nodes': self.nodes_expanded,
+            'cache_hits': self.hits,
+            'time_taken':self.time_taken
+        }
+        json.dump(stats, open(f'stats_{randint(0,10000000)}.json','xw'))
 
 
 class StrategyController:
@@ -11,6 +27,13 @@ class StrategyController:
     def __init__(self):
         self.strategies:list[Strategy] = []
         self.strategy_count = 0
+        self.match_stats = MatchStatistic()
+
+    def dump_stats(self):
+        try:
+            self.match_stats.dump()
+        except Exception as e:
+            print(f'Error While dumping stats: {e.__class__}')
 
     def __call__(self, *args, **kwds)->LightAction:
         return self._compute_action(*args,**kwds)
@@ -18,7 +41,14 @@ class StrategyController:
     def _compute_action(self) -> LightAction:
         moves_index = Strategy.my_step
         strategy = self[moves_index]
-        return strategy.search()
+
+        best_action = strategy.search()
+        if isinstance(strategy,Algorithm):
+            self.match_stats.nodes_expanded.append(strategy.node_expanded)
+            self.match_stats.hits.append(strategy.hit)
+            self.match_stats.time_taken.append(strategy.time_taken)
+        
+        return best_action
         
     def add_strategy(self,strategy:Strategy | type[Strategy],number_of_moves:int | None = None):
         # NOTE add **kwards if we want to another way to create a strategy

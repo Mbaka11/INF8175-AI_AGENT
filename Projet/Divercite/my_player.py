@@ -56,3 +56,7 @@ class MyPlayer(PlayerDivercite):
         # TODO
         Strategy.set_current_state(current_state, remaining_time)
         return self._controller()
+    
+
+    def __del__(self):
+        self._controller.dump_stats()

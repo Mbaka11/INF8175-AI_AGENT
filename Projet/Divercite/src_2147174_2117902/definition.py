@@ -15,6 +15,7 @@ from enum import Enum
 from inspect import signature
 #from scipy.stats import norm
 from numpy.random import normal,uniform
+from time import time
 
 
 L = 4.1
@@ -110,9 +111,6 @@ class AlgorithmHeuristic(Heuristic):
         return float(np.tanh(self.k*x))
     
     def normalize(self,x:float):
-        # self.max_compute = max(self.max_compute,x)
-        # self.min_compute = min(self.min_compute,x)
-        # return x
         if self.normalization_type == 'sigmoid':
             return self._sigmoid(x,self.min_value,self.max_value,self.L)
 
@@ -327,6 +325,7 @@ class Algorithm(Strategy):
         self.skip_symmetric = skip_symmetric
         self.hit = 0
         self.node_expanded = 0
+        self.time_taken:float = -1
 
         
     def _utility(self, state: GameStateDivercite) ->float:        
@@ -392,8 +391,11 @@ class Algorithm(Strategy):
         
     def search(self):
         # NOTE See comments in line 170
+        start_time = time()
         self._clear_cache()
-        return super().search()
+        best_action = super().search()
+        self.time_taken = time()- start_time
+        return best_action
 
 ############################################## Interface ###########################################
 
