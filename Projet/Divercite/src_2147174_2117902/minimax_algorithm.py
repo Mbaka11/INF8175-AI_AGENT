@@ -13,7 +13,7 @@ from copy import deepcopy
 
 class MinimaxTypeASearch(Algorithm):
 
-    def __init__(self, typeA_heuristic: AlgorithmHeuristic, max_depth: int | None, cache: Cache | int = 5000, skip_symmetric = True,utility_type: LossFunction = 'diff', quiescent_threshold=None):
+    def __init__(self, typeA_heuristic: AlgorithmHeuristic, max_depth: int | None, cache: Cache | int = 100000000, skip_symmetric = True,utility_type: LossFunction = 'diff', quiescent_threshold=None):
         super().__init__(utility_type, typeA_heuristic, cache, None,skip_symmetric=skip_symmetric)
         self.max_depth = max_depth if max_depth != None else MAX_STEP
         self.quiescent_threshold = quiescent_threshold
@@ -24,6 +24,7 @@ class MinimaxTypeASearch(Algorithm):
         return f'\n\t<==>  Id:{id(self)} =>{self.__class__.__name__}(cache={self.cache.__class__.__name__}-Size:{self.cache.maxsize}, max_depth={self.max_depth}, heuristics={self.main_heuristic})'
 
     def _search(self):
+        self.node_expanded =0
         print('Game Step:', self.current_state.step, "My Step:", self.my_step,
               'Type:', self.__class__.__name__, 'Depth:', self.max_depth)
         print('Main Heuristic:', self.main_heuristic)
@@ -137,7 +138,7 @@ class MinimaxHybridSearch(MinimaxTypeASearch,ActionOrderInterface):
 
     MAX_THRESHOLD = 0
 
-    def __init__(self, typeB_heuristic: AlgorithmHeuristic, cache: Cache | int = 5000, max_depth: int = None, utility_type: LossFunction = 'diff', typeA_heuristic: AlgorithmHeuristic = None,skip_symmetric = True, cut_depth_activation: bool = True, threshold: float = 0.5, n_expanded: int | None | float = None, quiescent_threshold=None):
+    def __init__(self, typeB_heuristic: AlgorithmHeuristic, cache: Cache | int = 1000000, max_depth: int = None, utility_type: LossFunction = 'diff', typeA_heuristic: AlgorithmHeuristic = None,skip_symmetric = True, cut_depth_activation: bool = True, threshold: float = 0.5, n_expanded: int | None | float = None, quiescent_threshold=None):
         MinimaxTypeASearch.__init__(self,typeA_heuristic, max_depth, cache,skip_symmetric, utility_type, quiescent_threshold)
 
         self.n_max_expanded = n_expanded
@@ -207,7 +208,7 @@ class MinimaxHybridSearch(MinimaxTypeASearch,ActionOrderInterface):
 
 
 class MinimaxHybridMCTSPlayouts(MinimaxTypeASearch,StochasticActionInterface):
-    def __init__(self, typeB_heuristic:AlgorithmHeuristic, max_depth:int, distribution_type:DistributionType,n_playouts: int,std:float,cache: Cache | int = 5000,skip_symmetric = True,quiescent_threshold: float | int | None = None):
+    def __init__(self, typeB_heuristic:AlgorithmHeuristic, max_depth:int, distribution_type:DistributionType,n_playouts: int,std:float,cache: Cache | int = 1000000,skip_symmetric = True,quiescent_threshold: float | int | None = None):
 
         super().__init__(typeB_heuristic, max_depth, cache,skip_symmetric,'diff', quiescent_threshold)
         StochasticActionInterface.__init__(self,typeB_heuristic,distribution_type,std)       

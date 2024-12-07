@@ -59,6 +59,7 @@ class MCTSSearch(Algorithm,StochasticActionInterface):
         return total_pred/self.n_playouts
 
     def _search(self) -> LightAction:
+        self.n_simulation = 0
         print(f'Allowed time {self.allowed_time} (s)')
         print(f'Game Step: {self.current_state.step}/{MAX_STEP} - My Step: {self.my_step}/{MAX_MOVES} - {self.__class__.__name__} - Distribution: {self.distribution_type}')
         root_node = Node(self.current_state)
@@ -109,8 +110,9 @@ class MCTSSearch(Algorithm,StochasticActionInterface):
                 else :
                     child_node = Node(next_state, action_taken=action,parent=node)
                     node.children.append(child_node)
-                
                     return child_node
+                
+        
         raise ActionNotFoundException()
 
     def _back_propagate(self, node: Node, reward: float):

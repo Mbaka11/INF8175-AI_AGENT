@@ -389,7 +389,6 @@ class MyPlayer(PlayerDivercite):
                 return v_prime, m_prime
         
         return v_prime, m_prime
-    @Monitor 
     def compute_action(self, current_state: GameState, remaining_time: int = 1e9, **kwargs) -> Action:
         """
         Use the minimax algorithm to choose the best action based on the heuristic evaluation of game states.

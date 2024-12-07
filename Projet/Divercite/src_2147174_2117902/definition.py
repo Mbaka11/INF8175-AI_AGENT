@@ -85,7 +85,7 @@ class AlgorithmHeuristic(Heuristic):
         self.optimization = optimization
         self.normalization_type:NormalizationType = normalization_type
         self.loss_func:LossFunction = loss_func
-        self.k = 1/(.60*max_value)
+        self.k = 1/(.60*max_value+1)
 
 
     def __call__(self, *args, **kwds) -> float: 
@@ -249,7 +249,7 @@ class Strategy:
         '''
 
         possible_actions = Strategy.current_state.get_possible_light_actions().copy()
-        best_action = None
+        best_action = possible_actions[0]
         best_score = Strategy.current_state.scores[Strategy.my_id]
 
         for action in possible_actions:
@@ -276,7 +276,6 @@ class Strategy:
 
         except Exception as e:
             print('Warning... !:',e.__class__.__name__,f': {e.args}')
-            e.with_traceback()
         
         try:
             return Strategy.greedy_fallback_move()
@@ -288,6 +287,10 @@ class Strategy:
     @property
     def my_pieces(self):
         return self.current_state.players_pieces_left[self.my_id]
+    
+    @property
+    def score_diff(self):
+        return self.my_score - self.opponent_score    
 
     @property
     def opponent_pieces(self):
