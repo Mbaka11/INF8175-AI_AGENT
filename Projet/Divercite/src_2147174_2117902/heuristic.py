@@ -44,7 +44,7 @@ class ScoreHeuristic(AlgorithmHeuristic):
 
 class ControlIndexHeuristic(AlgorithmHeuristic):
 
-    def __init__(self,normalization_type:NormalizationType='range_scaling',loss_func = 'raw_eval',ctrl_weight=.35,dist_weight=.65,):
+    def __init__(self,normalization_type:NormalizationType='range_scaling',loss_func:LossFunction = 'raw_eval',ctrl_weight=.35,dist_weight=.65,):
         super().__init__(normalization_type,loss_func,-4.3, 4.3,L=5.65)
         self.ctrl_weight = ctrl_weight
         self.dist_weight= dist_weight
@@ -113,7 +113,7 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
                 elif c == p_color and pieces_type != p_owner:  # same color but diff ownership
                     score += (25 if in_horizontal else 20)      
                 else:                                           # different ownership and diff_color
-                    score += (35 if in_horizontal else 30)
+                    score += ( 35 if in_horizontal else 30)
 
         return score
 

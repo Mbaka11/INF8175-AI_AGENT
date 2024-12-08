@@ -6,20 +6,24 @@ from .constant import *
 from .heuristic import *
 import json
 from random import randint
+import os
 
 class MatchStatistic:
     def __init__(self):
         self.nodes_expanded:list[int] = []
         self.hits:list[int] = []
-        self.time_taken:list[int] = []
-    
+        self.time_taken:list[float] = []
+        self.simulations:list[int] = []
+        self.scores_diff:list[int] = []
     def dump(self):
         stats = {
             'nodes': self.nodes_expanded,
-            'cache_hits': self.hits,
-            'time_taken':self.time_taken
+            'time_taken':self.time_taken,
+            'simulations': self.simulations,
+            'score_diff': self.scores_diff,
         }
-        json.dump(stats, open(f'stats_{randint(0,10000000)}.json','xw'))
+        print(stats)
+        #json.dump(stats, os.open(f'stats_{randint(0,10000000)}.json',flags=))
 
 
 class StrategyController:
@@ -30,11 +34,8 @@ class StrategyController:
         self.match_stats = MatchStatistic()
 
     def dump_stats(self):
-        try:
-            self.match_stats.dump()
-        except Exception as e:
-            print(f'Error While dumping stats: {e.__class__}')
-
+        self.match_stats.dump()
+        
     def __call__(self, *args, **kwds)->LightAction:
         return self._compute_action(*args,**kwds)
 
@@ -43,11 +44,17 @@ class StrategyController:
         strategy = self[moves_index]
 
         best_action = strategy.search()
-        if isinstance(strategy,Algorithm):
+        if isinstance(strategy,MinimaxTypeASearch):
             self.match_stats.nodes_expanded.append(strategy.node_expanded)
             self.match_stats.hits.append(strategy.hit)
             self.match_stats.time_taken.append(strategy.time_taken)
         
+        if isinstance(strategy,MCTSSearch):
+            self.match_stats.simulations.append(strategy.n_simulation)
+            self.match_stats.time_taken.append(strategy.time_taken)
+        
+        self.match_stats.scores_diff.append(strategy.score_diff)
+    
         return best_action
         
     def add_strategy(self,strategy:Strategy | type[Strategy],number_of_moves:int | None = None):
@@ -79,4 +86,8 @@ class StrategyController:
     
     def to_json(self):
         return {}
+    
+    
+    def __del__(self):
+        self.dump_stats()
 ############################################### PREDEFINED STRATEGY ##############################################
