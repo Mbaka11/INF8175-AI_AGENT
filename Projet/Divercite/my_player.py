@@ -37,10 +37,10 @@ class MyPlayer(PlayerDivercite):
 
         self._controller: StrategyController = StrategyController().add_strategy(
             OpeningMoveStrategy(False), 2).add_strategy(
-                #MinimaxTypeASearch(controlIndexHeuristic,4,LRUCache(2500),3)).add_strategy(
+              
                 MinimaxTypeASearch(hybrid2,3),5).add_strategy(
                 MinimaxTypeASearch(hybrid,3),7).add_strategy(
-                MinimaxTypeASearch(scoreHeuristic,6),)    
+                MinimaxTypeASearch(scoreHeuristic,5),)    
 
     @Monitor
     def compute_action(self, current_state: GameStateDivercite, remaining_time: int = 1e9, **kwargs) -> Action:
