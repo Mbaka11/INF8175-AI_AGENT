@@ -29,6 +29,14 @@ abyss:
 	zip abyss_2147174_2117902.zip requirements.txt ${prince} ${src_file}/*.py
 	rm ${prince} ${src_file} -f -R
 
+
+remise:
+	cp Divercite/${prince} ./
+	mkdir ${src_file}
+	cp Divercite/${src_file}/*.py ./${src_file}
+	zip projet_2147174_2117902.zip INF8175-Rapport.pdf requirements.txt ${prince} ${src_file}/*.py
+	rm ${prince} ${src_file} -f -R
+
 challonge:
 	cp Divercite/${prince} ./
 	mkdir ${src_file}

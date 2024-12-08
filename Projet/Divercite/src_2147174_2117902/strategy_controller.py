@@ -43,6 +43,7 @@ class StrategyController:
         moves_index = Strategy.my_step
         strategy = self[moves_index]
 
+        # Get stats
         best_action = strategy.search()
         if isinstance(strategy,MinimaxTypeASearch):
             self.match_stats.nodes_expanded.append(strategy.node_expanded)

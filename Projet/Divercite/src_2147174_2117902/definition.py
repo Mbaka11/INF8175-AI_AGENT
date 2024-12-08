@@ -128,12 +128,16 @@ class AlgorithmHeuristic(Heuristic):
         return scaled_value
         
     def __mul__(self,weight):
+        # changing the weight or the heuristic
         return self._clone(weight)
 
     def __truediv__(self,weight):
+        # changing the weight or the heuristic
+
         return self._clone(weight)
     
     def _clone(self, weight):
+        # Cloning the heuristic
         temp_args = self._compute_added_args()
         clone = self.__class__(**temp_args)
         clone.weight = weight

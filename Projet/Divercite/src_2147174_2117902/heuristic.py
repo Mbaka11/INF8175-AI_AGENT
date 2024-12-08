@@ -65,14 +65,14 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
             my_current_ic, opp_current_ic, my_ic_state, opp_ic_state,self.optimization)
 
         my_current_dist = self._compute_neighborhood_distances(
-            my_piece_type, my_current_moves, original_env)
+            my_piece_type, my_current_moves, original_env) # at the original state
         opp_current_dist = self._compute_neighborhood_distances(
-            opp_piece_type, opp_current_moves, original_env)
+            opp_piece_type, opp_current_moves, original_env)  # at the original state
 
         my_state_dist = self._compute_neighborhood_distances(
-            my_piece_type, my_state_moves, state_env)
+            my_piece_type, my_state_moves, state_env)  # at the new state 
         opp_state_dist = self._compute_neighborhood_distances(
-            opp_piece_type, opp_state_moves, state_env)
+            opp_piece_type, opp_state_moves, state_env) # at the new state 
 
         dist_index = self._maximize_score_diff(
             my_current_dist, opp_current_dist, my_state_dist, opp_state_dist,self.optimization)
@@ -95,12 +95,12 @@ class ControlIndexHeuristic(AlgorithmHeuristic):
                 index += 1
                 in_horizontal = index <= 4
 
-                i, j = pos
+                i, j = pos # GEt the new positions when it is in horizontal or vertical or digonale
 
                 computed_pos = m_x+i, m_y + j
-                if not is_in_board(computed_pos):
+                if not is_in_board(computed_pos): # Skip is not in board
                     continue
-                if not computed_pos in state_env:  # check neighbours
+                if not computed_pos in state_env:  # check piece neighbours exists
                     continue
                 p_color, _, p_owner = state_env[computed_pos].piece_type
 
@@ -172,11 +172,12 @@ class PiecesVarianceHeuristic(AlgorithmHeuristic):
         return self.compute_optimization(None, None,my_state_var,opp_state_var,self.loss_func,self.optimization)
              
     def _pieces_var(self, pieces: dict[str, int]):
-        
+        # Computing the variance for each type
+
         city_val = np.array([pieces[cn] if cn in pieces else 0 for cn in CityNames._member_names_])
         ress_val = np.array([pieces[rn] if rn in pieces else 0 for rn in RessourcesNames._member_names_])
         
-        is_tuning = ress_val.sum() > city_val.sum()
+        is_tuning = ress_val.sum() > city_val.sum() # Scaling up the city by one when its less than ressources
         if is_tuning:
             city_val +=1
 
@@ -189,19 +190,6 @@ class PiecesVarianceHeuristic(AlgorithmHeuristic):
         score_ress = ress_penalty if score_ress ==0 else score_ress
 
         return score_city + score_ress
-
-        ##################################
-        # city_val = np.var(city_val)
-        # ress_val = np.var(ress_val)*1.05
-
-        # ress_val = 0.5 if ress_val == 0 else ress_val
-        # return -min(city_val, ress_val)
-        # return float(city_val*self.city_weight+ ress_val*self.ress_weight)/self._h_tot_weight
-        # return float(city_val+ress_val)
-        ##########################
-        # pieces_vectors = (city_val*self.city_weight + ress_val*self.ress_weight)/self._h_tot_weight
-        # return float(np.var(pieces_vectors)*100)
-        # 33
 
     @property
     def _h_tot_weight(self):
@@ -225,9 +213,19 @@ class DiverciteHeuristic(AlgorithmHeuristic):
         super().__init__(normalization_type,loss_func,min_value,max_value, L=l)
     
     def get_placed_cities_by_player(self, state: GameStateDivercite, player_symbol: str) -> dict:
+        """
+        Get all cities placed by a specific player on the board.
+
+        Args:
+            state (GameStateDivercite): The current game state.
+            player (str): The symbol representing the player (e.g., 'W' for White or 'B' for Black).
+
+        Returns:
+            dict[tuple, str]: A dictionary mapping city positions (as tuples) to their respective piece types.
+        """
         player_cities = {}
         board = state.get_rep().get_env() 
-        
+        # Iterate through the board to find cities belonging to the player  
         for pos, piece in board.items():
             piece_type = piece.get_type()
             if piece_type[1] == 'C' and piece_type[2] == player_symbol:
@@ -236,10 +234,29 @@ class DiverciteHeuristic(AlgorithmHeuristic):
         return player_cities
 
     def get_total_pieces_on_board(self, state: GameStateDivercite) -> int:
+        """
+        Get the total number of placed pieces (non-empty) on the board.
+
+        Args:
+            state (GameStateDivercite): The current game state.
+
+        Returns:
+            int: The total number of pieces on the board.
+        """
         board = state.get_rep().get_env()
         return len([piece for piece in board.values() if piece != 'EMPTY'])
     
     def get_colors_around_city(self, state: GameStateDivercite, city_pos: tuple) -> list:
+        """
+        Get the colors of all resources adjacent to a specified city.
+
+        Args:
+            state (GameStateDivercite): The current game state.
+            city_pos (tuple[int, int]): The position of the city on the board.
+
+        Returns:
+            list[str]: A list of resource colors adjacent to the specified city.
+        """
         adjacent_positions = state.get_neighbours(city_pos[0], city_pos[1])
         adjacent_colors = []
         for _, (piece, _) in adjacent_positions.items():
@@ -251,13 +268,32 @@ class DiverciteHeuristic(AlgorithmHeuristic):
         return adjacent_colors
            
     def get_missing_colors_for_divercite(self, current_colors: set) -> str:
+        """
+        Identify a missing color needed to complete a divercité.
+
+        Args:
+            current_colors (set[str]): A set of colors already present around a city.
+
+        Returns:
+            Optional[str]: A missing color needed for divercité, or None if all colors are present.
+        """
         missing_colors = COLORS - current_colors
         return missing_colors.pop() if missing_colors else None
 
     def get_cities_affected_by_ressource(self, state: GameStateDivercite, ressource_pos: tuple) -> dict:
+        """
+        Identify all cities affected by a resource placed at a specific position.
+
+        Args:
+            state (GameStateDivercite): The current game state.
+            ressource_pos (tuple[int, int]): The position of the resource on the board.
+
+        Returns:
+            dict[tuple[int, int], str]: A dictionary mapping city positions (tuples) to their respective piece types.
+        """
         adjacent_positions = state.get_neighbours(ressource_pos[0], ressource_pos[1])
         adjacent_cities = {}
-        
+        # Collect cities affected by the resource
         for _, (piece, pos) in adjacent_positions.items():
             if piece != 'EMPTY' and hasattr(piece, 'get_type'):
                 piece_type = piece.get_type()
@@ -268,25 +304,53 @@ class DiverciteHeuristic(AlgorithmHeuristic):
 
     def evaluate_resource_scarcity(self, state: GameStateDivercite,player_id:str) -> float:
         """
-        Penalize excessive use of scarce resources.
+        Evaluate the scarcity of the player's remaining resources and penalize excessive usage.
+
+        Args:
+            state (GameStateDivercite): The current game state.
+
+        Returns:
+            float: A score penalizing resource scarcity. A lower score indicates more scarce or depleted resources.
         """
+        # Get the player's remaining pieces
         score = 0
         player_pieces_left = state.players_pieces_left[player_id]
         total_pieces = sum(player_pieces_left.values())
+        # Constants
+        DEPLETION_PENALTY = 150  # Penalty for completely depleting a resource color
+        SCARCITY_MULTIPLIER = 100  # Penalty scaling for scarce resources
 
         # Penalize if a specific resource color is disproportionately used
         for piece, count in player_pieces_left.items():
             color = piece[0]  # Extract the color
             if count == 0:  # Resource depleted
-                score -= 150  # Heavy penalty for completely depleting a color
+                score -= SCARCITY_MULTIPLIER  # Heavy penalty for completely depleting a color
             else:
                 scarcity_ratio = count / total_pieces
-                score -= (1 - scarcity_ratio) * 100  # Penalize if resource is scarce
+                score -= (1 - scarcity_ratio) * DEPLETION_PENALTY  # Penalize if resource is scarce
 
         return score
 
     def evaluate_ressource_placement(self, state: GameStateDivercite,player_symbol:str) -> float:
-        # Heuristic to boost the placement of ressources next to cities
+        """
+        Evaluate the placement of resources based on their proximity to cities and strategic importance.
+
+        Args:
+            state (GameStateDivercite): The current game state.
+
+        Returns:
+            float: A score reflecting the quality of resource placement. Higher scores indicate better placements.
+        """
+         # Constants
+        FRIENDLY_CITY_BONUS = 20
+        OPPONENT_CITY_PENALTY = 25
+        OPPONENT_ADVANTAGE_PENALTY = 75
+        CORNER_OPPONENT_PENALTY = 250
+        COLOR_MATCH_PENALTY = 30
+        COMPLETE_DIVERCITE_PENALTY = 200
+        NEARLY_COMPLETE_DIVERCITE_PENALTY = 100
+        NO_ADJACENT_CITIES_PENALTY = 20
+
         score = 0
         board = state.get_rep().get_env()
 
@@ -301,15 +365,15 @@ class DiverciteHeuristic(AlgorithmHeuristic):
                     opponent_city_count = len(opponent_cities)
                     
                     # Reward placements benefiting friendly cities
-                    score += 20 * friendly_city_count
+                    score += FRIENDLY_CITY_BONUS * friendly_city_count
                     # Penalize placements helping opponent cities
-                    score -= 25 * opponent_city_count
+                    score -= OPPONENT_CITY_PENALTY * opponent_city_count
                     
                     if friendly_city_count == 0:
-                        score -= 75 * (opponent_city_count ** 2)
+                        score -= OPPONENT_ADVANTAGE_PENALTY * (opponent_city_count ** 2)
                     
                     if pos in corner_ressource_position and opponent_city_count > 0:
-                        score -= 250
+                        score -= CORNER_OPPONENT_PENALTY
                     
                     opponent_cities_dict = {city_pos: city_type for city_pos, city_type in adjacent_cities.items() if city_type[2] != player_symbol}
                     for opponent_city_pos, opponent_city_type in opponent_cities_dict.items():
@@ -317,23 +381,38 @@ class DiverciteHeuristic(AlgorithmHeuristic):
                         piece_color = piece_type[0]
                         
                         if opponent_city_color == piece_color:
-                            score -= 30 * len([city for city in adjacent_cities.values() if city[0] == piece_color])
+                            score -= COLOR_MATCH_PENALTY * len([city for city in adjacent_cities.values() if city[0] == piece_color])
                         
                         adjacent_colors = self.get_colors_around_city(state, opponent_city_pos)
                         unique_colors = set(adjacent_colors)
                         
                         if len(unique_colors) == 4 : 
-                            score -= 200
+                            score -= COMPLETE_DIVERCITE_PENALTY
                         elif len(unique_colors) == 3 and len(adjacent_colors) == 3:
-                            score -= 100
+                            score -= NEARLY_COMPLETE_DIVERCITE_PENALTY
                     
                 elif not adjacent_cities:
-                    score -= 20
+                    score -= NO_ADJACENT_CITIES_PENALTY
                 
         return score
     
     def evaluate_city_placement(self, state: GameStateDivercite) -> float:
-        # Heuristic to boost the placement of cities near resources
+        """
+        Evaluate the placement of cities based on their proximity to resources and strategic value.
+
+        Args:
+            state (GameStateDivercite): The current game state.
+
+        Returns:
+            float: A score reflecting the quality of city placements. Higher scores indicate better placements.
+        """
+        FULL_DIVERCITE_BONUS = 200
+        INEFFICIENT_RESOURCES_PENALTY = 50
+        SINGLE_COLOR_BONUS = 20
+        MULTI_COLOR_BONUS = 30
+        ISOLATED_CITY_PENALTY = 100
+        MIN_RESOURCES_THRESHOLD = 5
+
         score = 0
         board = state.get_rep().get_env()
         
@@ -344,36 +423,45 @@ class DiverciteHeuristic(AlgorithmHeuristic):
                 adjacent_resource_count = len(adjacent_colors)
                 unique_colors = set(adjacent_colors)
                 city_color = piece_type[0]
-                repeated_colors = [color for color in adjacent_colors if adjacent_colors.count(color) > 1]
                 
+                # Case 1: Full divercité (4 unique colors)
                 if len(unique_colors) == 4:
-                    score += 200
-                # elif len(unique_colors) == 3 and adjacent_resource_count == 3:
-                #     missing_color = self.get_missing_colors_for_divercite(unique_colors)
-                    
-                #     color_ressources_left = state.players_pieces_left[self.get_id()]
-                #     keys_to_remove = [key for key, value in color_ressources_left.items() if (value == 0 and key[1] == "R") or key[1] == 'C']
-                #     for key in keys_to_remove:
-                #         color_ressources_left.pop(key)
-                        
-                #     if missing_color in color_ressources_left:
-                #         score += 100
-                elif len(unique_colors) == 2 and adjacent_resource_count > 2 and city_color not in unique_colors:
-                    score -= 50
+                    score += FULL_DIVERCITE_BONUS
 
+                # Case 2: Inefficient resource placement (2 unique colors, not matching city color)
+                elif len(unique_colors) == 2 and adjacent_resource_count > 2 and city_color not in unique_colors:
+                    score -= INEFFICIENT_RESOURCES_PENALTY
+
+                # Case 3: Single color matches city color
                 elif len(unique_colors) == 1 and city_color in unique_colors:
-                    score += 20 * adjacent_resource_count
+                    score += SINGLE_COLOR_BONUS * adjacent_resource_count
                     
+                 # Case 4: Multiple colors with city color included
                 elif city_color in unique_colors: 
-                    score += 30 * len(unique_colors)
+                    score += MULTI_COLOR_BONUS * len(unique_colors)
                 
+                 # Case 5: Isolated city with no adjacent resources (after early game)
                 elif adjacent_resource_count == 0 and self.get_total_pieces_on_board(state) > 5:
-                    score -= 100
+                    score -= ISOLATED_CITY_PENALTY
                     
         return score
         
     def calculate_blocking_score(self, state: GameStateDivercite,player_symbol:str,opponent_id:str) -> float:
-        # Heuristic to boost the blocking of cities with 3 different colors around them
+        """
+        Calculate a score for blocking opponent cities from achieving DiverCité.
+
+        Args:
+            state (GameStateDivercite): The current game state.
+
+        Returns:
+            float: A score reflecting the blocking effectiveness. Higher scores indicate better blocking.
+        """ 
+
+        # Constants
+        BLOCKING_BONUS_FULL = 200
+        BLOCKING_BONUS_PARTIAL = 100
+        BLOCKING_PENALTY = 50
+
         score = 0
         opponent_symbol = 'B' if player_symbol == 'W' else 'W'
         opponent_cities = self.get_placed_cities_by_player(state, opponent_symbol)
@@ -407,7 +495,7 @@ class DiverciteHeuristic(AlgorithmHeuristic):
                 
                 if missing_color + "R" in ennemy_color_ressource_left:
                     print("Missing color: ", missing_color)
-                    score += 200
+                    score += BLOCKING_BONUS_FULL
                 
             elif len(unique_colors) == 2 and len(adjacent_colors) == 4 and adjacent_colors.count(blocking_color) == 1:
                 # Check for blocking potential with only 2 resources
@@ -416,7 +504,7 @@ class DiverciteHeuristic(AlgorithmHeuristic):
                 repeated_colors = [color for color, count in color_counts.items() if count > 1]
                 
                 if len(repeated_colors) == 0:
-                    score += 100 
+                    score += BLOCKING_BONUS_PARTIAL
                     
             elif len(unique_colors) == 3 and len(adjacent_colors) == 3 and adjacent_colors.count(blocking_color) == 1:
                 # Check for blocking potential with only 3 resources
@@ -426,11 +514,30 @@ class DiverciteHeuristic(AlgorithmHeuristic):
                 
                 if len(repeated_colors) == 0:
                     # DiverCité is still theoretically possible, valid blocking
-                    score -= 50
+                    score -= BLOCKING_PENALTY
                     
         return score
          
     def calculate_divercite_score(self, state: GameStateDivercite,player_symbol:str,player_id:str) -> float:
+        """
+        Calculate a score for the player's cities based on their progress towards DiverCité.
+
+        Args:
+            state (GameStateDivercite): The current game state.
+
+        Returns:
+            float: A score reflecting the progress of the player's cities towards DiverCité.
+        """
+        # Constants for scoring
+        FULL_DIVERCITE_SCORE = 600
+        SINGLE_COLOR_SCORE = 100
+        RESOURCE_BONUS = 15
+        CLOSE_TO_DIVERCITE_BONUS = 60
+        OPPONENT_ADVANTAGE_PENALTY = 100
+        INEFFICIENT_PLACEMENT_PENALTY = 50
+        DIVERCIET_NOT_POSSIBLE_PENALTY = 50
+        LACK_OF_RESOURCES_PENALTY = 10
+
         score = 0
         player_cities = self.get_placed_cities_by_player(state, player_symbol)
 
@@ -441,13 +548,13 @@ class DiverciteHeuristic(AlgorithmHeuristic):
             
             # Case 1: Full divercité (4 unique colors + 4 resources => 5 points)
             if len(unique_colors) == 4 and len(adjacent_colors) == 4:
-                score += 600  # Full divercité, highest score
+                score += FULL_DIVERCITE_SCORE  # Full divercité, highest score
 
             elif len(unique_colors) == 1 and city_color in unique_colors:
                 if len(adjacent_colors) == 4:
-                    score += 100
+                    score += SINGLE_COLOR_SCORE
                 else:
-                    score += 15 * len(adjacent_colors) 
+                    score += RESOURCE_BONUS * len(adjacent_colors) 
                 
             elif len(unique_colors) == 3 and len(adjacent_colors) == 3 and city_color in unique_colors:
                 missing_color = self.get_missing_colors_for_divercite(unique_colors)
@@ -469,13 +576,13 @@ class DiverciteHeuristic(AlgorithmHeuristic):
                             color_ressources_left.pop(key)
                         
                         if missing_color in color_ressources_left and opponent_cities:
-                            score -= 100 * len(opponent_cities)
+                            score -= OPPONENT_ADVANTAGE_PENALTY * len(opponent_cities)
                             
                         elif missing_color + "R" in color_ressources_left :
-                            score += 60
+                            score += CLOSE_TO_DIVERCITE_BONUS
                             
                         else:
-                            score -= 100
+                            score -= OPPONENT_ADVANTAGE_PENALTY
                 
             # # Case 4: 2 unique colors + 2 resources => early progress
             elif len(unique_colors) == 2 and len(adjacent_colors) == 2 and city_color in unique_colors:
@@ -486,7 +593,7 @@ class DiverciteHeuristic(AlgorithmHeuristic):
                     color_ressources_left.pop(key)
                 
                 if missing_color in color_ressources_left:
-                    score += 50
+                    score += INEFFICIENT_PLACEMENT_PENALTY
                 
             # # Case 5: 1 unique color + 1 resource => initial placement
             # elif len(unique_colors) == 1 and len(adjacent_colors) == 1 and city_color in unique_colors:
@@ -494,24 +601,34 @@ class DiverciteHeuristic(AlgorithmHeuristic):
                 
             # Case 6: 3 unique colors + 4 resources => incomplete divercité
             elif len(unique_colors) == 3 and len(adjacent_colors) == 4 and adjacent_colors.count(city_color) < 3:
-                score -= 50  # Penalize since divercité is not possible
+                score -= INEFFICIENT_PLACEMENT_PENALTY  # Penalize since divercité is not possible
     
             # Case 7: 2 unique colors + 4 resources (Locked city)
             elif len(unique_colors) == 2 and len(adjacent_colors) == 4 and city_color not in unique_colors:
-                score -= 50  # Penalize lightly for inefficiency
+                score -= INEFFICIENT_PLACEMENT_PENALTY  # Penalize lightly for inefficiency
             
+            # Case 6: City with no matching resources
             elif len(unique_colors) == 2 and len(adjacent_colors) == 3 and adjacent_colors.count(city_color) < 2:
-                score -= 100
+                score -= OPPONENT_ADVANTAGE_PENALTY
             
             elif city_color not in unique_colors and unique_colors:
-                score -= 50  # Penalize for placing a city with no adjacent resources of the same color
-                
+                score -= DIVERCIET_NOT_POSSIBLE_PENALTY  # Penalize for placing a city with no adjacent resources of the same color
+            # Default penalty for poor placement     
             else :
-                score -= 10
+                score -= LACK_OF_RESOURCES_PENALTY
                 
         return score
     
     def _compute_divercite_score(self, state: GameStateDivercite,player_symbol:str,player_id:str,opponent_id:str) -> float:
+        """
+        Evaluate the current game state using a heuristic that combines multiple scores.
+
+        Args:
+            state (GameStateDivercite): The current game state.
+
+        Returns:
+            float: A total heuristic score representing the favorability of the game state.
+        """
         score_divercite = self.calculate_divercite_score(state,player_symbol,player_id)
         score_bloquage = self.calculate_blocking_score(state,player_symbol,opponent_id)
         player_actual_score = state.scores[player_id]

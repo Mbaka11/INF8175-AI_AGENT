@@ -173,11 +173,13 @@ class MCTSHybridMinimaxBackupsSearch(MCTSSearch):
         return n.UCB1_Minimax(self.C,self.alpha,v0)
     
     def _best_action(self, children):
+        # GEt the best action
         if self.n_max_filtered != None:
             children =self._filter_children(children)
         return super()._best_action(children)
     
     def _filter_children(self, children):
+        # Filter the children by an heuristic evaluation
         def _apply(node_):
             n:Node = node_[0]
             return self.filter_heuristic(n.state,my_id=self.my_id, opponent_id=self.opponent_id,

@@ -24,6 +24,7 @@ class MinimaxTypeASearch(Algorithm):
         return f'\n\t<==>  Id:{id(self)} =>{self.__class__.__name__}(cache={self.cache.__class__.__name__}-Size:{self.cache.maxsize}, max_depth={self.max_depth}, heuristics={self.main_heuristic})'
 
     def _search(self):
+        # Looking for the best actions
         self.node_expanded =0
         print('Game Step:', self.current_state.step, "My Step:", self.my_step,
               'Type:', self.__class__.__name__, 'Depth:', self.max_depth)
@@ -98,6 +99,7 @@ class MinimaxTypeASearch(Algorithm):
         return v_star, m_star
 
     def _pred_utility(self, state):
+        # prediction of the utility -> H(x)
         pred_utility: float = self.main_heuristic(
             state, my_id=self.my_id, opponent_id=self.opponent_id, my_pieces=self.my_pieces, opponent_pieces=self.opponent_pieces,
             last_move=self.last_move, is_first_to_play=self.is_first_to_play, moves=self.moves, current_env=self.current_env,
@@ -107,9 +109,10 @@ class MinimaxTypeASearch(Algorithm):
         return pred_utility
 
     def _isQuiescent(self, state: GameStateDivercite, pred_utility: float, isMaximize: bool) -> bool:
+        
         if not isMaximize:
             return True
-        # TODO check wether the state is safe or nah
+        # check wether the state is safe or nah when it is our turn
         if self.quiescent_threshold == None:
             return True
 
@@ -119,15 +122,19 @@ class MinimaxTypeASearch(Algorithm):
         return True
 
     def _compute_next_max_depth(self, current_max_depth: int, *args) -> int:
+        # next maximum depth
         return current_max_depth
 
     def _filter_action(self, states: GameStateDivercite) -> Generator:
+        # Filter action by heuristic
         return states.generate_possible_light_actions()
 
     def _compute_actions(self, state: GameStateDivercite):
+        # Get all actions
         return self._filter_action(state)
 
     def _clear_cache(self):
+        # Clear the cache
         if (MAX_STEP - self.current_state.step) <= self.max_depth:
             print('Not clearing the cache cause we already compute it')
             return
@@ -197,10 +204,11 @@ class MinimaxHybridSearch(MinimaxTypeASearch,ActionOrderInterface):
         return current_depth
 
     def _proba_by_temperature(self, _eval, current_step):
+        # Changing the probability by the step of the fame
         return _eval*2 * ((MAX_STEP-current_step+C_TEMP_NUM)/C_TEMP_DEN)
 
     def _compute_n_expanded(self, cur_step: int, n_child: int):
-        # TODO dynamically update the number of nodes expanded
+        # Dynamically update the number of nodes expanded
         if isinstance(self.n_max_expanded, float) and self.n_max_expanded > 0 and self.n_max_expanded < 1:
             return math.ceil(self.n_max_expanded * n_child)
 

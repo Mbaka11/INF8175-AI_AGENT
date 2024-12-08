@@ -26,9 +26,19 @@ class MyPlayer(PlayerDivercite):
         super().__init__(piece_type, name)
     
     def get_placed_cities_by_player(self, state: GameStateDivercite, player: str) -> dict:
+        """
+        Get all cities placed by a specific player on the board.
+
+        Args:
+            state (GameStateDivercite): The current game state.
+            player (str): The symbol representing the player (e.g., 'W' for White or 'B' for Black).
+
+        Returns:
+            dict[tuple, str]: A dictionary mapping city positions (as tuples) to their respective piece types.
+        """
         player_cities = {}
         board = state.get_rep().get_env() 
-        
+        # Iterate through the board to find cities belonging to the player  
         for pos, piece in board.items():
             piece_type = piece.get_type()
             if piece_type[1] == 'C' and piece_type[2] == player:
@@ -37,10 +47,29 @@ class MyPlayer(PlayerDivercite):
         return player_cities
 
     def get_total_pieces_on_board(self, state: GameStateDivercite) -> int:
+        """
+        Get the total number of placed pieces (non-empty) on the board.
+
+        Args:
+            state (GameStateDivercite): The current game state.
+
+        Returns:
+            int: The total number of pieces on the board.
+        """
         board = state.get_rep().get_env()
         return len([piece for piece in board.values() if piece != 'EMPTY'])
     
     def get_colors_around_city(self, state: GameStateDivercite, city_pos: tuple) -> list:
+        """
+        Get the colors of all resources adjacent to a specified city.
+
+        Args:
+            state (GameStateDivercite): The current game state.
+            city_pos (tuple[int, int]): The position of the city on the board.
+
+        Returns:
+            list[str]: A list of resource colors adjacent to the specified city.
+        """
         adjacent_positions = state.get_neighbours(city_pos[0], city_pos[1])
         adjacent_colors = []
         for direction, (piece, pos) in adjacent_positions.items():
@@ -52,8 +81,16 @@ class MyPlayer(PlayerDivercite):
         return adjacent_colors
            
     def get_missing_colors_for_divercite(self, current_colors: set) -> str:
-        all_colors = {'R', 'G', 'B', 'Y'}
-        missing_colors = all_colors - current_colors
+        """
+        Identify a missing color needed to complete a divercité.
+
+        Args:
+            current_colors (set[str]): A set of colors already present around a city.
+
+        Returns:
+            Optional[str]: A missing color needed for divercité, or None if all colors are present.
+        """
+        missing_colors = CO - current_colors
         return missing_colors.pop() if missing_colors else None
 
     def get_cities_affected_by_ressource(self, state: GameStateDivercite, ressource_pos: tuple) -> dict:
