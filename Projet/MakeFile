@@ -4,7 +4,7 @@ marsel = custom_p_divercite_heuristic.py
 last_agent = abyss_v3.py
 
 str1 = my_player.py
-str2 = my_player.py
+str2 = my_player_strategy.py
 
 install	:
 	pip install -r requirements.txt
@@ -65,6 +65,9 @@ pvh:
 
 pvr:
 	python Divercite/main_divercite.py -t local Divercite/${prince} Divercite/random_player_divercite.py  -r -g
+
+rvp:
+	python Divercite/main_divercite.py -t local Divercite/random_player_divercite.py  Divercite/${prince} -r -g
 
 prince_vs_marsel:
 	python Divercite/main_divercite.py -t local Divercite/${prince} Divercite/${marsel} -r -g

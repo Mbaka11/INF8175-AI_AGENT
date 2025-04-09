@@ -43,6 +43,7 @@ class OpeningMoveStrategy(Strategy):
             pos=choice(list(center_city_position))
             self.center_city_position.difference_update([pos])
             return LightAction({POSITION_KEY: pos, PIECE_KEY: city})
+        
         # update computed moves
         self.center_city_position.difference_update(self.moves)
         self.no_corner_city_position.difference_update(self.moves)

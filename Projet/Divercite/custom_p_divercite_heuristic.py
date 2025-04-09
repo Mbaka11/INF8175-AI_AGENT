@@ -1,4 +1,5 @@
 from src_2147174_2117902.tools import Monitor
+from src_2147174_2117902.constant import *
 from player_divercite import PlayerDivercite
 from seahorse.game.action import Action
 from seahorse.game.game_state import GameState
@@ -90,7 +91,7 @@ class MyPlayer(PlayerDivercite):
         Returns:
             Optional[str]: A missing color needed for divercité, or None if all colors are present.
         """
-        missing_colors = CO - current_colors
+        missing_colors = COLORS - current_colors
         return missing_colors.pop() if missing_colors else None
 
     def get_cities_affected_by_ressource(self, state: GameStateDivercite, ressource_pos: tuple) -> dict:

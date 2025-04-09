@@ -27,12 +27,12 @@ class MyPlayer(PlayerDivercite):
             time_limit (float, optional): the time limit in (s)
         """
         super().__init__(piece_type, name)
-        scoreHeuristic = ScoreHeuristic()
-        piecesVarianceHeuristic = PiecesVarianceHeuristic('sigmoid')
-        controlIndexHeuristic = ControlIndexHeuristic('sigmoid')
-        diverciteHeuristic  =DiverciteHeuristic(loss_func='raw_eval')
+        scoreHeuristic = ScoreHeuristic('range_scaling')
+        piecesVarianceHeuristic = PiecesVarianceHeuristic('range_scaling')
+        controlIndexHeuristic = ControlIndexHeuristic('range_scaling')
+        diverciteHeuristic  =DiverciteHeuristic('range_scaling',loss_func='raw_eval')
         
-        hybrid = scoreHeuristic*8 + controlIndexHeuristic + piecesVarianceHeuristic
+        hybrid = scoreHeuristic*8 + controlIndexHeuristic + piecesVarianceHeuristic + diverciteHeuristic
         hybrid2 = scoreHeuristic*8+ diverciteHeuristic*5 + piecesVarianceHeuristic*4 + controlIndexHeuristic*2
 
         self._controller: StrategyController = StrategyController().add_strategy(
